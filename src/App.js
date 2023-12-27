@@ -44,6 +44,7 @@ import Transfers from './pages/Transfers';
 import NewTransfer from './pages/transfers/NewTransfer';
 import RejectedTransfers from './pages/transfers/RejectedTransfers';
 import SaleBooks from './pages/reports/SaleBooks';
+import TablesRecord from './pages/tables/TablesRecord';
 
 const App = () => {
   const isLoggedIn = getUserIsLoggedIn();
@@ -125,6 +126,7 @@ const App = () => {
         {renderProtectedRoute('administration/brands', [1, 2], <Brands />)}
         {renderProtectedRoute('administration/ubications', [1, 2], <Ubications />)}
         {renderProtectedRoute('administration/delivery-routes', [1, 2], <DeliveryRoutes />)}
+        {renderProtectedRoute('administration/tables', [1, 2], <TablesRecord />)}
         {renderProtectedRoute('parking-checkouts/incomes', [1, 2], <ParkingCheckouts />)}
         {renderProtectedRoute('parking-checkouts/expenses', [1, 2], <ParkingExpenses />)}
         {renderProtectedRoute('parking-checkouts/guards', [1, 2], <ParkingGuards />)}

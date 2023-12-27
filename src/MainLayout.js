@@ -25,6 +25,7 @@ import {
   PartitionOutlined,
   PlusCircleTwoTone,
   PlusOutlined,
+  TableOutlined,
   PushpinOutlined,
   ReadOutlined,
   SettingOutlined,
@@ -229,6 +230,11 @@ const MainLayout = () => {
         <Breadcrumb.Item>Administracion</Breadcrumb.Item>
         <Breadcrumb.Item>Datos Generales</Breadcrumb.Item>
       </>);
+      case "/main/administration/tables": return (<>
+        <Breadcrumb.Item>Principal</Breadcrumb.Item>
+        <Breadcrumb.Item>Administracion</Breadcrumb.Item>
+        <Breadcrumb.Item>Registro de Mesas</Breadcrumb.Item>
+      </>);
       case "/main/parking-checkouts/incomes": return (<>
         <Breadcrumb.Item>Principal</Breadcrumb.Item>
         <Breadcrumb.Item>Control de Parqueos</Breadcrumb.Item>
@@ -296,6 +302,7 @@ const MainLayout = () => {
       case "/main/administration/ubications": return ["sub8"];
       case "/main/administration/delivery-routes": return ["sub8"];
       case "/main/administration/general-data": return ["sub8"];
+      case "/main/administration/tables": return ["sub8"];
       case "/main/parking-checkouts/incomes": return ["sub9"];
       case "/main/parking-checkouts/expenses": return ["sub9"];
       case "/main/parking-checkouts/guards": return ["sub9"];
@@ -350,6 +357,7 @@ const MainLayout = () => {
       case "/main/reports/dashboard": return "33";
       case "/main/reports/sales": return "34";
       case "/main/reports/purchases": return "35";
+      case "/main/administration/tables": return "36";
       default: return "1";
     }
   }
@@ -423,6 +431,7 @@ const MainLayout = () => {
       getItem('Ubicaciones', '22', <PushpinOutlined />),
       getItem('Rutas', '23', <PartitionOutlined />),
       // getItem('Datos Generales', '24', <ReadOutlined />),
+      getItem('Mesas', '36', <TableOutlined />),
     ]) : null,
     getItem('', '100'),
   ];
@@ -524,6 +533,7 @@ const MainLayout = () => {
                 case '33': navigate('/main/reports/dashboard'); break;
                 case '34': navigate('/main/reports/sales'); break;
                 case '35': navigate('/main/reports/purchases'); break;
+                case '36': navigate('/main/administration/tables'); break;
                 default: navigate('/main'); break;
               }
               setSelectedMenuKey(a.key);
