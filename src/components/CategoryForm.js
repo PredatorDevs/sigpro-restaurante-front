@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Input, Col, Row, Divider, Button, PageHeader, Modal } from 'antd';
-import { AppstoreAddOutlined, DeleteOutlined,  SaveOutlined, WarningOutlined } from '@ant-design/icons';
+import { AppstoreAddOutlined, DeleteOutlined, SaveOutlined, WarningOutlined } from '@ant-design/icons';
 import { isEmpty } from 'lodash';
 
 import { customNot } from '../utils/Notifications.js';
@@ -19,7 +19,7 @@ function CategoryForm(props) {
     const { id, name } = dataToUpdate;
     setId(id || 0);
     setFormName(name || '');
-  }, [ dataToUpdate ]);
+  }, [dataToUpdate]);
 
   function restoreState() {
     setId(0);
@@ -42,31 +42,31 @@ function CategoryForm(props) {
         categoriesServices.add(
           formName
         )
-        .then((response) => {
-          customNot('success', 'Operación exitosa', 'Categoria añadido');
-          restoreState();
-          setFetching(false);
-          onClose(true);
-        })
-        .catch((error) => {
-          setFetching(false);
-          customNot('error', 'Algo salió mal', 'Categoria no añadido');
-        })
+          .then((response) => {
+            customNot('success', 'Operación exitosa', 'Categoria añadido');
+            restoreState();
+            setFetching(false);
+            onClose(true);
+          })
+          .catch((error) => {
+            setFetching(false);
+            customNot('error', 'Algo salió mal', 'Categoria no añadido');
+          })
       } else {
         setFetching(true);
         categoriesServices.update(
           formName, formId
         )
-        .then((response) => {
-          customNot('success', 'Operación exitosa', 'Categoria actualizado');
-          restoreState();
-          setFetching(false);
-          onClose(true);
-        })
-        .catch((error) => {
-          setFetching(false);
-          customNot('error', 'Algo salió mal', 'Categoria no actualizado');
-        })
+          .then((response) => {
+            customNot('success', 'Operación exitosa', 'Categoria actualizado');
+            restoreState();
+            setFetching(false);
+            onClose(true);
+          })
+          .catch((error) => {
+            setFetching(false);
+            customNot('error', 'Algo salió mal', 'Categoria no actualizado');
+          })
       }
     }
   }
@@ -84,17 +84,17 @@ function CategoryForm(props) {
       onOk() {
         setFetching(true);
         categoriesServices.remove(formId)
-        .then((response) => {
-          restoreState();
-          setFetching(false);
-          onClose(true);
-        })
-        .catch((error) => {
-          setFetching(false);
-          customNot('info', 'Algo salió mal', 'El Categoria no pudo ser eliminado');
-        });
+          .then((response) => {
+            restoreState();
+            setFetching(false);
+            onClose(true);
+          })
+          .catch((error) => {
+            setFetching(false);
+            customNot('info', 'Algo salió mal', 'El Categoria no pudo ser eliminado');
+          });
       },
-      onCancel() {},
+      onCancel() { },
     });
   }
 
@@ -118,19 +118,19 @@ function CategoryForm(props) {
       maskClosable={false}
       visible={open}
       footer={null}
-    >      
+    >
       <Row gutter={8}>
         <Col span={24}>
-          <p style={{ margin: '0px 0px 0px 0px' }}>Nombre:</p>  
+          <p style={{ margin: '0px 0px 0px 0px' }}>Nombre:</p>
           <Input onChange={(e) => setFormName(e.target.value)} name={'formName'} value={formName} placeholder={'Embotellados'} />
         </Col>
         <Divider />
         <Col span={24}>
-          <Button 
-            type={'primary'} 
-            icon={<SaveOutlined />} 
-            onClick={(e) => formAction()} 
-            style={{ width: '100%', marginTop: 20 }} 
+          <Button
+            type={'primary'}
+            icon={<SaveOutlined />}
+            onClick={(e) => formAction()}
+            style={{ width: '100%', marginTop: 20 }}
             loading={fetching}
             disabled={fetching}
           >
@@ -138,13 +138,13 @@ function CategoryForm(props) {
           </Button>
         </Col>
         <Col span={24}>
-          <Button 
-            type={'default'} 
+          <Button
+            type={'default'}
             onClick={(e) => {
               if (!updateMode) restoreState();
               onClose(false)
             }}
-            style={{ width: '100%', marginTop: 10 }} 
+            style={{ width: '100%', marginTop: 10 }}
           >
             Cancelar
           </Button>
