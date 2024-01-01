@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Col, Input, Row, Space, Table, Tabs } from 'antd';
+import { Button, Col, Input, Row, Space, Table } from 'antd';
 import { AppstoreAddOutlined, SyncOutlined } from '@ant-design/icons';
 import { find } from 'lodash';
+
 import { useNavigate } from 'react-router-dom';
 
 import TablesForm from '../../components/tables/TablesForm';
+import tablesServices from '../../services/TablesServices';
 
 import { Wrapper } from '../../styled-components/Wrapper';
 import { customNot } from '../../utils/Notifications';
 import { filterData } from '../../utils/Filters';
 import { columnActionsDef, columnDef } from '../../utils/ColumnsDefinitions';
+
+import { getUserLocation } from '../../utils/LocalData';
 
 const { Search } = Input;
 
@@ -25,12 +29,6 @@ function Tables() {
     const [entityRefreshData, setEntityRefreshData] = useState(0);
     const [entityToUpdate, setEntityToUpdate] = useState({});
 
-    const navigate = useNavigate();
-
-    function randomNum(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
     const areasActives = [
         { id: 1, name: "Salón Principal" },
         { id: 2, name: "Sala Este" },
@@ -42,22 +40,10 @@ function Tables() {
         { id: 8, name: "Salón Secundario" }
     ];
 
-    const tablesArr = [];
-
-    for (let i = 1; i <= 40; i++) {
-        const obj = {
-            id: i,
-            name: `Mesa ${i}`,
-            maxcap: randomNum(2, 10),
-            area: areasActives[randomNum(0, areasActives.length - 1)].name
-        };
-
-        tablesArr.push(obj);
-    }
-
     async function loadData() {
         setFetching(true);
-        setEntityData(tablesArr);
+        const response = await tablesServices.findTables(getUserLocation());
+        setEntityData(response.data);
         setFetching(false);
     }
 
@@ -68,9 +54,25 @@ function Tables() {
     const columns = [
         columnDef({ title: 'Id', dataKey: 'id' }),
         columnDef({ title: 'Nombres', dataKey: 'name' }),
-        //TODO: Ponerla tilde xd
-        columnDef({ title: 'Area', dataKey: 'area' }),
-        columnDef({ title: 'Capacidad Max', dataKey: 'maxcap' }),
+        columnDef({ title: 'Grupo', dataKey: 'GroupName' }),
+        columnDef({
+            title: 'Color', dataKey: 'color', customRender: color => (
+                <span style={{
+                    display: 'block',
+                    width: '100%',
+                    height: '20px',
+                    backgroundColor: color
+                }}>
+                </span>
+            )
+        }),
+        columnDef({
+            title: 'Estado', dataKey: 'status', customRender: status => (
+                <span style={{ color: status === 0 ? 'green' : 'red' }}>
+                    {status === 0 ? 'Libre' : 'Ocupado'}
+                </span>
+            )
+        }),
         columnActionsDef(
             {
                 title: 'Acciones',

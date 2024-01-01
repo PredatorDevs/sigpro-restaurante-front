@@ -27,7 +27,8 @@ export const columnDef = ({
   fSize = 12,
   align = 'left',
   ifNull = '',
-  enableSort = false
+  enableSort = false,
+  customRender = null,
 }) => ({
   title: <p style={{ margin: '0px', fontSize: fSize, fontWeight: 600 }}>{title}</p>,
   dataIndex: dataKey,
@@ -35,7 +36,7 @@ export const columnDef = ({
   align: align,
   sorter: enableSort ? (a, b) => sortAlphaNum(a, b, dataKey) : null,
   showSorterTooltip: false,
-  render: value => <p style={{ margin: '0px', fontSize: fSize }}>{value || ifNull}</p>,
+  render: customRender || (value => <p style={{ margin: '0px', fontSize: fSize }}>{value || ifNull}</p>),
 })
 
 export const columnNumberDef = ({
@@ -87,21 +88,21 @@ export const columnMoneyDef = ({
 })
 
 export const columnActionsDef = ({
-  title = 'Title', 
+  title = 'Title',
   dataKey = 'key',
   fSize = 12,
   detail = true,
-  detailAction = () => {},
+  detailAction = () => { },
   disableDetail = false,
   edit = true,
-  editAction = () => {},
+  editAction = () => { },
   del = false,
-  delAction = () => {}
+  delAction = () => { }
 }) => {
   let actions = [];
-  if (detail) actions.push({ caption: 'Ver', disableButton: disableDetail, icon: <EyeFilled style={{ color: '#1890FF'}} />, action: detailAction });
-  if (edit) actions.push({caption: 'Editar', disableButton: false, icon: <EditFilled style={{ color: '#52C41A'}} />, action: editAction });
-  if (del) actions.push({ caption: 'Borrar', disableButton: false, icon: <DeleteFilled style={{ color: '#FF4D4F'}} />, action: delAction });
+  if (detail) actions.push({ caption: 'Ver', disableButton: disableDetail, icon: <EyeFilled style={{ color: '#1890FF' }} />, action: detailAction });
+  if (edit) actions.push({ caption: 'Editar', disableButton: false, icon: <EditFilled style={{ color: '#52C41A' }} />, action: editAction });
+  if (del) actions.push({ caption: 'Borrar', disableButton: false, icon: <DeleteFilled style={{ color: '#FF4D4F' }} />, action: delAction });
   const def = {
     title: <p style={{ margin: '0px', fontSize: fSize, fontWeight: 600 }}>{title}</p>,
     dataIndex: dataKey,
@@ -111,11 +112,11 @@ export const columnActionsDef = ({
       <Space>
         {
           actions.map((item, index) => (
-            <Button 
+            <Button
               key={index}
-              type="default" 
-              shape="square" 
-              size={'small'} 
+              type="default"
+              shape="square"
+              size={'small'}
               icon={item.icon}
               disabled={item.disableButton}
               style={{ backgroundColor: '#FFFFFF' }}
@@ -130,7 +131,7 @@ export const columnActionsDef = ({
 }
 
 export const columnImgDef = ({
-  title = 'Title', 
+  title = 'Title',
   dataKey = 'PicName',
   fSize = 12,
   source = (value) => (`${value}`),
@@ -144,10 +145,10 @@ export const columnImgDef = ({
     key: dataKey,
     align: 'left',
     render: value => (
-      <div 
+      <div
         style={
-          { 
-            backgroundColor: 'transparent', 
+          {
+            backgroundColor: 'transparent',
             padding: 5,
             margin: 0,
             display: 'flex',
@@ -167,12 +168,12 @@ export const columnImgDef = ({
 }
 
 export const columnBtnAction = ({
-  title = 'Title', 
+  title = 'Title',
   dataKey = 'key',
   fSize = 12,
   btnText = 'Action',
   btnColor = '#73d13d',
-  btnAction = () => {},
+  btnAction = () => { },
   btn2Text = null,
   btn2Color = null,
   btn2Action = null,
@@ -190,7 +191,7 @@ export const columnBtnAction = ({
         <Button
           type="primary"
           size="small"
-          style={{ fontSize: 10, backgroundColor: btnColor, borderColor: btnColor }} 
+          style={{ fontSize: 10, backgroundColor: btnColor, borderColor: btnColor }}
           onClick={() => btnAction(value)}
         >
           {btnText}
@@ -200,7 +201,7 @@ export const columnBtnAction = ({
             <Button
               type="primary"
               size="small"
-              style={{ fontSize: 10, marginLeft: 10, backgroundColor: btn2Color, borderColor: btnColor }} 
+              style={{ fontSize: 10, marginLeft: 10, backgroundColor: btn2Color, borderColor: btnColor }}
               onClick={() => btn2Action(value)}
             >
               {btn2Text}
@@ -212,7 +213,7 @@ export const columnBtnAction = ({
             <Button
               type="primary"
               size="small"
-              style={{ fontSize: 10, marginLeft: 10, backgroundColor: btn3Color, borderColor: btnColor }} 
+              style={{ fontSize: 10, marginLeft: 10, backgroundColor: btn3Color, borderColor: btnColor }}
               onClick={() => btn3Action(value)}
             >
               {btn3Text}
@@ -226,7 +227,7 @@ export const columnBtnAction = ({
 }
 
 export const columnBoolean = ({
-  title = 'Title', 
+  title = 'Title',
   dataKey = 'key',
   fSize = 12,
   trueText = 'Si',
@@ -245,7 +246,7 @@ export const columnBoolean = ({
 }
 
 export const columnColorTag = ({
-  title = 'Title', 
+  title = 'Title',
   dataKey = 'key',
   fSize = 12
 }) => {
@@ -260,7 +261,7 @@ export const columnColorTag = ({
 }
 
 export const columnIfValueEqualsTo = ({
-  title = 'Title', 
+  title = 'Title',
   dataKey = 'key',
   fSize = 12,
   text = 'Anulado',
@@ -289,7 +290,7 @@ export const columnBadgeAlert = ({
     align: 'left',
     render: value => <Badge
       count={
-        +value ? 
+        +value ?
           <ClockCircleOutlined style={{ color: '#f5222d' }} /> :
           <CheckCircleOutlined style={{ color: '#52c41a' }} />
       }

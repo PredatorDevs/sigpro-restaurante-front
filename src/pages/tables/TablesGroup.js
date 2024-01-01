@@ -18,7 +18,6 @@ const { Search } = Input;
 
 function TablesGroups() {
 
-
     const [fetching, setFetching] = useState(false);
     const [filter, setFilter] = useState('');
 
