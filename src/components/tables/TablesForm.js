@@ -208,7 +208,7 @@ function TablesForm(props) {
                 <Row gutter={8}>
                     <Col span={24}>
                         <p style={{ margin: '0px 0px 0px 0px' }}>Nombre:</p>
-                        <Input placeholder='Nombre del Grupo'
+                        <Input placeholder='Nombre de la Mesa'
                             name='name'
                             type='text'
                             autoComplete='off'
