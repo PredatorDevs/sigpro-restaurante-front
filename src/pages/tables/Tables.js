@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Col, Input, Row, Space, Table } from 'antd';
+import { Button, Col, Input, Row, Space, Table, Tag } from 'antd';
 import { AppstoreAddOutlined, SyncOutlined } from '@ant-design/icons';
 import { find } from 'lodash';
 
@@ -7,10 +7,11 @@ import { useNavigate } from 'react-router-dom';
 
 import TablesForm from '../../components/tables/TablesForm';
 import tablesServices from '../../services/TablesServices';
-import TablesGroupDetails from '../../components/tables/TablesGroupDetails';
+
+import TablesGroupDetails from '../../components/previews/TablePreview';
 
 import { Wrapper } from '../../styled-components/Wrapper';
-import { customNot } from '../../utils/Notifications';
+
 import { filterData } from '../../utils/Filters';
 import { columnActionsDef, columnDef } from '../../utils/ColumnsDefinitions';
 
@@ -49,20 +50,20 @@ function Tables() {
         columnDef({ title: 'Grupo', dataKey: 'GroupName' }),
         columnDef({
             title: 'Color', dataKey: 'color', customRender: color => (
-                <span style={{
+                <Tag color={color} style={{
                     display: 'block',
                     width: '100%',
                     height: '20px',
-                    backgroundColor: color
                 }}>
-                </span>
+
+                </Tag>
             )
         }),
         columnDef({
             title: 'Estado', dataKey: 'status', customRender: status => (
-                <span style={{ color: status === 0 ? 'green' : 'red' }}>
+                <Tag color={status === 0 ? 'green' : 'red'}>
                     {status === 0 ? 'Libre' : 'Ocupada'}
-                </span>
+                </Tag>
             )
         }),
         columnActionsDef(

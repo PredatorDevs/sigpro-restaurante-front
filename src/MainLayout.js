@@ -433,6 +433,10 @@ const MainLayout = () => {
       // getItem('Datos Generales', '24', <ReadOutlined />),
       getItem('Mesas', '36', <TableOutlined />),
     ]) : null,
+    getUserIsAdmin() && includes([1, 2], roleId) ? getItem('Comandas', 'sub12', <StockOutlined />, [
+      getItem('Nueva', '16', <PlusOutlined />),
+      getItem('Control', '17', <BookOutlined />)
+    ]) : null,
     getItem('', '100'),
   ];
 
