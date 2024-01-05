@@ -4,7 +4,7 @@ import { AppstoreAddOutlined, DeleteOutlined, SaveOutlined, WarningOutlined } fr
 
 import { isEmpty } from 'lodash';
 
-import { SwatchesPicker } from 'react-color';
+import ColorPicker from '../pickers/ColorPicker.js';
 
 import tablesServices from '../../services/TablesServices';
 
@@ -234,10 +234,9 @@ function TablesForm(props) {
                     <Col span={24}>
                         <p style={{ margin: '0px 0px 0px 0px' }}>Color:</p>
 
-                        <SwatchesPicker
+                        <ColorPicker
                             width={'100%'}
                             height={175}
-                            className='customPicker'
                             color={formData.color}
                             onChange={handleColorChange}
                         />

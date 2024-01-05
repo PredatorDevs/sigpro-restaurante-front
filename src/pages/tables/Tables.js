@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 import TablesForm from '../../components/tables/TablesForm';
 import tablesServices from '../../services/TablesServices';
+import TablesGroupDetails from '../../components/tables/TablesGroupDetails';
 
 import { Wrapper } from '../../styled-components/Wrapper';
 import { customNot } from '../../utils/Notifications';
@@ -29,16 +30,7 @@ function Tables() {
     const [entityRefreshData, setEntityRefreshData] = useState(0);
     const [entityToUpdate, setEntityToUpdate] = useState({});
 
-    const areasActives = [
-        { id: 1, name: "Salón Principal" },
-        { id: 2, name: "Sala Este" },
-        { id: 3, name: "Sala Norte" },
-        { id: 4, name: "Salón Principal" },
-        { id: 5, name: "Área de Juegos" },
-        { id: 6, name: "Área de Juegos" },
-        { id: 7, name: "Área de Fumadores" },
-        { id: 8, name: "Salón Secundario" }
-    ];
+    const [openDetails, setOpenDetails] = useState(false);
 
     async function loadData() {
         setFetching(true);
@@ -69,7 +61,7 @@ function Tables() {
         columnDef({
             title: 'Estado', dataKey: 'status', customRender: status => (
                 <span style={{ color: status === 0 ? 'green' : 'red' }}>
-                    {status === 0 ? 'Libre' : 'Ocupado'}
+                    {status === 0 ? 'Libre' : 'Ocupada'}
                 </span>
             )
         }),
@@ -77,7 +69,11 @@ function Tables() {
             {
                 title: 'Acciones',
                 dataKey: 'id',
-                detailAction: (value) => customNot('info', 'En desarrollo', 'Próximamente'),
+                detailAction: (value) => {
+                    setOpenDetails(true);
+                    setFormUpdateMode(true);
+                    setEntityToUpdate(find(entityData, ['id', value]));
+                },
                 editAction: (value) => {
                     setOpenForm(true);
                     setFormUpdateMode(true);
@@ -137,13 +133,21 @@ function Tables() {
                 open={openForm}
                 updateMode={formUpdateMode}
                 dataToUpdate={entityToUpdate}
-                areasAvailable={areasActives}
                 onClose={(refresh) => {
                     setOpenForm(false);
                     setFormUpdateMode(false);
                     if (refresh) {
                         loadData();
                     }
+                }}
+            />
+            <TablesGroupDetails
+                open={openDetails}
+                entryType={formUpdateMode}
+                details={entityToUpdate}
+                onClose={() => {
+                    setOpenDetails(false);
+                    setFormUpdateMode(false);
                 }}
             />
         </Wrapper>
