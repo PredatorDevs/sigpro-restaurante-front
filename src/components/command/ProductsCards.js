@@ -23,7 +23,7 @@ function ProductsCard({ products, selectedProduct, loading }) {
                     <div
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                             gap: '16px',
                             padding: '16px 0',
                         }}
@@ -41,7 +41,7 @@ function ProductsCard({ products, selectedProduct, loading }) {
                                 bodyStyle={{ padding: 5 }}
                             >
                                 <p style={{ fontWeight: "bolder", margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.productName}</p>
-                                <p style={{ margin: 0 }}>Delicioso bistec de res bañado en salsa de cebolla</p>
+                                <p style={{ margin: 0 }}>{product.Description}</p>
                                 <p style={{
                                     fontWeight: "bolder",
                                     color: parseFloat(product.stock) > 0 ? '#13C2C2' : '#DCE0E6',

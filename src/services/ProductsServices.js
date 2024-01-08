@@ -56,6 +56,7 @@ productsServices.checkAvailability = (locationId, productId, quantity) =>
 
 productsServices.add = (
   name,
+  description,
   brandId,
   categoryId,
   ubicationId,
@@ -72,6 +73,7 @@ productsServices.add = (
     `/products`,
     {
       name,
+      description,
       brandId,
       categoryId,
       ubicationId,
@@ -91,6 +93,7 @@ productsServices.add = (
 
 productsServices.update = (
   name,
+  description,
   brandId,
   categoryId,
   ubicationId,
@@ -108,6 +111,7 @@ productsServices.update = (
     `/products`,
     {
       name,
+      description,
       brandId,
       categoryId,
       ubicationId,

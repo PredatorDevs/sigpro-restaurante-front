@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Input, Col, Row, Button, Modal, InputNumber, Space, Tabs, Divider, Select, Checkbox, Switch, Tag, Table } from 'antd';
-import { ArrowRightOutlined, CloseOutlined, DeleteOutlined,  DollarOutlined,  EditOutlined,  ExclamationCircleOutlined,  PercentageOutlined,  PlusOutlined,  SaveOutlined, WarningOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined, CloseOutlined, DeleteOutlined, DollarOutlined, EditOutlined, ExclamationCircleOutlined, PercentageOutlined, PlusOutlined, SaveOutlined, WarningOutlined } from '@ant-design/icons';
 import { forEach, isEmpty } from 'lodash';
 
 import { customNot } from '../../utils/Notifications.js';
@@ -43,6 +43,7 @@ function ProductForm(props) {
   // FIRST STAGE FORM VALUES
   const [formId, setId] = useState(0);
   const [formName, setFormName] = useState('');
+  const [formDescription, setFormDescription] = useState('');
   const [formBrandId, setFormBrandId] = useState(0);
   const [formCategoryId, setFormCategoryId] = useState(0);
   const [formUbicationId, setFormUbicationId] = useState(0);
@@ -59,7 +60,7 @@ function ProductForm(props) {
 
   const [formPackageConfigPackageTypeId, setFormPackageConfigPackageTypeId] = useState(0);
   const [formPackageConfigQuantity, setFormPackageConfigQuantity] = useState(0);
-  
+
   // SECOND STAGE FORM VALUES
   const [formStocks, setFormStocks] = useState([]);
 
@@ -78,13 +79,13 @@ function ProductForm(props) {
       const ubicationsResponse = await ubicationsServices.find();
       const mesUnitRes = await measurementUnitsServices.find();
       const packTypeUnitRes = await generalsServices.findPackageTypes();
-      
+
       setBrandsData(brandsResponse.data);
       setCategoriesData(categoriesResponse.data);
       setUbicationsData(ubicationsResponse.data);
       setUnitMesData(mesUnitRes.data);
       setPackageTypesData(packTypeUnitRes.data);
-    } catch(err) {
+    } catch (err) {
       console.log(err);
     }
     setFetching(false);
@@ -94,16 +95,16 @@ function ProductForm(props) {
     if (idToLoad !== undefined && idToLoad !== 0) {
       try {
         const productPackageConfigResponse = await productsServices.packageConfigs.findByProductId(idToLoad);
-  
+
         setFormProductPackageConfigs(productPackageConfigResponse.data);
-      } catch(error) {
+      } catch (error) {
         console.log(error);
       }
     } else {
 
     }
   }
-  
+
   useEffect(() => {
     loadData();
   }, []);
@@ -113,6 +114,7 @@ function ProductForm(props) {
       const {
         productId,
         productName,
+        productDescription,
         productBrandId,
         productCategoryId,
         productUbicationId,
@@ -124,9 +126,10 @@ function ProductForm(props) {
         isTaxable,
         packageContent
       } = dataToUpdate;
-  
+
       setId(productId || 0);
       setFormName(productName || '');
+      setFormDescription(productDescription || '');
       setFormBrandId(productBrandId || 0);
       setFormCategoryId(productCategoryId || 0);
       setFormUbicationId(productUbicationId || 0);
@@ -137,14 +140,14 @@ function ProductForm(props) {
       setFormEnabledForProduction(!!productEnabledForProduction || false);
       setFormIsTaxable(!!isTaxable || false);
       setFormPackageContent(packageContent);
-  
+
       if (productId !== undefined) {
         const productTaxesResponse = await productsServices.findTaxesByProductId(productId);
 
         setFormProductTaxes(productTaxesResponse.data[0].taxesData);
 
         const pricesResponse = await productsServices.prices.findByProductId(productId);
-        
+
         if (isEmpty(pricesResponse.data)) {
           // [productId, price, profitRate, profitRateFixed, productPriceId]
           setFormPrices([[null, null, null, null, null]]);
@@ -179,12 +182,13 @@ function ProductForm(props) {
 
   useEffect(() => {
     loadDataToUpdate();
-  }, [ dataToUpdate ]);
+  }, [dataToUpdate]);
 
   function restoreState() {
     setActiveTab('1');
     setId(0);
     setFormName('');
+    setFormDescription('');
     setFormBrandId(0);
     setFormCategoryId(0);
     setFormUbicationId(0);
@@ -217,6 +221,7 @@ function ProductForm(props) {
     try {
       const productAddResponse = await productsServices.add(
         formName,
+        formDescription,
         formBrandId,
         formCategoryId,
         formUbicationId || null,
@@ -228,19 +233,19 @@ function ProductForm(props) {
         formEnabledForProduction,
         formPackageContent
       );
-  
+
       const { insertId } = productAddResponse.data;
-  
+
       setId(insertId);
-  
+
       const productStockResponse = await productsServices.stocks.findByProductId(insertId);
       const productTaxesResponse = await productsServices.findTaxesByProductId(insertId);
-      
+
       setFetching(false);
       setActiveTab('2');
       setFormStocks(productStockResponse.data);
       setFormProductTaxes(productTaxesResponse.data[0].taxesData);
-    } catch(error) {
+    } catch (error) {
       setFetching(false);
     }
   }
@@ -253,7 +258,7 @@ function ProductForm(props) {
         const { initialStock, stock, productStockId } = x;
         await productsServices.stocks.updateById(initialStock || 0, stock || 0, productStockId);
       });
-    } catch(error) {
+    } catch (error) {
 
     }
 
@@ -281,26 +286,26 @@ function ProductForm(props) {
       }
 
       setFetching(false);
-    } catch(error) {
+    } catch (error) {
       setFetching(false);
     }
   }
 
   async function thirdStageAction() {
     const validPrices = updateMode ? true : !(formPrices[formPrices.length - 1][1] === null);
-    
+
     if (!validPrices) {
       customNot('warning', 'Debe tener al menos un precio o un valor correcto', 'Dato no válido');
       return;
     }
 
     setFetching(true);
-    
+
     const bulkDataPrices = [];
-    
+
     forEach(formPrices, (x) => bulkDataPrices.push(
       // [productId, price, profitRate, profitRateFixed]
-      [ formId, x[1], x[2], x[3] ]
+      [formId, x[1], x[2], x[3]]
     ));
 
     try {
@@ -308,7 +313,7 @@ function ProductForm(props) {
       restoreState();
       setFetching(false);
       onClose(true);
-    } catch(error) {
+    } catch (error) {
       console.log(error);
       setFetching(false);
       onClose(false);
@@ -321,11 +326,11 @@ function ProductForm(props) {
 
     return (
       updateMode ? validateSelectedData(formId, 'Seleccione una categoría') : true
-      && validateStringData(formName, 'Verifique nombre del producto')
-      && validateSelectedData(formBrandId, 'Seleccione una marca')
-      && validateSelectedData(formCategoryId, 'Seleccione una categoria')
-      && validateSelectedData(formUbicationId, 'Seleccione una ubicación')
-      && updateMode ? true : !(formPrices[formPrices.length - 1][1] === null)
+        && validateStringData(formName, 'Verifique nombre del producto')
+        && validateSelectedData(formBrandId, 'Seleccione una marca')
+        && validateSelectedData(formCategoryId, 'Seleccione una categoria')
+        && validateSelectedData(formUbicationId, 'Seleccione una ubicación')
+        && updateMode ? true : !(formPrices[formPrices.length - 1][1] === null)
     );
   }
 
@@ -336,6 +341,7 @@ function ProductForm(props) {
       try {
         await productsServices.update(
           formName,
+          formDescription,
           formBrandId,
           formCategoryId,
           formUbicationId || null,
@@ -348,17 +354,17 @@ function ProductForm(props) {
           formPackageContent,
           formId
         );
-  
+
         forEach(formStocks, async (x) => {
           const { initialStock, stock, minStockAlert, productStockId } = x;
-  
+
           await productsServices.stocks.updateById(initialStock || 0, stock || 0, minStockAlert || 1, productStockId);
         });
-  
+
         restoreState();
         setFetching(false);
         onClose(true);
-      } catch(error) {
+      } catch (error) {
         setFetching(false);
       }
     }
@@ -378,12 +384,12 @@ function ProductForm(props) {
             formUnitMeasurementId,
             formPackageConfigQuantity
           );
-          
+
           setFormPackageConfigPackageTypeId(0);
           setFormPackageConfigQuantity(0);
-  
+
           loadPackageConfig(formId);
-        } catch(error) {
+        } catch (error) {
           console.log(error);
         }
         setFetching(false);
@@ -407,13 +413,13 @@ function ProductForm(props) {
         loadPackageConfig(formId);
         setFetching(false);
       },
-      onCancel() {},
+      onCancel() { },
     });
   }
 
   function getProductTotalTaxes() {
     let totalTaxes = 0; // DECLARA UNA VARIABLE RESULTADO
-    
+
     // UN FOREACH PARA RECORRER LOS DETALLES DE LA VENTA
     forEach(formProductTaxes, (tax) => {
       // BUSCA EL TAX ENTRE LA INFORMACIÓN DE LOS TAXES
@@ -479,489 +485,499 @@ function ProductForm(props) {
         {`${!updateMode ? 'Nuevo' : 'Actualizar'} Producto`}
       </p>
       {/* <TabsContainer> */}
-        <Tabs 
-          activeKey={activeTab}
-          onChange={(activeKey) => { setActiveTab(activeKey); }}
-          tabPosition={'left'}
-        >
-          <Tabs.TabPane tab="Información" key={'1'} disabled={!updateMode}>
-            <Row gutter={[12, 12]}>
-              <Col span={12}>
-                <p style={styleSheet.labelStyle}>Categoria:</p>  
-                <Select
-                  dropdownStyle={{ width: '100%' }} 
-                  style={{ width: '100%' }} 
-                  value={formCategoryId} 
-                  onChange={(value) => setFormCategoryId(value)}
-                  optionFilterProp='children'
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option.children).toLowerCase().includes(input.toLowerCase())
-                  }
-                >
-                  <Option key={0} value={0} disabled>{'No seleccionado'}</Option>
-                  {
-                    (categoriesData || []).map(
-                      (element) => <Option key={element.id} value={element.id}>{element.name}</Option>
-                    )
-                  }
-                </Select>
-              </Col>
-              <Col span={12}>
-                <p style={styleSheet.labelStyle}>Marca:</p>  
-                <Select
-                  dropdownStyle={{ width: '100%' }} 
-                  style={{ width: '100%' }} 
-                  value={formBrandId} 
-                  onChange={(value) => setFormBrandId(value)}
-                  optionFilterProp='children'
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option.children).toLowerCase().includes(input.toLowerCase())
-                  }
-                >
-                  <Option key={0} value={0} disabled>{'No seleccionado'}</Option>
-                  {
-                    (brandsData || []).map(
-                      (element) => <Option key={element.id} value={element.id}>{element.name}</Option>
-                    )
-                  }
-                </Select>
-              </Col>
-              <Col span={24}>
-                <p style={styleSheet.labelStyle}>Nombre:</p>  
-                <Input
-                  onChange={(e) => setFormName(e.target.value.toUpperCase())}
-                  name={'formName'}
-                  value={formName}
-                  placeholder={'Producto 1'}
-                />
-              </Col>
-              <Col span={12}>
-                <p style={styleSheet.labelStyle}>Código de barras:</p>  
-                <Input
-                  onChange={(e) => setFormBarcode(e.target.value)}
-                  name={'formBarcode'}
-                  value={formBarcode}
-                  placeholder={'0123456789'}
-                />
-              </Col>
-              <Col span={12}>
-                <p style={{ margin: 0, color: '#434343' }}>{'Unidad de medida:'}</p>
-                <Select
-                  dropdownStyle={{ width: '100%' }} 
-                  style={{ width: '100%' }} 
-                  value={formUnitMeasurementId} 
-                  onChange={(value) => {
-                    setFormUnitMeasurementId(value);
-                  }}
-                  optionFilterProp='children'
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option.children).toLowerCase().includes(input.toLowerCase())
-                  }
-                >
-                  <Option key={0} value={0} disabled>{'No seleccionado'}</Option>
-                  {
-                    (unitMesData || []).map(
-                      (element) => <Option key={element.measurementUnitId} value={element.measurementUnitId}>{element.measurementUnitName}</Option>
-                    )
-                  }
-                </Select>
-              </Col>
-              <Col span={12}>
-                <p style={styleSheet.labelStyle}>Costo:</p>  
-                <InputNumber
-                  addonBefore={'$'}
-                  onChange={(value) => setFormCost(value)}
-                  name={'formCost'}
-                  value={formCost}
-                  precision={4}
-                />
-              </Col>
-              <Col span={12}>
-                <p style={styleSheet.labelStyle}>Ubicación:</p>  
-                <Select
-                  dropdownStyle={{ width: '100%' }} 
-                  style={{ width: '100%' }} 
-                  value={formUbicationId} 
-                  onChange={(value) => setFormUbicationId(value)}
-                  optionFilterProp='children'
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option.children).toLowerCase().includes(input.toLowerCase())
-                  }
-                >
-                  <Option key={0} value={0} disabled>{'No seleccionado'}</Option>
-                  {
-                    (ubicationsData || []).map(
-                      (element) => <Option key={element.id} value={element.id}>{element.name}</Option>
-                    )
-                  }
-                </Select>
-              </Col>
-              <Col span={12}>
-                <p style={styleSheet.labelStyle}>Contenido:</p>  
-                <InputNumber
-                  onChange={(value) => setFormPackageContent(value)}
-                  name={'formPackageContent'}
-                  value={formPackageContent}
-                  min={1}
-                />
-              </Col>
-              <Col span={12}>
-              </Col>
-              <Col span={12}>
-                <Checkbox
-                  checked={formEnabledForProduction}
-                  onChange={(e) => setFormEnabledForProduction(e.target.checked)}
-                  style={{ color: '#434343' }}
-                >
-                  Para producción
-                </Checkbox>
-              </Col>
-              <Col span={12}>
-                <Checkbox
-                  checked={formIsService}
-                  onChange={(e) => setFormIsService(e.target.checked)}
-                  style={{ color: '#434343' }}
-                >
-                  Es un servicio
-                </Checkbox>
-              </Col>
-              <Col span={12}>
-                <Checkbox
-                  disabled
-                  checked={formIsTaxable}
-                  onChange={(e) => setFormIsTaxable(e.target.checked)}
-                  style={{ color: '#434343' }}
-                >
-                  Gravado
-                </Checkbox>
-              </Col>
-            </Row>
-          </Tabs.TabPane>
-          <Tabs.TabPane tab="Existencias" key={'2'} disabled={!updateMode}>
-            {
-              (formStocks || []).map((element, index) => {
-                return (
-                  <Row gutter={8} key={index}>
-                    <Col span={24}>
-                      <p style={{ ...styleSheet.labelStyle, fontWeight: 600 }}>{`${(element.locationName)}`}</p>
-                    </Col>
-                    <Col span={8}>
-                      <p style={{ ...styleSheet.labelStyle, fontSize: 11 }}>{`Inicial:`}</p>
-                      <Space>
-                        <InputNumber
-                          type={'number'}
-                          // disabled={updateMode}
-                          // min={0}
-                          precision={2} 
-                          value={element.initialStock}
-                          onChange={(value) => {
-                            let newArr = [...formStocks];
-                            newArr[index] = { ...newArr[index], initialStock: value };
-                            setFormStocks(newArr);
-                          }}
-                        />
-                      </Space>
-                    </Col>
-                    <Col span={8}>
-                      <p style={{ ...styleSheet.labelStyle, fontSize: 11, color: 'blue' }}>{`Actual:`}</p>
-                      <Space>
-                        <InputNumber
-                          type={'number'}
-                          precision={2} 
-                          // min={0}
-                          // disabled={updateMode}
-                          value={element.stock}
-                          onChange={(value) => {
-                            let newArr = [...formStocks];
-                            newArr[index] = { ...newArr[index], stock: value };
-                            setFormStocks(newArr);
-                          }}
-                        />
-                      </Space>
-                    </Col>
-                    <Col span={8}>
-                      <p style={{ ...styleSheet.labelStyle, fontSize: 11, color: 'red' }}>{`Alerta Mínimo:`}</p>
-                      <Space>
-                        <InputNumber
-                          type={'number'}
-                          precision={2} 
-                          // disabled={updateMode}
-                          min={0}
-                          value={element.minStockAlert}
-                          onChange={(value) => {
-                            let newArr = [...formStocks];
-                            newArr[index] = { ...newArr[index], minStockAlert: value };
-                            setFormStocks(newArr);
-                          }}
-                        />
-                      </Space>
-                    </Col>
-                    {
-                      formProductPackageConfigs.map((x) => (
-                        <Col span={24} style={{ margin: '10px 0px' }}>
-                          <Tag color={'blue'}>{`${Number(element.stock / x.quantity).toFixed(2)} ${x.packageTypeName} de ${x.quantity} ${x.measurementUnitName}`}</Tag>
-                        </Col>
-                      ))
-                    }
-                  </Row>
-                )
-              })
-            }
-          </Tabs.TabPane>
-          <Tabs.TabPane tab="Precios" key={'3'} disabled={!updateMode}>
-            <Row gutter={8}>
-              <Col span={24}>
-                <Space>
-                  <Tag>{'Costo'}</Tag>
-                  <Tag icon={<DollarOutlined />}>{formCost}</Tag>
-                  <Tag>{'Impuestos'}</Tag>
-                  <Tag icon={<DollarOutlined />}>{getProductTotalTaxes().toFixed(4)}</Tag>
-                </Space>
-              </Col>
-              <Col span={24}>
+      <Tabs
+        activeKey={activeTab}
+        onChange={(activeKey) => { setActiveTab(activeKey); }}
+        tabPosition={'left'}
+      >
+        <Tabs.TabPane tab="Información" key={'1'} disabled={!updateMode}>
+          <Row gutter={[12, 12]}>
+            <Col span={12}>
+              <p style={styleSheet.labelStyle}>Categoria:</p>
+              <Select
+                dropdownStyle={{ width: '100%' }}
+                style={{ width: '100%' }}
+                value={formCategoryId}
+                onChange={(value) => setFormCategoryId(value)}
+                optionFilterProp='children'
+                showSearch
+                filterOption={(input, option) =>
+                  (option.children).toLowerCase().includes(input.toLowerCase())
+                }
+              >
+                <Option key={0} value={0} disabled>{'No seleccionado'}</Option>
                 {
-                  (formProductTaxes || [])
+                  (categoriesData || []).map(
+                    (element) => <Option key={element.id} value={element.id}>{element.name}</Option>
+                  )
+                }
+              </Select>
+            </Col>
+            <Col span={12}>
+              <p style={styleSheet.labelStyle}>Marca:</p>
+              <Select
+                dropdownStyle={{ width: '100%' }}
+                style={{ width: '100%' }}
+                value={formBrandId}
+                onChange={(value) => setFormBrandId(value)}
+                optionFilterProp='children'
+                showSearch
+                filterOption={(input, option) =>
+                  (option.children).toLowerCase().includes(input.toLowerCase())
+                }
+              >
+                <Option key={0} value={0} disabled>{'No seleccionado'}</Option>
+                {
+                  (brandsData || []).map(
+                    (element) => <Option key={element.id} value={element.id}>{element.name}</Option>
+                  )
+                }
+              </Select>
+            </Col>
+            <Col span={24}>
+              <p style={styleSheet.labelStyle}>Nombre:</p>
+              <Input
+                onChange={(e) => setFormName(e.target.value.toUpperCase())}
+                name={'formName'}
+                value={formName}
+                placeholder={'Producto 1'}
+              />
+            </Col>
+            <Col span={24}>
+              <p style={styleSheet.labelStyle}>Descripción:</p>
+              <Input
+                type={'textarea'}
+                onChange={(e) => setFormDescription(e.target.value.toUpperCase())}
+                name={'formDescription'}
+                value={formDescription}
+                placeholder={'Descripción del producto'}
+              />
+            </Col>
+            <Col span={12}>
+              <p style={styleSheet.labelStyle}>Código de barras:</p>
+              <Input
+                onChange={(e) => setFormBarcode(e.target.value)}
+                name={'formBarcode'}
+                value={formBarcode}
+                placeholder={'0123456789'}
+              />
+            </Col>
+            <Col span={12}>
+              <p style={{ margin: 0, color: '#434343' }}>{'Unidad de medida:'}</p>
+              <Select
+                dropdownStyle={{ width: '100%' }}
+                style={{ width: '100%' }}
+                value={formUnitMeasurementId}
+                onChange={(value) => {
+                  setFormUnitMeasurementId(value);
+                }}
+                optionFilterProp='children'
+                showSearch
+                filterOption={(input, option) =>
+                  (option.children).toLowerCase().includes(input.toLowerCase())
+                }
+              >
+                <Option key={0} value={0} disabled>{'No seleccionado'}</Option>
+                {
+                  (unitMesData || []).map(
+                    (element) => <Option key={element.measurementUnitId} value={element.measurementUnitId}>{element.measurementUnitName}</Option>
+                  )
+                }
+              </Select>
+            </Col>
+            <Col span={12}>
+              <p style={styleSheet.labelStyle}>Costo:</p>
+              <InputNumber
+                addonBefore={'$'}
+                onChange={(value) => setFormCost(value)}
+                name={'formCost'}
+                value={formCost}
+                precision={4}
+              />
+            </Col>
+            <Col span={12}>
+              <p style={styleSheet.labelStyle}>Ubicación:</p>
+              <Select
+                dropdownStyle={{ width: '100%' }}
+                style={{ width: '100%' }}
+                value={formUbicationId}
+                onChange={(value) => setFormUbicationId(value)}
+                optionFilterProp='children'
+                showSearch
+                filterOption={(input, option) =>
+                  (option.children).toLowerCase().includes(input.toLowerCase())
+                }
+              >
+                <Option key={0} value={0} disabled>{'No seleccionado'}</Option>
+                {
+                  (ubicationsData || []).map(
+                    (element) => <Option key={element.id} value={element.id}>{element.name}</Option>
+                  )
+                }
+              </Select>
+            </Col>
+            <Col span={12}>
+              <p style={styleSheet.labelStyle}>Contenido:</p>
+              <InputNumber
+                onChange={(value) => setFormPackageContent(value)}
+                name={'formPackageContent'}
+                value={formPackageContent}
+                min={1}
+              />
+            </Col>
+            <Col span={12}>
+            </Col>
+            <Col span={12}>
+              <Checkbox
+                checked={formEnabledForProduction}
+                onChange={(e) => setFormEnabledForProduction(e.target.checked)}
+                style={{ color: '#434343' }}
+              >
+                Para producción
+              </Checkbox>
+            </Col>
+            <Col span={12}>
+              <Checkbox
+                checked={formIsService}
+                onChange={(e) => setFormIsService(e.target.checked)}
+                style={{ color: '#434343' }}
+              >
+                Es un servicio
+              </Checkbox>
+            </Col>
+            <Col span={12}>
+              <Checkbox
+                disabled
+                checked={formIsTaxable}
+                onChange={(e) => setFormIsTaxable(e.target.checked)}
+                style={{ color: '#434343' }}
+              >
+                Gravado
+              </Checkbox>
+            </Col>
+          </Row>
+        </Tabs.TabPane>
+        <Tabs.TabPane tab="Existencias" key={'2'} disabled={!updateMode}>
+          {
+            (formStocks || []).map((element, index) => {
+              return (
+                <Row gutter={8} key={index}>
+                  <Col span={24}>
+                    <p style={{ ...styleSheet.labelStyle, fontWeight: 600 }}>{`${(element.locationName)}`}</p>
+                  </Col>
+                  <Col span={8}>
+                    <p style={{ ...styleSheet.labelStyle, fontSize: 11 }}>{`Inicial:`}</p>
+                    <Space>
+                      <InputNumber
+                        type={'number'}
+                        // disabled={updateMode}
+                        // min={0}
+                        precision={2}
+                        value={element.initialStock}
+                        onChange={(value) => {
+                          let newArr = [...formStocks];
+                          newArr[index] = { ...newArr[index], initialStock: value };
+                          setFormStocks(newArr);
+                        }}
+                      />
+                    </Space>
+                  </Col>
+                  <Col span={8}>
+                    <p style={{ ...styleSheet.labelStyle, fontSize: 11, color: 'blue' }}>{`Actual:`}</p>
+                    <Space>
+                      <InputNumber
+                        type={'number'}
+                        precision={2}
+                        // min={0}
+                        // disabled={updateMode}
+                        value={element.stock}
+                        onChange={(value) => {
+                          let newArr = [...formStocks];
+                          newArr[index] = { ...newArr[index], stock: value };
+                          setFormStocks(newArr);
+                        }}
+                      />
+                    </Space>
+                  </Col>
+                  <Col span={8}>
+                    <p style={{ ...styleSheet.labelStyle, fontSize: 11, color: 'red' }}>{`Alerta Mínimo:`}</p>
+                    <Space>
+                      <InputNumber
+                        type={'number'}
+                        precision={2}
+                        // disabled={updateMode}
+                        min={0}
+                        value={element.minStockAlert}
+                        onChange={(value) => {
+                          let newArr = [...formStocks];
+                          newArr[index] = { ...newArr[index], minStockAlert: value };
+                          setFormStocks(newArr);
+                        }}
+                      />
+                    </Space>
+                  </Col>
+                  {
+                    formProductPackageConfigs.map((x) => (
+                      <Col span={24} style={{ margin: '10px 0px' }}>
+                        <Tag color={'blue'}>{`${Number(element.stock / x.quantity).toFixed(2)} ${x.packageTypeName} de ${x.quantity} ${x.measurementUnitName}`}</Tag>
+                      </Col>
+                    ))
+                  }
+                </Row>
+              )
+            })
+          }
+        </Tabs.TabPane>
+        <Tabs.TabPane tab="Precios" key={'3'} disabled={!updateMode}>
+          <Row gutter={8}>
+            <Col span={24}>
+              <Space>
+                <Tag>{'Costo'}</Tag>
+                <Tag icon={<DollarOutlined />}>{formCost}</Tag>
+                <Tag>{'Impuestos'}</Tag>
+                <Tag icon={<DollarOutlined />}>{getProductTotalTaxes().toFixed(4)}</Tag>
+              </Space>
+            </Col>
+            <Col span={24}>
+              {
+                (formProductTaxes || [])
                   .map((element, index) => {
                     return (
                       <Space key={index}>
                         <Tag>{element.taxName}</Tag>
-                        <Tag icon={element.isPercentage ? <PercentageOutlined/> : <DollarOutlined />}>{element.isPercentage ? (element.taxRate * 100) : element.isPercentage}</Tag>
+                        <Tag icon={element.isPercentage ? <PercentageOutlined /> : <DollarOutlined />}>{element.isPercentage ? (element.taxRate * 100) : element.isPercentage}</Tag>
                       </Space>
                     )
                   })
-                }
-              </Col>
-              <Col span={24}>
-                <div style={{ height: 10 }} />
-              </Col>
-              {
-                (formPrices || []).map((element, index) => {
-                  return (
-                    <Col span={24} key={index}>                      
-                      <Row
-                        gutter={8}
-                        style={{ width: '100%' }}
+              }
+            </Col>
+            <Col span={24}>
+              <div style={{ height: 10 }} />
+            </Col>
+            {
+              (formPrices || []).map((element, index) => {
+                return (
+                  <Col span={24} key={index}>
+                    <Row
+                      gutter={8}
+                      style={{ width: '100%' }}
+                    >
+                      <Col
+                        span={24}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: 5,
+                          borderRadius: 5,
+                          backgroundColor: '#f5f5f5'
+                        }}
                       >
-                        <Col
-                          span={24}
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: 5,
-                            borderRadius: 5,
-                            backgroundColor: '#f5f5f5'
-                          }}
-                        >
-                          <p style={{ ...styleSheet.labelStyle }}>{`Precio ${(index + 1)}`}</p>
-                          <Space>
-                            <Button
-                              icon={(formPriceIndexSelected !== index) ? <EditOutlined /> : <SaveOutlined />}
-                              onClick={async (e) => {
-                                if (!(formPriceIndexSelected !== index)) {
-                                  if (element[0] === null) {
-                                    try {
-                                      await productsServices.prices.add([[formId, element[1], element[2] || 0, element[3] || 0]]);
-                                      setFormPriceIndexSelected(null);
-                                    } catch(error) {
-                                    }
-                                  } else {
-                                    await productsServices.prices.update(+element[1], +element[2] || 0, +element[3] || 0, +element[4]);
+                        <p style={{ ...styleSheet.labelStyle }}>{`Precio ${(index + 1)}`}</p>
+                        <Space>
+                          <Button
+                            icon={(formPriceIndexSelected !== index) ? <EditOutlined /> : <SaveOutlined />}
+                            onClick={async (e) => {
+                              if (!(formPriceIndexSelected !== index)) {
+                                if (element[0] === null) {
+                                  try {
+                                    await productsServices.prices.add([[formId, element[1], element[2] || 0, element[3] || 0]]);
                                     setFormPriceIndexSelected(null);
+                                  } catch (error) {
                                   }
                                 } else {
-                                  setFormPriceIndexSelected(index);
+                                  await productsServices.prices.update(+element[1], +element[2] || 0, +element[3] || 0, +element[4]);
+                                  setFormPriceIndexSelected(null);
                                 }
-                              }}
-                              size='small'
-                              disabled={!updateMode}
-                            />
-                            <Button
-                              icon={<DeleteOutlined />}
-                              onClick={(e) => {
-                                confirm({
-                                  title: '¿Desea remover este precio?',
-                                  icon: <DeleteOutlined />,
-                                  content: 'Acción irreversible',
-                                  okType: 'danger',
-                                  async onOk() { 
-                                    setFetching(true);
-                                    
-                                    const removedPriceRes = await productsServices.prices.remove(element[4] || 0);
-                                    const { productId } = dataToUpdate;
-                                    const pricesRes = await productsServices.prices.findByProductId(productId);
-
-                                    if (isEmpty(pricesRes.data)) {
-                                      setFormPrices([[null, null, null, false, null]]); // [productId, price, profitRate, profitRateFixed, productPriceId]
-                                    } else {
-                                      let newArr = (pricesRes.data || []).map((element) => ([
-                                        element.productId,
-                                        +element.price,
-                                        +element.profitRate,
-                                        +element.profitRateFixed,
-                                        element.id
-                                      ]));
-                                      setFormPrices(newArr);
-                                    }
-
-                                    setFetching(false);
-                                  },
-                                  onCancel() {},
-                                });
-                              }}
-                              size='small'
-                              disabled={!updateMode && (index === 0)}
-                              type={'primary'}
-                              danger
-                            />
-                          </Space>
-                        </Col>
-                        <Col span={8}>
-                          <p style={styleSheet.labelStyle}>{`Tipo`}</p>
-                          <Space wrap>
-                            <p style={{...styleSheet.labelStyle, color: element[3] ? '#000000' : '#1677ff' }}>{`%`}</p>
-                            <Switch
-                              checked={element[3]}
-                              disabled={updateMode && (formPriceIndexSelected !== index)}
-                              onChange={(checked) => {
-                                let newArr = [...formPrices];
-                                // [productId, price, profitRate, profitRateFixed, productPriceId]
-                                newArr[index] = [
-                                  element[0] || null,
-                                  // SÍ ES PORCENTUAL SE CALCULA EL COSTO BRUTO X (1 + (PORCENTAJE DE GANANCIA))
-                                  ((checked ? ((+formCost  + getProductTotalTaxes()) + +element[2]) : ((+formCost  + getProductTotalTaxes()) * (1 + (+element[2] / 100))))) || 0,
-                                  element[2] || 0,
-                                  checked,
-                                  element[4] || null
-                                ];
-                                
-                                setFormPrices(newArr);
-                              }}
-                              size='small'
-                            />
-                            
-                            <p style={{...styleSheet.labelStyle, color: element[3] ? '#1677ff' : '#000000' }}>{`$`}</p>
-                          </Space>
-                        </Col>
-                        <Col span={8}>
-                          <p style={styleSheet.labelStyle}>{`Margen Ganancia`}</p>
-                          <InputNumber
+                              } else {
+                                setFormPriceIndexSelected(index);
+                              }
+                            }}
                             size='small'
-                            type={'number'}
-                            prefix={element[3] ? <DollarOutlined /> : <PercentageOutlined />}
-                            precision={2}
-                            style={{ width: '125px' }}
-                            value={element[2]}
-                            disabled={updateMode && (formPriceIndexSelected !== index)}
-                            onChange={(value) => {
-                              let newArr = [...formPrices];
+                            disabled={!updateMode}
+                          />
+                          <Button
+                            icon={<DeleteOutlined />}
+                            onClick={(e) => {
+                              confirm({
+                                title: '¿Desea remover este precio?',
+                                icon: <DeleteOutlined />,
+                                content: 'Acción irreversible',
+                                okType: 'danger',
+                                async onOk() {
+                                  setFetching(true);
 
+                                  const removedPriceRes = await productsServices.prices.remove(element[4] || 0);
+                                  const { productId } = dataToUpdate;
+                                  const pricesRes = await productsServices.prices.findByProductId(productId);
+
+                                  if (isEmpty(pricesRes.data)) {
+                                    setFormPrices([[null, null, null, false, null]]); // [productId, price, profitRate, profitRateFixed, productPriceId]
+                                  } else {
+                                    let newArr = (pricesRes.data || []).map((element) => ([
+                                      element.productId,
+                                      +element.price,
+                                      +element.profitRate,
+                                      +element.profitRateFixed,
+                                      element.id
+                                    ]));
+                                    setFormPrices(newArr);
+                                  }
+
+                                  setFetching(false);
+                                },
+                                onCancel() { },
+                              });
+                            }}
+                            size='small'
+                            disabled={!updateMode && (index === 0)}
+                            type={'primary'}
+                            danger
+                          />
+                        </Space>
+                      </Col>
+                      <Col span={8}>
+                        <p style={styleSheet.labelStyle}>{`Tipo`}</p>
+                        <Space wrap>
+                          <p style={{ ...styleSheet.labelStyle, color: element[3] ? '#000000' : '#1677ff' }}>{`%`}</p>
+                          <Switch
+                            checked={element[3]}
+                            disabled={updateMode && (formPriceIndexSelected !== index)}
+                            onChange={(checked) => {
+                              let newArr = [...formPrices];
                               // [productId, price, profitRate, profitRateFixed, productPriceId]
                               newArr[index] = [
                                 element[0] || null,
                                 // SÍ ES PORCENTUAL SE CALCULA EL COSTO BRUTO X (1 + (PORCENTAJE DE GANANCIA))
-                                ((!!element[3] ? ((+formCost  + getProductTotalTaxes()) + +value) : ((+formCost  + getProductTotalTaxes()) * (1 + (+value / 100))))) || 0,
-                                +value,
-                                element[3] || false,
+                                ((checked ? ((+formCost + getProductTotalTaxes()) + +element[2]) : ((+formCost + getProductTotalTaxes()) * (1 + (+element[2] / 100))))) || 0,
+                                element[2] || 0,
+                                checked,
                                 element[4] || null
                               ];
-                              
+
                               setFormPrices(newArr);
                             }}
-                          />
-                        </Col>
-                        <Col span={8}>
-                          <p style={styleSheet.labelStyle}>{`Precio Final`}</p>
-                          <InputNumber
-                            type={'number'}
                             size='small'
-                            precision={2} 
-                            value={element[1]}
-                            disabled={updateMode && (formPriceIndexSelected !== index)}
-                            onChange={(value) => {
-                              let newArr = [...formPrices];
-
-                              // [productId, price, profitRate, profitRateFixed, productPriceId]
-                              newArr[index] = [
-                                updateMode ? element[0] : null,
-                                +value,
-                                updateMode ? element[2] : 0,
-                                updateMode ? element[3] : false,
-                                updateMode ? element[4] : null
-                              ];
-                              
-                              setFormPrices(newArr);
-                            }}
                           />
-                        </Col>
-                        <Col span={12}>
 
-                        </Col>
-                        <Col span={12}>
-                          
-                        </Col>
-                      </Row>
-                      <Space align='start' size={'large'}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          {
-                            (formProductTaxes || [])
+                          <p style={{ ...styleSheet.labelStyle, color: element[3] ? '#1677ff' : '#000000' }}>{`$`}</p>
+                        </Space>
+                      </Col>
+                      <Col span={8}>
+                        <p style={styleSheet.labelStyle}>{`Margen Ganancia`}</p>
+                        <InputNumber
+                          size='small'
+                          type={'number'}
+                          prefix={element[3] ? <DollarOutlined /> : <PercentageOutlined />}
+                          precision={2}
+                          style={{ width: '125px' }}
+                          value={element[2]}
+                          disabled={updateMode && (formPriceIndexSelected !== index)}
+                          onChange={(value) => {
+                            let newArr = [...formPrices];
+
+                            // [productId, price, profitRate, profitRateFixed, productPriceId]
+                            newArr[index] = [
+                              element[0] || null,
+                              // SÍ ES PORCENTUAL SE CALCULA EL COSTO BRUTO X (1 + (PORCENTAJE DE GANANCIA))
+                              ((!!element[3] ? ((+formCost + getProductTotalTaxes()) + +value) : ((+formCost + getProductTotalTaxes()) * (1 + (+value / 100))))) || 0,
+                              +value,
+                              element[3] || false,
+                              element[4] || null
+                            ];
+
+                            setFormPrices(newArr);
+                          }}
+                        />
+                      </Col>
+                      <Col span={8}>
+                        <p style={styleSheet.labelStyle}>{`Precio Final`}</p>
+                        <InputNumber
+                          type={'number'}
+                          size='small'
+                          precision={2}
+                          value={element[1]}
+                          disabled={updateMode && (formPriceIndexSelected !== index)}
+                          onChange={(value) => {
+                            let newArr = [...formPrices];
+
+                            // [productId, price, profitRate, profitRateFixed, productPriceId]
+                            newArr[index] = [
+                              updateMode ? element[0] : null,
+                              +value,
+                              updateMode ? element[2] : 0,
+                              updateMode ? element[3] : false,
+                              updateMode ? element[4] : null
+                            ];
+
+                            setFormPrices(newArr);
+                          }}
+                        />
+                      </Col>
+                      <Col span={12}>
+
+                      </Col>
+                      <Col span={12}>
+
+                      </Col>
+                    </Row>
+                    <Space align='start' size={'large'}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        {
+                          (formProductTaxes || [])
                             .map((x, index) => {
                               return (
-                                  <Tag
-                                    key={index}
-                                    icon={<ExclamationCircleOutlined />}
-                                    color={'blue'}
-                                  >
-                                    {`${x.taxName}: $${getFinalPriceTotalTaxesByTax(x.taxId, element[1]).toFixed(4)}`}
-                                  </Tag>
+                                <Tag
+                                  key={index}
+                                  icon={<ExclamationCircleOutlined />}
+                                  color={'blue'}
+                                >
+                                  {`${x.taxName}: $${getFinalPriceTotalTaxesByTax(x.taxId, element[1]).toFixed(4)}`}
+                                </Tag>
                               )
                             })
-                          }
-                          <Tag
-                            icon={<DollarOutlined />}
-                            color={'yellow'}
-                          >
-                            {`Pago a cuenta: $${((element[1] - +getFinalPriceTotalTax(element[1])) * 0.0175).toFixed(4)}`}
-                          </Tag>
-                          <Tag
-                            icon={<DollarOutlined />}
-                            color={'green'}
-                          >
-                            {`Margen Utilidad: $${(element[1] - +getFinalPriceTotalTax(element[1]) - +formCost - +((element[1] - +getFinalPriceTotalTax(element[1])) * 0.0175)).toFixed(4)}`}
-                          </Tag>
-                        </div>
-                      </Space>
-                      <div style={{ height: 10 }} />
-                    </Col>
-                  )
-                })
-              }
-              <Col span={24}>
-                <Button
-                  type={'default'} 
-                  icon={<PlusOutlined />}
-                  onClick={(e) => {
-                    let newArr = [...formPrices];
-                    // [productId, price, profitRate, profitRateFixed, productPriceId]
-                    newArr.push([null, null, null, false, null]);
-                    setFormPrices(newArr);
-                    if (updateMode) setFormPriceIndexSelected(newArr.length - 1);
-                  }} 
-                  style={{ width: '50%', marginTop: 20 }}
-                  loading={fetching}
-                  disabled={fetching || (formPrices[formPrices.length - 1][1] === null) || !(formPriceIndexSelected === null)}
-                >
-                  Añadir otro precio
-                </Button>
-              </Col>
-            </Row>
-          </Tabs.TabPane>
-          {/* <Tabs.TabPane tab="Contenidos" key={'4'} disabled={!updateMode}>
+                        }
+                        <Tag
+                          icon={<DollarOutlined />}
+                          color={'yellow'}
+                        >
+                          {`Pago a cuenta: $${((element[1] - +getFinalPriceTotalTax(element[1])) * 0.0175).toFixed(4)}`}
+                        </Tag>
+                        <Tag
+                          icon={<DollarOutlined />}
+                          color={'green'}
+                        >
+                          {`Margen Utilidad: $${(element[1] - +getFinalPriceTotalTax(element[1]) - +formCost - +((element[1] - +getFinalPriceTotalTax(element[1])) * 0.0175)).toFixed(4)}`}
+                        </Tag>
+                      </div>
+                    </Space>
+                    <div style={{ height: 10 }} />
+                  </Col>
+                )
+              })
+            }
+            <Col span={24}>
+              <Button
+                type={'default'}
+                icon={<PlusOutlined />}
+                onClick={(e) => {
+                  let newArr = [...formPrices];
+                  // [productId, price, profitRate, profitRateFixed, productPriceId]
+                  newArr.push([null, null, null, false, null]);
+                  setFormPrices(newArr);
+                  if (updateMode) setFormPriceIndexSelected(newArr.length - 1);
+                }}
+                style={{ width: '50%', marginTop: 20 }}
+                loading={fetching}
+                disabled={fetching || (formPrices[formPrices.length - 1][1] === null) || !(formPriceIndexSelected === null)}
+              >
+                Añadir otro precio
+              </Button>
+            </Col>
+          </Row>
+        </Tabs.TabPane>
+        {/* <Tabs.TabPane tab="Contenidos" key={'4'} disabled={!updateMode}>
             <Row gutter={8}>
               <Col span={24}>
                 <Table 
@@ -1058,52 +1074,52 @@ function ProductForm(props) {
               </Col>
             </Row>
           </Tabs.TabPane> */}
-        </Tabs>
+      </Tabs>
       {/* </TabsContainer> */}
       <Divider />
       <Row gutter={8}>
         <Col span={12}>
-          <Button 
+          <Button
             type={'primary'}
             danger
-            icon={<CloseOutlined />} 
+            icon={<CloseOutlined />}
             onClick={(e) => {
               restoreState();
               onClose(false)
             }}
-            style={{ width: '100%' }} 
+            style={{ width: '100%' }}
           >
             Cancelar
           </Button>
         </Col>
         <Col span={12}>
           <Button
-            type={'primary'} 
+            type={'primary'}
             icon={
               updateMode ?
-                <SaveOutlined /> : 
-                activeTab === '1' || activeTab === '2' ? 
+                <SaveOutlined /> :
+                activeTab === '1' || activeTab === '2' ?
                   <ArrowRightOutlined /> : <SaveOutlined />
             }
             onClick={
               updateMode ?
-                (e) => updateAction() : 
-                activeTab === '1' ? 
-                  (e) => firstStageAction() : 
-                  activeTab === '2' ? 
-                    (e) => secondStageAction() : 
-                    activeTab === '3' ? 
-                      (e) => thirdStageAction() : 
+                (e) => updateAction() :
+                activeTab === '1' ?
+                  (e) => firstStageAction() :
+                  activeTab === '2' ?
+                    (e) => secondStageAction() :
+                    activeTab === '3' ?
+                      (e) => thirdStageAction() :
                       null
             }
-            style={{ width: '100%' }} 
+            style={{ width: '100%' }}
             loading={fetching}
             disabled={fetching}
           >
             {
               updateMode ?
-                'Guardar' : 
-                activeTab === '1' || activeTab === '2' ? 
+                'Guardar' :
+                activeTab === '1' || activeTab === '2' ?
                   'Siguiente' : 'Guardar'
             }
           </Button>

@@ -38,7 +38,7 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
 
     return (
         <div style={{
-            width: '50%',
+            width: '100%',
             height: '110px',
             display: "flex",
             backgroundColor: '#D9D9D9',
