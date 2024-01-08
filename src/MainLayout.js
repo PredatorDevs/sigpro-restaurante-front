@@ -55,7 +55,7 @@ const MainLayout = () => {
 
   const [collapsed, setCollapsed] = useState(false);
   const [selectedMenuKey, setSelectedMenuKey] = useState(getCurrentSelectedMenuKeyByRoute(pathname));
-  
+
   const navigate = useNavigate();
 
   const roleId = getUserRole();
@@ -73,7 +73,7 @@ const MainLayout = () => {
 
   function getCurrentBreadcumbByRoute(pathName) {
     console.log("Changed ", pathName);
-    switch(pathName) {
+    switch (pathName) {
       case "/main": return (<><Breadcrumb.Item>Principal</Breadcrumb.Item></>);
       case "/main/contracts": return (<>
         <Breadcrumb.Item>Principal</Breadcrumb.Item>
@@ -269,13 +269,21 @@ const MainLayout = () => {
         <Breadcrumb.Item>Traslados</Breadcrumb.Item>
         <Breadcrumb.Item>Rechazados</Breadcrumb.Item>
       </>);
+      case "/main/command/new": return (<>
+        <Breadcrumb.Item>Comandas</Breadcrumb.Item>
+        <Breadcrumb.Item>Nueva Comanda</Breadcrumb.Item>
+      </>);
+      case "/main/command/control": return (<>
+        <Breadcrumb.Item>Comandas</Breadcrumb.Item>
+        <Breadcrumb.Item>Control de Comandas</Breadcrumb.Item>
+      </>);
       default: return (<></>);
     }
   }
 
   function getCurrentOpenKeysByRoute(pathName) {
     console.log("Changed ", pathName);
-    switch(pathName) {
+    switch (pathName) {
       case "/main": return [];
       case "/main/sales/new": return ["sub1"];
       case "/main/sales/summary": return ["sub1"];
@@ -319,7 +327,7 @@ const MainLayout = () => {
   }
 
   function getCurrentSelectedMenuKeyByRoute(pathName) {
-    switch(pathName) {
+    switch (pathName) {
       case "/main": return "1";
       case "/main/sales/new": return "2";
       case "/main/sales/summary": return "3";
@@ -358,6 +366,8 @@ const MainLayout = () => {
       case "/main/reports/sales": return "34";
       case "/main/reports/purchases": return "35";
       case "/main/administration/tables": return "36";
+      case "/main/command/new": return "37";
+      case "/main/command/control": return "38";
       default: return "1";
     }
   }
@@ -372,6 +382,10 @@ const MainLayout = () => {
     //   getItem('Vigilantes', '27', <UserOutlined />),
     //   getItem('Informes', '28', <BarChartOutlined />)
     // ]) : null,
+    getUserIsAdmin() && includes([1, 2], roleId) ? getItem('Comandas', 'sub12', <StockOutlined />, [
+      getItem('Nueva', '37', <PlusOutlined />),
+      getItem('Control', '38', <BookOutlined />)
+    ]) : null,
     includes([1, 2, 4, 5], roleId) ? getItem('Ventas', 'sub1', <StockOutlined />, [
       getItem('Nueva', '2', <PlusOutlined />),
       getItem('Resumen', '3', <BookOutlined />)
@@ -381,25 +395,25 @@ const MainLayout = () => {
       'sub2',
       <ShoppingCartOutlined />,
       // <GMenuPurchasesIcon width='20px' addBackground backgroundMargin={5} backgroundPadding={0} />,
-    [
-      // getItem('Mat. Prima', 'sub3', null, [
-      //   getItem('Nueva', '4', <PlusOutlined />),
-      //   getItem('Resumen', '5', <BookOutlined />)
-      // ]),
-      getItem('Producto', 'sub4', null, [
-        getItem('Nueva', '6', <PlusOutlined />),
-        getItem('Resumen', '7', <BookOutlined />)
-      ])
-    ]) : null,
+      [
+        // getItem('Mat. Prima', 'sub3', null, [
+        //   getItem('Nueva', '4', <PlusOutlined />),
+        //   getItem('Resumen', '5', <BookOutlined />)
+        // ]),
+        getItem('Producto', 'sub4', null, [
+          getItem('Nueva', '6', <PlusOutlined />),
+          getItem('Resumen', '7', <BookOutlined />)
+        ])
+      ]) : null,
     includes([1, 2], roleId) ? getItem(
       'Gastos',
       'sub10',
       <DownloadOutlined />,
       // <GMenuExpensesIcon width='20px' addBackground backgroundMargin={5} backgroundPadding={0} />,
-    [
-      getItem('Nuevo', '29', <PlusOutlined />),
-      getItem('Resumen', '30', <BookOutlined />)
-    ]) : null,
+      [
+        getItem('Nuevo', '29', <PlusOutlined />),
+        getItem('Resumen', '30', <BookOutlined />)
+      ]) : null,
     // getItem('Producción', 'sub5', <ShoppingCartOutlined />, [
     //   getItem('Nueva hoja', '8', <PlusOutlined />),
     //   getItem('Resumen', '9', <BookOutlined />)
@@ -433,10 +447,6 @@ const MainLayout = () => {
       // getItem('Datos Generales', '24', <ReadOutlined />),
       getItem('Mesas', '36', <TableOutlined />),
     ]) : null,
-    getUserIsAdmin() && includes([1, 2], roleId) ? getItem('Comandas', 'sub12', <StockOutlined />, [
-      getItem('Nueva', '16', <PlusOutlined />),
-      getItem('Control', '17', <BookOutlined />)
-    ]) : null,
     getItem('', '100'),
   ];
 
@@ -456,11 +466,11 @@ const MainLayout = () => {
         axios.defaults.headers.common.idtoauth = '';
         navigate('/');
       },
-      onCancel() {},
+      onCancel() { },
     });
   }
 
-  return (   
+  return (
     <Layout
       style={{
         minHeight: '100vh',
@@ -493,56 +503,58 @@ const MainLayout = () => {
           </p>
         </div>
         {/* <div style={{ height: '350px', overflow: 'auto' }}> */}
-          <Menu
-            theme="dark"
-            defaultSelectedKeys={['1']}
-            defaultOpenKeys={getCurrentOpenKeysByRoute(pathname)}
-            mode="inline"
-            items={items}
-            selectedKeys={[getCurrentSelectedMenuKeyByRoute(pathname)]}
-            onClick={(a) => {
-              switch(a.key) {
-                case '1': navigate('/main'); break;
-                case '2': navigate('/main/sales/new'); break;
-                case '3': navigate('/main/sales/summary'); break;
-                case '4': navigate('/main/purchases/rawmaterials/new'); break;
-                case '5': navigate('/main/purchases/rawmaterials/summary'); break;
-                case '6': navigate('/main/purchases/products/new'); break;
-                case '7': navigate('/main/purchases/products/summary'); break;
-                case '8': navigate('/main/productions/new'); break;
-                case '9': navigate('/main/productions/summary'); break;
-                case '10': navigate('/main/pending-accounts/to-collect'); break;
-                case '11': navigate('/main/pending-accounts/to-pay'); break;
-                case '12': navigate('/main/inventory/rawmaterials'); break;
-                case '13': navigate('/main/inventory/products'); break;
-                case '14': navigate('/main/my-cashier'); break;
-                case '15': navigate('/main/reports'); break;
-                case '16': navigate('/main/administration/cashiers'); break;
-                case '17': navigate('/main/administration/customers'); break;
-                case '18': navigate('/main/administration/users'); break;
-                case '19': navigate('/main/administration/suppliers'); break;
-                case '20': navigate('/main/administration/categories'); break;
-                case '21': navigate('/main/administration/brands'); break;
-                case '22': navigate('/main/administration/ubications'); break;
-                case '23': navigate('/main/administration/delivery-routes'); break;
-                case '24': navigate('/main/administration/general-data'); break;
-                case '25': navigate('/main/parking-checkouts/incomes'); break;
-                case '26': navigate('/main/parking-checkouts/expenses'); break;
-                case '27': navigate('/main/parking-checkouts/guards'); break;
-                case '28': navigate('/main/parking-checkouts/reports'); break;
-                case '29': navigate('/main/expenses/new'); break;
-                case '30': navigate('/main/expenses/summary'); break;
-                case '31': navigate('/main/reports/shiftcuts'); break;
-                case '32': navigate('/main/transfers'); break;
-                case '33': navigate('/main/reports/dashboard'); break;
-                case '34': navigate('/main/reports/sales'); break;
-                case '35': navigate('/main/reports/purchases'); break;
-                case '36': navigate('/main/administration/tables'); break;
-                default: navigate('/main'); break;
-              }
-              setSelectedMenuKey(a.key);
-            }}
-          />
+        <Menu
+          theme="dark"
+          defaultSelectedKeys={['1']}
+          defaultOpenKeys={getCurrentOpenKeysByRoute(pathname)}
+          mode="inline"
+          items={items}
+          selectedKeys={[getCurrentSelectedMenuKeyByRoute(pathname)]}
+          onClick={(a) => {
+            switch (a.key) {
+              case '1': navigate('/main'); break;
+              case '2': navigate('/main/sales/new'); break;
+              case '3': navigate('/main/sales/summary'); break;
+              case '4': navigate('/main/purchases/rawmaterials/new'); break;
+              case '5': navigate('/main/purchases/rawmaterials/summary'); break;
+              case '6': navigate('/main/purchases/products/new'); break;
+              case '7': navigate('/main/purchases/products/summary'); break;
+              case '8': navigate('/main/productions/new'); break;
+              case '9': navigate('/main/productions/summary'); break;
+              case '10': navigate('/main/pending-accounts/to-collect'); break;
+              case '11': navigate('/main/pending-accounts/to-pay'); break;
+              case '12': navigate('/main/inventory/rawmaterials'); break;
+              case '13': navigate('/main/inventory/products'); break;
+              case '14': navigate('/main/my-cashier'); break;
+              case '15': navigate('/main/reports'); break;
+              case '16': navigate('/main/administration/cashiers'); break;
+              case '17': navigate('/main/administration/customers'); break;
+              case '18': navigate('/main/administration/users'); break;
+              case '19': navigate('/main/administration/suppliers'); break;
+              case '20': navigate('/main/administration/categories'); break;
+              case '21': navigate('/main/administration/brands'); break;
+              case '22': navigate('/main/administration/ubications'); break;
+              case '23': navigate('/main/administration/delivery-routes'); break;
+              case '24': navigate('/main/administration/general-data'); break;
+              case '25': navigate('/main/parking-checkouts/incomes'); break;
+              case '26': navigate('/main/parking-checkouts/expenses'); break;
+              case '27': navigate('/main/parking-checkouts/guards'); break;
+              case '28': navigate('/main/parking-checkouts/reports'); break;
+              case '29': navigate('/main/expenses/new'); break;
+              case '30': navigate('/main/expenses/summary'); break;
+              case '31': navigate('/main/reports/shiftcuts'); break;
+              case '32': navigate('/main/transfers'); break;
+              case '33': navigate('/main/reports/dashboard'); break;
+              case '34': navigate('/main/reports/sales'); break;
+              case '35': navigate('/main/reports/purchases'); break;
+              case '36': navigate('/main/administration/tables'); break;
+              case '37': navigate('/main/command/new'); break;
+              case '38': navigate('/main/command/control'); break;
+              default: navigate('/main'); break;
+            }
+            setSelectedMenuKey(a.key);
+          }}
+        />
         {/* </div> */}
       </Sider>
       <Layout className="site-layout">

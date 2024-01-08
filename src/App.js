@@ -45,6 +45,8 @@ import NewTransfer from './pages/transfers/NewTransfer';
 import RejectedTransfers from './pages/transfers/RejectedTransfers';
 import SaleBooks from './pages/reports/SaleBooks';
 import TablesRecord from './pages/tables/TablesRecord';
+import NewCommand from './pages/comandas/NewCommand';
+import ControlCommand from './pages/comandas/ControlCommand';
 
 const App = () => {
   const isLoggedIn = getUserIsLoggedIn();
@@ -57,29 +59,29 @@ const App = () => {
       navigate('/')
     } else {
       checkToken()
-      .then((response) => {
-        customNot('success', 'Sesión válida', 'Sus credenciales aún no expiran');
-      })
-      .catch((res) => {
-        customNot('warning', 'Sesión expirada', 'Sus credenciales han expirado');
-        localStorage.removeItem('userData');
-        localStorage.removeItem('userToken');
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('permissionsData');
-        axios.defaults.headers.common.authorization = '';
-        axios.defaults.headers.common.idtoauth = '';
-        navigate('/tokenexpired');
-      });
+        .then((response) => {
+          customNot('success', 'Sesión válida', 'Sus credenciales aún no expiran');
+        })
+        .catch((res) => {
+          customNot('warning', 'Sesión expirada', 'Sus credenciales han expirado');
+          localStorage.removeItem('userData');
+          localStorage.removeItem('userToken');
+          localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem('permissionsData');
+          axios.defaults.headers.common.authorization = '';
+          axios.defaults.headers.common.idtoauth = '';
+          navigate('/tokenexpired');
+        });
     }
   }, []);
 
   function renderProtectedRoute(
-    routePath = '', 
-    allowedRoles = [], 
+    routePath = '',
+    allowedRoles = [],
     childComponent = (<div></div>)
   ) {
     return (
-      <Route 
+      <Route
         path={routePath}
         element={
           <ProtectedRoute user={isLoggedIn} roles={allowedRoles}>
@@ -101,7 +103,7 @@ const App = () => {
             <MainLayout />
           </ProtectedRoute>
         }
-      >        
+      >
         {renderProtectedRoute('', [1, 2, 4, 5], <>Home Page</>)}
         {renderProtectedRoute('contracts', [1, 2], <>Contratos</>)}
         {renderProtectedRoute('sales', [1, 2, 4, 5], <>Ventas</>)}
@@ -134,6 +136,8 @@ const App = () => {
         {renderProtectedRoute('transfers', [1, 2, 4, 5], <Transfers />)}
         {renderProtectedRoute('transfers/new', [1, 2, 5], <NewTransfer />)}
         {renderProtectedRoute('transfers/rejecteds', [1, 2, 5], <RejectedTransfers />)}
+        {renderProtectedRoute('command/new', [1, 2, 5], <NewCommand />)}
+        {renderProtectedRoute('command/control', [1, 2, 5], <ControlCommand />)}
         <Route path='*' element={<Page404 />} />
       </Route>
       <Route path="/noauth" element={<Page403 />}></Route>
