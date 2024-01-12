@@ -31,6 +31,7 @@ import AuthorizeUserPINCode from '../../components/confirmations/AuthorizeUserPI
 import NewSaleCashExchange from '../../components/confirmations/NewSaleCashExchange';
 import { RequiredQuestionMark } from '../../components/RequiredQuestionMark';
 import { validateSelectedData, validateStringData } from '../../utils/ValidateData';
+import productsServices from '../../services/ProductsServices';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -99,7 +100,7 @@ function NewSale() {
 
   const [openCusomterSelector, setOpenCusomterSelector] = useState(false);
   const [openProductSearchForSale, setOpenProductSearchForSale] = useState(false);
-  
+
   const [printData, setPrintData] = useState([]);
   const [printDataDetails, setPrintDataDetails] = useState([]);
 
@@ -115,20 +116,20 @@ function NewSale() {
   const [customerUpdateMode, setCustomerUpdateMode] = useState(false);
   const [customerToUpdate, setCustomerToUpdate] = useState({});
   const [validDocNumberAndSerie, setValidDocNumberAndSerie] = useState(true);
-  
+
   const [documentTypeSelected, setDocumentTypeSelected] = useState(0);
   const [paymentTypeSelected, setPaymentTypeSelected] = useState(0);
 
   const [paymentMethodSelected, setPaymentMethodSelected] = useState(0);
-  
+
   const [docDatetime, setDocDatetime] = useState(defaultDate());
   const [docNumber, setDocNumber] = useState('');
   const [docType, setDocType] = useState(1);
   const [docDetails, setDocDetails] = useState([]);
-  
+
   const [docIVAretention, setDocIVAretention] = useState(null);
   const [docIVAperception, setDocIVAperception] = useState(null);
-  
+
   const [docExpirationDays, setDocExpirationDays] = useState(8);
 
   // PAYMENT METHOD EXTRA INFO STATES
@@ -197,7 +198,7 @@ function NewSale() {
       );
 
       const { validated } = valRes.data[0];
-      
+
       setValidDocNumberAndSerie(validated === 0 ? false : true);
 
       if (validated === 0)
@@ -205,7 +206,7 @@ function NewSale() {
       else
         customNot('success', 'Correlativo disponible', '');
       setFetching(false);
-    } catch(error) {
+    } catch (error) {
       console.log(error);
       setFetching(false);
     }
@@ -220,7 +221,7 @@ function NewSale() {
     const customersResponse = await customersServices.findByLocation(getUserLocation());
     const payMetRes = await generalsServices.findPaymentMethods();
     const banksRes = await generalsServices.findBanks();
-    
+
     setDocumentTypesData(documentTypesResponse.data);
     setPaymentTypesData(paymentTypesResponse.data);
     setTaxesData(taxesResponse.data);
@@ -320,7 +321,7 @@ function NewSale() {
       customNot('warning', 'Sus ventas de contado deben tener definido un método de pago', 'Seleccione un método de pago');
       return;
     }
-    
+
     const validPaymentType = paymentTypeSelected !== 0 && !!paymentTypeSelected;
     const validDocDetals = !isEmpty(docDetails);
     const validDocDetailsIntegrity = docDetails.every(isValidDetail);
@@ -334,9 +335,9 @@ function NewSale() {
     if (!validDocDetailsIntegrity) customNot('warning', 'Los datos en el detalle no son admitidos', 'Dato no válido');
     return (
       validDocNumber
-      && validDocDatetime && validCustomerSelected 
-      && validDocumentType && validPaymentType 
-      && validDocDetals && validDocDetailsIntegrity 
+      && validDocDatetime && validCustomerSelected
+      && validDocumentType && validPaymentType
+      && validDocDetals && validDocDetailsIntegrity
       && validDocNumberAndSerie
     );
   }
@@ -364,10 +365,10 @@ function NewSale() {
         paymentAccountNumber || '',
         userPINCode
       );
-      
+
       const { insertId } = saleResponse.data[0];
-    
-      const bulkData = docDetails.map((element) => ([ insertId, element.detailId, element.detailUnitPrice, element.detailQuantity ]));
+
+      const bulkData = docDetails.map((element) => ([insertId, element.detailId, element.detailUnitPrice, element.detailQuantity]));
 
       const saleDetailResponse = await salesServices.details.add(bulkData);
       const saleResultResponse = await salesServices.findById(insertId);
@@ -380,7 +381,7 @@ function NewSale() {
         setCashAmountToExchange(Number(getDetailTotal().toFixed(2)) || 0.00);
         setOpenCashExchangeForm(true);
       }
-      
+
       let printingResponse;
 
       if (documentTypeSelected === 2) {
@@ -428,7 +429,7 @@ function NewSale() {
       restoreState();
 
       window.scrollTo(0, 0);
-    } catch(error) {
+    } catch (error) {
       console.log(error);
     }
     setFetching(false);
@@ -452,7 +453,7 @@ function NewSale() {
       );
 
       const { validated } = response.data[0];
-      
+
       setValidDocNumberAndSerie(validated === 0 ? false : true);
 
       if (validated === 0)
@@ -464,7 +465,7 @@ function NewSale() {
   }
 
   function pushDetail(data) {
-    const newDetails = [ ...docDetails, data ];
+    const newDetails = [...docDetails, data];
 
     setDocDetails(newDetails);
   }
@@ -497,14 +498,14 @@ function NewSale() {
         forEach(docdetail.detailTaxesData, (detailtax) => {
           // BUSCA EL TAX ENTRE LA INFORMACIÓN DE LOS TAXES
           const targetTax = find(taxesData, (x) => x.id === detailtax.taxId);
-          
+
           if (targetTax.isPercentage === 1) {
             totalTaxes += (((docdetail.detailQuantity * docdetail.detailUnitPrice) / (1 + +targetTax.taxRate)) * +targetTax.taxRate);
           } else {
             totalTaxes += (docdetail.detailQuantity * ++targetTax.taxRate);
           }
         })
-        
+
       }
     });
     return totalTaxes || 0;
@@ -543,16 +544,16 @@ function NewSale() {
 
     total = total + docIVAperception;
     total = total - docIVAretention;
-    
+
     return total || 0;
   }
 
   const columns = [
-    columnDef({title: 'Cantidad', dataKey: 'detailQuantity'}),
-    columnDef({title: 'Detalle', dataKey: 'detailName'}),
-    columnMoneyDef({title: 'Precio Unitario', dataKey: (documentTypeSelected === 1 || documentTypeSelected === 2) ? 'detailUnitPrice' : 'detailUnitPriceWithoutTax'}),
-    columnMoneyDef({title: 'Exento', dataKey: 'detailNoTaxableTotal', showDefaultString: true}),
-    columnMoneyDef({title: 'Gravado', dataKey: (documentTypeSelected === 1 || documentTypeSelected === 2) ? 'detailTaxableTotal' : 'detailTaxableWithoutTaxesTotal', showDefaultString: true}),
+    columnDef({ title: 'Cantidad', dataKey: 'detailQuantity' }),
+    columnDef({ title: 'Detalle', dataKey: 'detailName' }),
+    columnMoneyDef({ title: 'Precio Unitario', dataKey: (documentTypeSelected === 1 || documentTypeSelected === 2) ? 'detailUnitPrice' : 'detailUnitPriceWithoutTax' }),
+    columnMoneyDef({ title: 'Exento', dataKey: 'detailNoTaxableTotal', showDefaultString: true }),
+    columnMoneyDef({ title: 'Gravado', dataKey: (documentTypeSelected === 1 || documentTypeSelected === 2) ? 'detailTaxableTotal' : 'detailTaxableWithoutTaxesTotal', showDefaultString: true }),
     // columnMoneyDef({title: 'GravadoNoTaxes', dataKey: 'detailTaxableWithoutTaxesTotal', showDefaultString: true}),
     // columnMoneyDef({title: 'Taxes', dataKey: 'detailTotalTaxes', showDefaultString: true}),
     columnActionsDef(
@@ -578,7 +579,7 @@ function NewSale() {
   ];
 
   function getDocumentTypeIcon(type, size = '36px') {
-    switch(type) {
+    switch (type) {
       case 1: return <GTicketIcon width={size} />;
       case 2: return <GInvoice2Icon width={size} />;
       case 3: return <GInvoiceTax2Icon width={size} />;
@@ -589,7 +590,7 @@ function NewSale() {
   }
 
   function getPaymentTypeIcon(type, size = '36px') {
-    switch(type) {
+    switch (type) {
       case 1: return <GCashPaymentIcon width={size} />;
       case 2: return <GCreditPaymentIcon width={size} />;
       default: return <GAddFileIcon width={size} />;
@@ -597,7 +598,7 @@ function NewSale() {
   }
 
   function getPaymentMethodIcon(type, size = '36px') {
-    switch(type) {
+    switch (type) {
       case 1: return <GCashMethodIcon width={size} />;
       case 2: return <GTransferMethodIcon width={size} />;
       case 3: return <GPaymentCheckMethodIcon width={size} />;
@@ -636,8 +637,8 @@ function NewSale() {
           trigger={() => <button id="print-newsale-button">Print</button>}
           content={() => ticketComponentRef.current}
         />
-        <SaleTicket 
-          ref={ticketComponentRef} 
+        <SaleTicket
+          ref={ticketComponentRef}
           ticketData={printData[0] || {}}
           ticketDetail={printDataDetails || []}
         />
@@ -648,7 +649,7 @@ function NewSale() {
           content={() => cfComponentRef.current}
         />
         <ConsumidorFinal
-          ref={cfComponentRef} 
+          ref={cfComponentRef}
           ticketData={printData[0] || {}}
           ticketDetail={printDataDetails || []}
         />
@@ -658,8 +659,8 @@ function NewSale() {
           trigger={() => <button id="print-newsale-ccf-button">Print</button>}
           content={() => ccfComponentRef.current}
         />
-        <CFFInvoice 
-          ref={ccfComponentRef} 
+        <CFFInvoice
+          ref={ccfComponentRef}
           ticketData={printData[0] || {}}
           ticketDetail={printDataDetails || []}
         />
@@ -758,14 +759,14 @@ function NewSale() {
                   return (
                     <Radio.Button key={element.id} value={element.id}>
                       <Space>
-                      {getDocumentTypeIcon(element.id, '16px')}
-                      {element.name}
+                        {getDocumentTypeIcon(element.id, '16px')}
+                        {element.name}
                       </Space>
                     </Radio.Button>
                   )
                 })
               }
-              
+
             </Radio.Group>
             <Button
               icon={<GRefreshIcon width={'16px'} />}
@@ -783,7 +784,7 @@ function NewSale() {
           lg={{ span: 12 }}
           xl={{ span: 12 }}
           xxl={{ span: 12 }}
-          style={{ display: (documentTypeSelected !== 0 && documentTypeSelected !== 1 && documentTypeSelected !== null) ? 'inline' : 'none'}}
+          style={{ display: (documentTypeSelected !== 0 && documentTypeSelected !== 1 && documentTypeSelected !== null) ? 'inline' : 'none' }}
         >
           <p style={{ margin: '0px', fontSize: 12 }}>{'Pago:'}</p>
           <Space wrap>
@@ -795,18 +796,18 @@ function NewSale() {
                 setCustomerSelected(0);
               }}
             >
-            {
-              (paymentTypesData || []).map((element) => {
-                return (
-                  <Radio.Button key={element.id} value={element.id}>
-                    <Space>
-                      {getPaymentTypeIcon(element.id, '16px')}
-                      {element.name}
-                    </Space>
-                  </Radio.Button>
-                )
-              })
-            }
+              {
+                (paymentTypesData || []).map((element) => {
+                  return (
+                    <Radio.Button key={element.id} value={element.id}>
+                      <Space>
+                        {getPaymentTypeIcon(element.id, '16px')}
+                        {element.name}
+                      </Space>
+                    </Radio.Button>
+                  )
+                })
+              }
             </Radio.Group>
           </Space>
         </Col>
@@ -817,7 +818,7 @@ function NewSale() {
           lg={{ span: 12 }}
           xl={{ span: 12 }}
           xxl={{ span: 12 }}
-          style={{ display: (paymentTypeSelected === 1) ? 'inline' : 'none'}}
+          style={{ display: (paymentTypeSelected === 1) ? 'inline' : 'none' }}
         >
           <p style={{ margin: '0px', fontSize: 12 }}>{'Metodo de pago:'}</p>
           <Radio.Group
@@ -839,8 +840,8 @@ function NewSale() {
                 return (
                   <Radio.Button key={element.id} value={element.id}>
                     <Space>
-                    {getPaymentMethodIcon(element.id, '16px')}
-                    {element.name}
+                      {getPaymentMethodIcon(element.id, '16px')}
+                      {element.name}
                     </Space>
                   </Radio.Button>
                 )
@@ -853,7 +854,7 @@ function NewSale() {
               <p style={{ margin: '0px', fontSize: 12 }}>{`No Cuenta: ${paymentAccountNumber}`}</p>
               <p style={{ margin: '0px', fontSize: 12 }}>{`Banco: ${banksData.find((x) => x.id === bankSelected)?.name}`}</p>
             </>
-            : <></>
+              : <></>
           }
         </Col>
         <Col span={24} />
@@ -864,17 +865,17 @@ function NewSale() {
           lg={{ span: 12 }}
           xl={{ span: 6 }}
           xxl={{ span: 6 }}
-          style={{ display: (documentTypeSelected !== 0 && documentTypeSelected !== 1 && documentTypeSelected !== null) ? 'inline' : 'none'}}
+          style={{ display: (documentTypeSelected !== 0 && documentTypeSelected !== 1 && documentTypeSelected !== null) ? 'inline' : 'none' }}
         >
           <p style={{ margin: '0px', fontSize: 12 }}>{'N° Documento:'}</p>
-          <Input 
+          <Input
             id='g-new-sale-doc-number-input'
-            style={{ width: '100%' }} 
+            style={{ width: '100%' }}
             placeholder={'0001'}
             min={0}
             disabled
-            value={docNumber} 
-            type={'number'} 
+            value={docNumber}
+            type={'number'}
             onChange={(e) => setDocNumber(e.target.value)}
             onBlur={(e) => { validateDocNumber(); }}
             onKeyDown={
@@ -887,11 +888,11 @@ function NewSale() {
         </Col>
         <Col xs={{ span: 24 }} sm={{ span: 24 }} md={{ span: 12 }} lg={{ span: 6 }} xl={{ span: 6 }} xxl={{ span: 6 }}>
           <p style={{ margin: '0px', fontSize: 12 }}>{'Fecha:'}</p>
-          <DatePicker 
+          <DatePicker
             id={'g-new-sale-datepicker'}
-            locale={locale} 
-            format="DD-MM-YYYY" 
-            value={docDatetime} 
+            locale={locale}
+            format="DD-MM-YYYY"
+            value={docDatetime}
             disabled
             style={{ width: '100%' }}
             onFocus={() => {
@@ -910,14 +911,14 @@ function NewSale() {
           lg={{ span: 12 }}
           xl={{ span: 12 }}
           xxl={{ span: 12 }}
-          style={{ display: (documentTypeSelected !== 0 && documentTypeSelected !== 1 && documentTypeSelected !== null) ? 'inline' : 'none'}}
+          style={{ display: (documentTypeSelected !== 0 && documentTypeSelected !== 1 && documentTypeSelected !== null) ? 'inline' : 'none' }}
         >
           <p style={{ margin: '0px', fontSize: 12 }}>{'Cliente:'}</p>
-          <Select 
+          <Select
             id={'g-customer-new-sale-selector'}
-            dropdownStyle={{ width: '100%' }} 
-            style={{ width: '100%' }} 
-            value={customerSelected} 
+            dropdownStyle={{ width: '100%' }}
+            style={{ width: '100%' }}
+            value={customerSelected}
             onChange={(value) => {
               setCustomerSelected(value);
               setCustomerSearchFilter('');
@@ -939,7 +940,7 @@ function NewSale() {
             {
               (filterData(getCustomerByFilters(), customerSearchFilter, ['id', 'fullName', 'phone', 'address']) || []).map(
                 (element) => (
-                  <Option key={element.id} value={element.id} style={{ borderBottom: '1px solid #E5E5E5'}}>
+                  <Option key={element.id} value={element.id} style={{ borderBottom: '1px solid #E5E5E5' }}>
                     <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                       <p style={{ margin: 0 }}>{element.fullName}</p>
                     </div>
@@ -951,7 +952,7 @@ function NewSale() {
                       paymentTypeSelected === 2 && element.applyForCredit === 1 ? (
                         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-start' }}>
                           <p style={{ margin: 0, marginRight: 5 }}>{'Límite de crédito: '}</p>
-                          
+
                           <Tag icon={<DollarCircleOutlined />} color={'red'}>{`${element.creditLimit || '-'}`}</Tag>
                         </div>
                       ) : <></>
@@ -988,15 +989,15 @@ function NewSale() {
           lg={{ span: 12 }}
           xl={{ span: 6 }}
           xxl={{ span: 6 }}
-          style={{ display: (paymentTypeSelected === 2) ? 'inline' : 'none'}}
+          style={{ display: (paymentTypeSelected === 2) ? 'inline' : 'none' }}
         >
           <p style={{ margin: '0px', fontSize: 12 }}>{'Plazo vencimiento (dias):'}</p>
-          <InputNumber 
+          <InputNumber
             id='g-new-sale-expiration-days-input'
-            style={{ width: '100%' }} 
+            style={{ width: '100%' }}
             min={0}
-            value={docExpirationDays} 
-            type={'number'} 
+            value={docExpirationDays}
+            type={'number'}
             onChange={(val) => setDocExpirationDays(val)}
             onKeyDown={
               (e) => {
@@ -1012,8 +1013,8 @@ function NewSale() {
           {
             (docDetails.length <= 18) ? <Search
               id={'newsale-product-search-input'}
-              name={'filter'} 
-              value={productSearchFilter} 
+              name={'filter'}
+              value={productSearchFilter}
               placeholder="Código, Nombre, Cód. Barra"
               allowClear
               disabled={!(docDetails.length < 18)}
@@ -1031,7 +1032,7 @@ function NewSale() {
         </Col>
         <Col span={24} />
         <Col span={24}>
-          <Table 
+          <Table
             bordered
             loading={fetching}
             columns={columns}
@@ -1042,7 +1043,7 @@ function NewSale() {
             ] || []}
             pagination={false}
             footer={() => {
-              return(
+              return (
                 <Row gutter={[8, 4]}>
                   <Col xs={{ span: 24 }} sm={{ span: 24 }} md={{ span: 16 }} lg={{ span: 18 }} xl={{ span: 18 }} xxl={{ span: 18 }}>
                     <div style={styleSheet.tableFooter.footerCotainer}>
@@ -1087,12 +1088,12 @@ function NewSale() {
                           prefix={'$'}
                           size='small'
                           id='g-new-sale-iva-perception'
-                          style={{ width: '50%' }} 
+                          style={{ width: '50%' }}
                           placeholder={''}
                           disabled={docIVAretention !== null || docIVAretention > 0}
                           min={0}
-                          value={docIVAperception} 
-                          type={'docIVAperception'} 
+                          value={docIVAperception}
+                          type={'docIVAperception'}
                           onChange={(value) => setDocIVAperception(value)}
                           onKeyDown={
                             (e) => {
@@ -1104,7 +1105,7 @@ function NewSale() {
                       </div>
                       <div style={styleSheet.tableFooter.detailContainer}>
                         <p style={styleSheet.tableFooter.detailLabels.normal}>{`IVA RETENIDO (-)`}</p>
-                        <InputNumber 
+                        <InputNumber
                           prefix={'$'}
                           size='small'
                           id='g-new-sale-iva-retention'
@@ -1113,7 +1114,7 @@ function NewSale() {
                           min={0}
                           value={docIVAretention}
                           disabled={docIVAperception !== null || docIVAperception > 0}
-                          type={'docIVAretention'} 
+                          type={'docIVAretention'}
                           onChange={(value) => setDocIVAretention(value)}
                         />
                       </div>
@@ -1139,10 +1140,10 @@ function NewSale() {
         </Col>
       </Row>
       <ProductSearchForSale
-        open={openProductSearchForSale} 
+        open={openProductSearchForSale}
         priceScale={customersData.filter(x => x.id === customerSelected)[0]?.defPriceIndex || 1}
         productFilterSearch={productSearchFilter}
-        onClose={(saleDetailToPush, executePush, currentStock) => { 
+        onClose={(saleDetailToPush, executePush, currentStock) => {
           setOpenProductSearchForSale(false);
           const { detailId, detailName, detailQuantity, detailIsService } = saleDetailToPush;
           const currentDetailQuantity = getQuantitySumProductDetail(detailId);
@@ -1162,15 +1163,15 @@ function NewSale() {
         }}
       />
       <CustomerForm
-        open={openForm} 
+        open={openForm}
         updateMode={customerUpdateMode}
         dataToUpdate={customerToUpdate}
         showDeleteButton={false}
-        onClose={(refresh) => { 
+        onClose={(refresh) => {
           setOpenForm(false);
           setCustomerUpdateMode(false);
           setCustomerToUpdate({});
-          if (refresh) { 
+          if (refresh) {
             document.getElementById('g-customer-new-sale-selector').focus();
             loadData();
           }
@@ -1217,7 +1218,7 @@ function NewSale() {
       >
         <Row gutter={[12, 12]}>
           <Col span={24}>
-            <p style={{ margin: 0, fontSize: 11 }}>{<RequiredQuestionMark />} No Referencia:</p>  
+            <p style={{ margin: 0, fontSize: 11 }}>{<RequiredQuestionMark />} No Referencia:</p>
             <Input
               onChange={(e) => setPaymentReferenceNumber(e.target.value)}
               name={'paymentReferenceNumber'}
@@ -1225,7 +1226,7 @@ function NewSale() {
             />
           </Col>
           <Col span={24}>
-            <p style={{ margin: 0, fontSize: 11 }}>No Cuenta:</p>  
+            <p style={{ margin: 0, fontSize: 11 }}>No Cuenta:</p>
             <Input
               onChange={(e) => setPaymentAccountNumber(e.target.value)}
               name={'paymentAccountNumber'}
@@ -1233,11 +1234,11 @@ function NewSale() {
             />
           </Col>
           <Col span={24}>
-            <p style={{ margin: 0, fontSize: 11 }}>{<RequiredQuestionMark />} Banco:</p>  
+            <p style={{ margin: 0, fontSize: 11 }}>{<RequiredQuestionMark />} Banco:</p>
             <Select
-              dropdownStyle={{ width: '100%' }} 
-              style={{ width: '100%' }} 
-              value={bankSelected} 
+              dropdownStyle={{ width: '100%' }}
+              style={{ width: '100%' }}
+              value={bankSelected}
               onChange={(value) => setBankSelected(value)}
               optionFilterProp='children'
               showSearch

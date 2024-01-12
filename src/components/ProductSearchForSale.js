@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Input, Col, Row, Divider, Button, PageHeader, Modal, List, Avatar, Space, Tag, Tabs, InputNumber, Result } from 'antd';
-import { ArrowLeftOutlined, BarcodeOutlined, CloseOutlined, DeleteOutlined,  DollarOutlined,  InfoCircleTwoTone,  InfoOutlined,  SaveOutlined, TagsOutlined, WarningOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, BarcodeOutlined, CloseOutlined, DeleteOutlined, DollarOutlined, InfoCircleTwoTone, InfoOutlined, SaveOutlined, TagsOutlined, WarningOutlined } from '@ant-design/icons';
 import { functionsIn, isEmpty } from 'lodash';
 
 import productIcon from '../img/icons/product.png';
@@ -51,38 +51,38 @@ function ProductSearchForSale(props) {
     if (open) {
       loadProductData(productFilterSearch);
     }
-  }, [ productFilterSearch, open ]);
+  }, [productFilterSearch, open]);
 
   function loadProductData(filter) {
     if (validateStringData(filter)) {
       setFetching(true);
       productsServices.findByMultipleParams(getUserLocation(), filter, 0)
-      .then((response) => {
-        setProductsData(response.data);
-        if (response.data.length === 0) {
-          document.getElementById('product-not-found-return-button').focus();
-        } 
-        if (response.data.length === 1) {
-          setSelectedProductData(response.data[0]);
-
-          if (response.data[0]?.pricesData?.length !== undefined) {
-            if (response.data[0]?.pricesData?.length >= priceScale) {
-              setDetailUnitPrice(response.data[0]?.pricesData[priceScale - 1]?.price || 0);
-            } else {
-              setDetailUnitPrice(response.data[0]?.pricesData[response.data[0]?.pricesData?.length - 1]?.price || 0);
-            }
+        .then((response) => {
+          setProductsData(response.data);
+          if (response.data.length === 0) {
+            document.getElementById('product-not-found-return-button').focus();
           }
-          setActiveTab('2');
-          document.getElementById('newsale-detail-quantity-input').focus();
-        }
-        setFetching(false);
-      })
-      .catch((error) => {
-        // setProductsData(response.data);
-        console.log(error);
-        customNot('error', 'No se pudo obtener información de productos', '')
-        setFetching(false);
-      })
+          if (response.data.length === 1) {
+            setSelectedProductData(response.data[0]);
+
+            if (response.data[0]?.pricesData?.length !== undefined) {
+              if (response.data[0]?.pricesData?.length >= priceScale) {
+                setDetailUnitPrice(response.data[0]?.pricesData[priceScale - 1]?.price || 0);
+              } else {
+                setDetailUnitPrice(response.data[0]?.pricesData[response.data[0]?.pricesData?.length - 1]?.price || 0);
+              }
+            }
+            setActiveTab('2');
+            document.getElementById('newsale-detail-quantity-input').focus();
+          }
+          setFetching(false);
+        })
+        .catch((error) => {
+          // setProductsData(response.data);
+          console.log(error);
+          customNot('error', 'No se pudo obtener información de productos', '')
+          setFetching(false);
+        })
     }
   }
 
@@ -147,100 +147,100 @@ function ProductSearchForSale(props) {
         ) : (
           <>
             {/* <TabsContainer> */}
-              <Tabs 
-                tabPosition={'left'}
-                tabBarStyle={{ backgroundColor: 'transparent' }}
-                activeKey={activeTab}
-              >
-                <Tabs.TabPane tab="Buscar" key={'1'}>
-                  <Row gutter={[12, 12]}>
-                    <Col span={24} style={{ display: 'flex', flexDirection: 'column' }}>
-                      <p style={styleSheet.titleStyle}>{'Búsqueda de producto'}</p>
-                    </Col>
-                    <Col span={24} style={{ display: 'flex', flexDirection: 'column' }}>
-                      <List
-                        style={{ backgroundColor: '#f5f5f5', borderRadius: 10, padding: 10 }}
-                        size='small'
-                        itemLayout="horizontal"
-                        rowKey={'productId'}
-                        dataSource={productsData || []}
-                        renderItem={(item, index) => (
-                          <List.Item
-                            key={index}
-                            // onClick={() => loadDetailData(item.customerId)}
-                            style={{ backgroundColor: index % 2 === 0 ? '#FFFFFF' : '#f5f5f5', borderRadius: 0 }}
-                            onClick={() => {
-                              setSelectedProductData(item);
-                              if (item?.pricesData?.length !== undefined) {
-                                if (item?.pricesData?.length >= priceScale) {
-                                  setDetailUnitPrice(item?.pricesData[priceScale - 1]?.price || 0);
-                                } else {
-                                  setDetailUnitPrice(item?.pricesData[item?.pricesData?.length - 1]?.price || 0);
-                                }
+            <Tabs
+              tabPosition={'left'}
+              tabBarStyle={{ backgroundColor: 'transparent' }}
+              activeKey={activeTab}
+            >
+              <Tabs.TabPane tab="Buscar" key={'1'}>
+                <Row gutter={[12, 12]}>
+                  <Col span={24} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <p style={styleSheet.titleStyle}>{'Búsqueda de producto'}</p>
+                  </Col>
+                  <Col span={24} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <List
+                      style={{ backgroundColor: '#f5f5f5', borderRadius: 10, padding: 10 }}
+                      size='small'
+                      itemLayout="horizontal"
+                      rowKey={'productId'}
+                      dataSource={productsData || []}
+                      renderItem={(item, index) => (
+                        <List.Item
+                          key={index}
+                          // onClick={() => loadDetailData(item.customerId)}
+                          style={{ backgroundColor: index % 2 === 0 ? '#FFFFFF' : '#f5f5f5', borderRadius: 0 }}
+                          onClick={() => {
+                            setSelectedProductData(item);
+                            if (item?.pricesData?.length !== undefined) {
+                              if (item?.pricesData?.length >= priceScale) {
+                                setDetailUnitPrice(item?.pricesData[priceScale - 1]?.price || 0);
                               } else {
-                                setDetailUnitPrice(item.defaultPrice || 0);
+                                setDetailUnitPrice(item?.pricesData[item?.pricesData?.length - 1]?.price || 0);
                               }
-                              setActiveTab('2');
-                              setTimeout(() => {
-                                document.getElementById('newsale-detail-quantity-input').focus();
-                              }, "500");
-                            }}
-                            extra={[
-                              <Button
-                                type={'primary'}
-                                onClick={() => {
-                                  setSelectedProductData(item);
+                            } else {
+                              setDetailUnitPrice(item.defaultPrice || 0);
+                            }
+                            setActiveTab('2');
+                            setTimeout(() => {
+                              document.getElementById('newsale-detail-quantity-input').focus();
+                            }, "500");
+                          }}
+                          extra={[
+                            <Button
+                              type={'primary'}
+                              onClick={() => {
+                                setSelectedProductData(item);
 
-                                  setDetailUnitPrice(item.defaultPrice || 0);
-                                  setActiveTab('2');
-                                  setTimeout(() => {
-                                    document.getElementById('newsale-detail-quantity-input').focus();
-                                  }, "500");
-                                }}
+                                setDetailUnitPrice(item.defaultPrice || 0);
+                                setActiveTab('2');
+                                setTimeout(() => {
+                                  document.getElementById('newsale-detail-quantity-input').focus();
+                                }, "500");
+                              }}
+                            >
+                              Seleccionar
+                            </Button>
+                          ]}
+                        >
+                          <List.Item.Meta
+                            avatar={
+                              <Avatar
+                                src={productIcon}
+                              />
+                            }
+                            title={
+                              <p
+                                style={{ margin: 0, color: '#434343' }}
                               >
-                                Seleccionar
-                              </Button>
-                            ]}
-                          >
-                            <List.Item.Meta
-                              avatar={
-                                <Avatar 
-                                  src={productIcon} 
-                                />
-                              }
-                              title={
-                                <p 
-                                  style={{ margin: 0, color: '#434343' }}
-                                >
-                                  {`${item.productName}`}
-                                </p>
-                              }
-                              description={
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                  <Space wrap>
-                                    <Tag color='blue' icon={<BarcodeOutlined />}>{`${item.productBarcode}`}</Tag>
-                                    <Tag color='green' icon={<DollarOutlined />}>{`${item.defaultPrice}`}</Tag>
-                                    {
-                                      item.productIsService ? <Tag color='geekblue' icon={<InfoCircleTwoTone />}>{`Servicio`}</Tag> : <></>
-                                    }
-                                  </Space>
-                                  <p style={{ margin: 0, fontSize: 12 }}>{`${item.currentStock} existencias`}</p>
-                                  {/* <p style={{ margin: 0, fontSize: 12 }}>{`Cód Barr. ${item.productBarcode}`}</p> */}
-                                </div>
-                                
-                              }
-                            />
-                          </List.Item>
-                        )}
-                        pagination
-                      />
-                    </Col>
-                  </Row>
-                </Tabs.TabPane>
-                <Tabs.TabPane tab="Detalle" key={'2'}>
-                  <Row gutter={[12, 12]}>
-                    <Col span={24} style={{ display: 'flex', flexDirection: 'column' }}>
-                      <Space>
+                                {`${item.productName}`}
+                              </p>
+                            }
+                            description={
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <Space wrap>
+                                  <Tag color='blue' icon={<BarcodeOutlined />}>{`${item.productBarcode}`}</Tag>
+                                  <Tag color='green' icon={<DollarOutlined />}>{`${item.defaultPrice}`}</Tag>
+                                  {
+                                    item.productIsService ? <Tag color='geekblue' icon={<InfoCircleTwoTone />}>{`Servicio`}</Tag> : <></>
+                                  }
+                                </Space>
+                                <p style={{ margin: 0, fontSize: 12 }}>{`${item.currentStock} existencias`}</p>
+                                {/* <p style={{ margin: 0, fontSize: 12 }}>{`Cód Barr. ${item.productBarcode}`}</p> */}
+                              </div>
+
+                            }
+                          />
+                        </List.Item>
+                      )}
+                      pagination
+                    />
+                  </Col>
+                </Row>
+              </Tabs.TabPane>
+              <Tabs.TabPane tab="Detalle" key={'2'}>
+                <Row gutter={[12, 12]}>
+                  <Col span={24} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <Space>
                       <p
                         style={{
                           color: '#434343',
@@ -258,86 +258,86 @@ function ProductSearchForSale(props) {
                         selectedProductData.productIsService ? <Tag color='blue'>{`Servicio`}</Tag> : <></>
                       }
                       <p style={{ margin: 0, fontSize: 12 }}>{`${selectedProductData.currentStock} existencias`}</p>
-                      </Space>
-                    </Col>
-                    <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
-                      <p style={styleSheet.labelStyle}>Cantidad:</p>
-                      <InputNumber
-                        id={'newsale-detail-quantity-input'}
-                        style={{ width: '100%' }}
-                        size={'large'}
-                        placeholder={'123'} 
-                        value={detailQuantity}
-                        onChange={(value) => setDetailQuantity(value)}
-                        type={'number'}
-                        onKeyDown={
-                          (e) => {
-                            if (e.key === 'Enter')
+                    </Space>
+                  </Col>
+                  <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <p style={styleSheet.labelStyle}>Cantidad:</p>
+                    <InputNumber
+                      id={'newsale-detail-quantity-input'}
+                      style={{ width: '100%' }}
+                      size={'large'}
+                      placeholder={'123'}
+                      value={detailQuantity}
+                      onChange={(value) => setDetailQuantity(value)}
+                      type={'number'}
+                      onKeyDown={
+                        (e) => {
+                          if (e.key === 'Enter')
                             document.getElementById('newsale-detail-unit-price-input').select();
-                            // document.getElementById('newsale-detail-unit-price-input').focus();
-                          }
+                          // document.getElementById('newsale-detail-unit-price-input').focus();
                         }
-                      />
-                    </Col>
-                    <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
-                      <p style={styleSheet.labelStyle}>Precio:</p>
-                      <InputNumber 
-                        id={'newsale-detail-unit-price-input'}
-                        style={{ width: '100%' }} 
-                        size={'large'}
-                        addonBefore='$'
-                        placeholder={'1.25'}
-                        disabled
-                        value={detailUnitPrice} 
-                        onChange={(value) => setDetailUnitPrice(value)}
-                        type={'number'}
-                        onKeyDown={
-                          (e) => {
-                            if (e.key === 'Enter')
+                      }
+                    />
+                  </Col>
+                  <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <p style={styleSheet.labelStyle}>Precio:</p>
+                    <InputNumber
+                      id={'newsale-detail-unit-price-input'}
+                      style={{ width: '100%' }}
+                      size={'large'}
+                      addonBefore='$'
+                      placeholder={'1.25'}
+                      disabled
+                      value={detailUnitPrice}
+                      onChange={(value) => setDetailUnitPrice(value)}
+                      type={'number'}
+                      onKeyDown={
+                        (e) => {
+                          if (e.key === 'Enter')
                             document.getElementById('new-sale-add-detail-button').click();
-                          }
                         }
-                      />
-                      <p style={{ margin: 0, fontSize: 11, color: '#10239e' }}>
-                        {`Precio aplicado automáticamente: ${priceScale}`}
-                      </p>
-                    </Col>
-                    <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
-                      
-                    </Col>
-                    <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
-                      <Button
-                        style={{ width: '100%' }}
-                        // type={'primary'}
-                        onClick={() => {
-                          // setOpenPricesPreviewConfirmation(true);
-                          setOpenPricePicker(true);
-                        }}
-                        icon={<DollarOutlined />}
-                      >
-                        Ver precios disponibles
-                      </Button>
-                    </Col>
-                    <Col span={24}>
-                      <Button
-                        style={{ width: '100%' }}
-                        onClick={() => {
-                          setActiveTab('1');
-                          setSelectedProductData({});
-                          setDetailQuantity(null);
-                          setDetailUnitPrice(null);
-                        }}
-                        icon={<ArrowLeftOutlined />}
-                      >
-                        Seleccionar otro producto
-                      </Button>
-                    </Col>
-                  </Row>
-                </Tabs.TabPane>
-              </Tabs>
+                      }
+                    />
+                    <p style={{ margin: 0, fontSize: 11, color: '#10239e' }}>
+                      {`Precio aplicado automáticamente: ${priceScale}`}
+                    </p>
+                  </Col>
+                  <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
+
+                  </Col>
+                  <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <Button
+                      style={{ width: '100%' }}
+                      // type={'primary'}
+                      onClick={() => {
+                        // setOpenPricesPreviewConfirmation(true);
+                        setOpenPricePicker(true);
+                      }}
+                      icon={<DollarOutlined />}
+                    >
+                      Ver precios disponibles
+                    </Button>
+                  </Col>
+                  <Col span={24}>
+                    <Button
+                      style={{ width: '100%' }}
+                      onClick={() => {
+                        setActiveTab('1');
+                        setSelectedProductData({});
+                        setDetailQuantity(null);
+                        setDetailUnitPrice(null);
+                      }}
+                      icon={<ArrowLeftOutlined />}
+                    >
+                      Seleccionar otro producto
+                    </Button>
+                  </Col>
+                </Row>
+              </Tabs.TabPane>
+            </Tabs>
             {/* </TabsContainer> */}
             <Divider />
-            <div 
+            <div
               style={{
                 width: '100%',
                 backgroundColor: '#f5f5f5',
@@ -362,7 +362,7 @@ function ProductSearchForSale(props) {
             <Divider />
             <Row gutter={[12, 12]}>
               <Col span={12}>
-                <Button 
+                <Button
                   danger
                   type={'primary'}
                   size={'large'}
@@ -371,7 +371,7 @@ function ProductSearchForSale(props) {
                     restoreState();
                     onClose({}, false);
                   }}
-                  style={{ width: '100%' }} 
+                  style={{ width: '100%' }}
                 >
                   Cancelar
                 </Button>
@@ -379,9 +379,9 @@ function ProductSearchForSale(props) {
               <Col span={12}>
                 <Button
                   id={'new-sale-add-detail-button'}
-                  type={'primary'} 
+                  type={'primary'}
                   size={'large'}
-                  icon={<SaveOutlined />} 
+                  icon={<SaveOutlined />}
                   onClick={(e) => {
                     // formAction();
                     if (!!!selectedProductData.productIsService) {
@@ -390,7 +390,7 @@ function ProductSearchForSale(props) {
                         return;
                       }
                     }
-                    
+
                     if (validateDetail()) {
                       const detailToAdd = new SaleDetailModel(
                         selectedProductData.productId,
@@ -407,7 +407,7 @@ function ProductSearchForSale(props) {
                       onClose(detailToAdd, true, selectedProductData.currentStock);
                     }
                   }}
-                  style={{ width: '100%' }} 
+                  style={{ width: '100%' }}
                   loading={fetching}
                   disabled={fetching}
                 >

@@ -6,7 +6,7 @@ function ProductsCard({ products, selectedProduct, loading }) {
 
     const cardStyles = {
         width: 250,
-        height: 100,
+        height: 80,
         borderRadius: 5,
         cursor: 'pointer'
     }
@@ -33,9 +33,11 @@ function ProductsCard({ products, selectedProduct, loading }) {
                             <Card key={product.productId}
                                 style={{
                                     ...cardStyles,
-                                    backgroundColor: parseFloat(product.stock) > 0 ? '#E4FDF9' : '#F5F5F7',
+                                    // backgroundColor: parseFloat(product.stock) > 0 ? '#E4FDF9' : '#F5F5F7',
+                                    backgroundColor: '#E4FDF9',
 
-                                    border: parseFloat(product.stock) > 0 ? '2px solid #13C2C2' : '2px solid #DCE0E6',
+                                    // border: parseFloat(product.stock) > 0 ? '2px solid #13C2C2' : '2px solid #DCE0E6',
+                                    border: '2px solid #13C2C2',
                                 }}
                                 onClick={() => selectedProduct(product)}
                                 bodyStyle={{ padding: 5 }}
@@ -44,7 +46,8 @@ function ProductsCard({ products, selectedProduct, loading }) {
                                 <p style={{ margin: 0 }}>{product.Description}</p>
                                 <p style={{
                                     fontWeight: "bolder",
-                                    color: parseFloat(product.stock) > 0 ? '#13C2C2' : '#DCE0E6',
+                                    // color: parseFloat(product.stock) > 0 ? '#13C2C2' : '#DCE0E6',
+                                    color: '#13C2C2',
                                     margin: 0
                                 }}>${product.DefaultPrice}</p>
                             </Card>

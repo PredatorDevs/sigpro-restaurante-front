@@ -11,44 +11,52 @@ orderSalesServices.findByLocationCurrentActiveShiftcut = (locationId) => genRequ
 
 orderSalesServices.findByRangeDate = (initialDate, finalDate) => genRequest(`get`, `/ordersales/by-range-date/${initialDate}/${finalDate}`, {});
 
-orderSalesServices.findByLocationRangeDate = (locationId, initialDate, finalDate) => 
+orderSalesServices.findByLocationRangeDate = (locationId, initialDate, finalDate) =>
   genRequest(`get`, `/ordersales/by-location/${locationId}/by-range-date/${initialDate}/${finalDate}`, {});
 
 orderSalesServices.findSettlementByRangeDate = (initialDate, finalDate) => genRequest(`get`, `/ordersales/settlement-by-range-date/${initialDate}/${finalDate}`, {});
 
-orderSalesServices.findSettlementByLocationRangeDate = (locationId, initialDate, finalDate) => 
+orderSalesServices.findSettlementByLocationRangeDate = (locationId, initialDate, finalDate) =>
   genRequest(`get`, `/ordersales/settlement/by-location/${locationId}/by-range-date/${initialDate}/${finalDate}`, {});
 
 orderSalesServices.findRecents = () => genRequest(`get`, `/ordersales/recents`, {});
 
-orderSalesServices.add = (locationId, customerId, docType, docDatetime, total) => 
+orderSalesServices.add = (locationId, customerId, docType, docDatetime, total) =>
   genRequest(`post`, `/ordersales`, { locationId, customerId, docType, docDatetime, total });
 
-orderSalesServices.update = (locationId, customerId, docType, docDatetime, status, total, orderSaleId) => 
+orderSalesServices.update = (locationId, customerId, docType, docDatetime, status, total, orderSaleId) =>
   genRequest(`put`, `/ordersales`, { locationId, customerId, docType, docDatetime, status, total, orderSaleId });
-  
-orderSalesServices.setStatus = (status, orderSaleId) => 
+
+orderSalesServices.setStatus = (status, orderSaleId) =>
   genRequest(`put`, `/ordersales/setstatus`, { status, orderSaleId });
 
-orderSalesServices.remove = (orderSaleId) => 
+orderSalesServices.remove = (orderSaleId) =>
   genRequest(`delete`, `/ordersales/${orderSaleId}`);
 
-orderSalesServices.recalculateTotal = (orderSaleId) => 
+orderSalesServices.recalculateTotal = (orderSaleId) =>
   genRequest(`put`, `/ordersales/recalculate/${orderSaleId}`);
 
 // PRODUCTION DETAILS
 
-orderSalesServices.details.findByOrderSaleId = (orderSaleId) => 
+orderSalesServices.details.findByOrderSaleId = (orderSaleId) =>
   genRequest(`get`, `/ordersales/details/${orderSaleId}`, {});
 
 // EXPECTED req.body => details = [[orderSaleId, productId, unitPrice, quantity], [...]]
-orderSalesServices.details.add = (bulkData) => 
+orderSalesServices.details.add = (bulkData) =>
   genRequest(`post`, `/ordersales/details`, { bulkData });
 
-orderSalesServices.details.update = (orderSaleId, productId, unitPrice, quantity, orderSaleDetailId) => 
+orderSalesServices.details.update = (orderSaleId, productId, unitPrice, quantity, orderSaleDetailId) =>
   genRequest(`put`, `/ordersales/details`, { orderSaleId, productId, unitPrice, quantity, orderSaleDetailId });
 
-orderSalesServices.details.remove = (orderSaleDetailId) => 
+orderSalesServices.details.remove = (orderSaleDetailId) =>
   genRequest(`delete`, `/ordersales/details/${orderSaleDetailId}`);
-  
+
+//Commands
+orderSalesServices.addCommand = (locationId, customerId, tableId, shiftcutId, total, productId, quantity, unitPrice) =>
+  genRequest('post', '/ordersales/command/new', { locationId, customerId, tableId, shiftcutId, total, productId, quantity, unitPrice });
+
+
+orderSalesServices.findByTableId = (tableId) =>
+  genRequest('get', `/ordersales/by-table/${tableId}`, {});
+
 export default orderSalesServices;
