@@ -36,8 +36,7 @@ function NewCommand() {
     const [tableOrder, setTableOrder] = useState(0);
     const [openProductInfo, setOpenProductInfo] = useState(false);
     const [selectedProductData, setSelectedProductData] = useState([]);
-    const [orderInTable, setOrderInTable] = useState();
-    const [orderDetails, setOrderDetails] = useState([]);
+    const [orderInTable, setOrderInTable] = useState([]);
     const [currentShiftcut, setCurrentShiftcutId] = useState(0);
 
     async function checkIfAbleToProcess() {
@@ -100,6 +99,17 @@ function NewCommand() {
         setTableOrder(value);
     }
 
+    async function getOrderDetails(tableId) {
+        const response = await orderSalesServices.findByTableId(tableId);
+        setOrderInTable(response.data[0]);
+    }
+
+    useEffect(() => {
+        if (tableOrder || tableOrder !== 0) {
+            getOrderDetails(tableOrder);
+        }
+    }, [tableOrder]);
+
     function selectedProduct(product) {
         setOpenProductInfo(true);
         setSelectedProductData(product);
@@ -116,11 +126,29 @@ function NewCommand() {
             data.detailId,
             data.detailQuantity,
             data.detailUnitPrice
-        ).then((response) => {
+        ).then(async (response) => {
             customNot('success', 'Operación exitosa', 'Su orden fue añadida');
+            await getOrderDetails(tableOrder);
         }).catch((error) => {
             customNot('error', 'Algo salió mal', 'Su order no fue añadida');
         });
+    }
+
+    async function updateOrderCommand(data) {
+        const { saleDetailToPush, orderInfo } = data;
+        if (orderInfo === orderInTable[0]) {
+            orderSalesServices.details.addByCommand(
+                orderInfo.id,
+                saleDetailToPush.detailId,
+                saleDetailToPush.detailUnitPrice,
+                saleDetailToPush.detailQuantity
+            ).then(async (response) => {
+                customNot('success', 'Operación exitosa', 'Su orden fue actualizada');
+                await getOrderDetails(tableOrder);
+            }).catch((error) => {
+                customNot('error', 'Algo salió mal', 'Su order no fue actualizada');
+            });
+        }
     }
 
     return (
@@ -153,10 +181,11 @@ function NewCommand() {
                                 </>
                         }
                     </Col>
-                    <DetailsCommand tableDetails={tableOrder}/>
+                    <DetailsCommand tableDetails={tableOrder} orderTable={orderInTable} />
                 </Row>
                 <AddProduct
                     open={openProductInfo}
+                    orderDetails={orderInTable}
                     productSelected={selectedProductData}
                     onClose={(saleDetailToPush, executePush, currentStock) => {
                         setOpenProductInfo(false);
@@ -164,6 +193,15 @@ function NewCommand() {
 
                         if (executePush) {
                             createNewComanda(saleDetailToPush);
+                        }
+
+
+                    }}
+                    onUpdate={(saleDetailToPush, executePut, orderInfo) => {
+                        setOpenProductInfo(false);
+
+                        if (executePut) {
+                            updateOrderCommand({ saleDetailToPush, orderInfo });
                         }
                     }}
                 />

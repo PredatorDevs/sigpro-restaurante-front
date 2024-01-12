@@ -11,7 +11,7 @@ import ProductPricePicker from "../pickers/ProductPricePicker.js";
 import { getUserLocation } from "../../utils/LocalData";
 import { customNot } from "../../utils/Notifications.js";
 
-import { isEmpty } from "lodash";
+import { isEmpty, set } from "lodash";
 
 const styleSheet = {
     labelStyle: {
@@ -25,35 +25,9 @@ const styleSheet = {
     }
 };
 
-const buttonStyle = {
-    position: 'relative',
-    width: '60px',
-    height: '60px',
-    backgroundColor: '#3498db',
-    borderRadius: '50%',
-    border: '5px solid #fff',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontSize: '24px',
-    color: '#fff',
-    textDecoration: 'none',
-};
-
-const decorationStyle = {
-    content: '',
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'transparent',
-    border: '5px solid #fff',
-    borderRadius: '50%',
-    boxSizing: 'border-box',
-};
-
 function AddProduct(props) {
 
-    const { open, productSelected, onClose } = props;
+    const { open, productSelected, orderDetails, onClose, onUpdate } = props;
 
     const [openPricePicker, setOpenPricePicker] = useState(false);
 
@@ -61,6 +35,10 @@ function AddProduct(props) {
     const [detailQuantity, setDetailQuantity] = useState(null);
     const [detailUnitPrice, setDetailUnitPrice] = useState(null);
     const [priceScale, setPriceScale] = useState(1);
+    const [updateMode, setUpdateMode] = useState();
+    const [orderInfo, setOrderInfo] = useState([]);
+
+
     async function loadProductData(filter) {
         try {
             if (filter) {
@@ -81,6 +59,16 @@ function AddProduct(props) {
     }
 
     useEffect(() => {
+        if (!isEmpty(orderDetails)) {
+            setUpdateMode(true);
+            setOrderInfo(orderDetails[0]);
+        } else {
+            setUpdateMode(false);
+            setOrderInfo([]);
+        }
+    }, [orderDetails])
+
+    useEffect(() => {
         loadProductData(productSelected.productName);
     }, [productSelected, open])
 
@@ -88,6 +76,7 @@ function AddProduct(props) {
         // setActiveTab('1');
         // setFormProductFilterSearch('');
         setProductData([]);
+        setOrderInfo([]);
         // setSelectedProductData({});
         setDetailQuantity(null);
         setDetailUnitPrice(null);
@@ -287,8 +276,11 @@ function AddProduct(props) {
                                 );
 
                                 restoreState();
-
-                                onClose(detailToAdd, true, productData.currentStock);
+                                if (!updateMode) {
+                                    onClose(detailToAdd, true, productData.currentStock);
+                                } else {
+                                    onUpdate(detailToAdd, true, orderInfo);
+                                }
                             }
 
                         }}
@@ -318,7 +310,7 @@ function AddProduct(props) {
                     //loading={fetching}
                     //disabled={fetching}
                     >
-                        Añadir
+                        {!updateMode ? "Crear Order" : "Añadir Producto"}
                     </Button>
                 </Col>
             </Row>

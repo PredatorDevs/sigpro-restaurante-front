@@ -7,21 +7,21 @@ import orderSalesServices from "../../services/OrderSalesServices";
 
 function DetailsCommand(props) {
 
-    const { tableDetails } = props;
+    const { tableDetails, orderTable } = props;
 
     const [detailsOrder, setDetailsOrder] = useState([]);
 
-    async function getOrderDetails(tableId) {
-        const response = await orderSalesServices.findByTableId(tableId);
+    async function loadData(orderData) {
+        const response = await orderSalesServices.details.findByOrderId(orderData);
         setDetailsOrder(response.data[0]);
-        console.log(detailsOrder);
     }
-
-    useEffect(async () => {
-        if (tableDetails || tableDetails !== 0) {
-            await getOrderDetails(tableDetails);
+    useEffect(() => {
+        if (!isEmpty(orderTable)) {
+            loadData(orderTable[0].id);
+        } else {
+            setDetailsOrder([]);
         }
-    }, [tableDetails]);
+    }, [orderTable])
 
     return (
         <Col span={12} style={{
@@ -32,7 +32,7 @@ function DetailsCommand(props) {
             padding: '10px'
         }}>
             <strong>Resumen de la Orden</strong>
-            {isEmpty(detailsOrder) ? <>
+            {isEmpty(orderTable) ? <>
                 <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                     description="Mesa sin ordenes"
@@ -43,7 +43,7 @@ function DetailsCommand(props) {
                     {detailsOrder.map(detail => (
                         <div key={detail.id}
                             style={{
-                                backgroundColor: !detail.status ? '#BAE0FF' : '#D9F7BE',
+                                backgroundColor: !detail.isActive ? '#BAE0FF' : '#D9F7BE',
                                 height: 80,
                                 width: '100%',
                                 display: "flex",
@@ -60,14 +60,14 @@ function DetailsCommand(props) {
                             }}>
                                 <strong> {detail.ProductName} </strong>
                                 <span style={{ color: "green" }}>
-                                    ${parseFloat(detail.total).toFixed(2)}
+                                    ${parseFloat(detail.unitPrice * detail.quantity).toFixed(2)}
                                 </span>
                             </div>
-                            <div style={{ display: "flex", justifyContent: !detail.status ? "center" : "space-between", alignItems: "center", width: '150px' }}>
+                            <div style={{ display: "flex", justifyContent: !detail.isActive ? "center" : "space-between", alignItems: "center", width: '150px' }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", width: 90 }}>
-                                    <Button type="primary" size="small" hidden={!detail.status} shape="circle" icon={<PlusOutlined />}></Button>
+                                    <Button type="primary" size="small" hidden={!detail.isActive} shape="circle" icon={<PlusOutlined />}></Button>
                                     <span style={{ fontSize: 15 }}>{parseInt(detail.quantity)}</span>
-                                    <Button type="primary" size="small" hidden={!detail.status} shape="circle" icon={<MinusOutlined />}></Button>
+                                    <Button type="primary" size="small" hidden={!detail.isActive} shape="circle" icon={<MinusOutlined />}></Button>
                                 </div>
 
                                 <Button size="small" shape="circle"

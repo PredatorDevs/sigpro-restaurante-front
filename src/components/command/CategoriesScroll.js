@@ -1,8 +1,10 @@
-import { useEffect, useState, useRef } from "react";
-import { Button, Card } from "antd";
+import { useRef } from "react";
+import { Button } from "antd";
 import { CaretLeftOutlined, CaretRightFilled } from "@ant-design/icons";
 
 import menuLogo from '../../img/logos/logo.png'
+
+import { isEmpty } from "lodash";
 
 function CategoriesScroll({ categories, selectedCategory, onClick }) {
 
@@ -22,7 +24,7 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
         margin: 0,
         // fontWeight: 500
     }
-    
+
     const handleScroll = (scrollDirection) => {
         const scrollAmount = 94;
         const container = categoriesContainer.current;
@@ -48,6 +50,7 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
             marginTop: '10px',
 
         }}>
+
             <CaretLeftOutlined onClick={() => handleScroll('left')} style={{ display: "flex", alignItems: "center", cursor: 'pointer', height: '90%', width: '20px', backgroundColor: '#fff', border: 'none' }} />
             <div style={{
                 display: 'flex',
@@ -57,28 +60,35 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
                 scrollBehavior: 'smooth'
             }} ref={categoriesContainer}>
 
-                {categories.map(category => (
-                    <Button
-                        key={category.id}
-                        type="primary"
-                        shape="square"
-                        style={{
-                            ...buttonStyle,
-                            backgroundColor: category === selectedCategory ? '#BAE0FF' : '#E6F4FF',
-                        }}
-                        onClick={() => onClick(category)}
-                    >
-                        <div style={{ width: '100%' }}>
-                            <img
-                                width={55}
-                                height={55}
-                                src={menuLogo}
-                                style={{ objectFit: 'cover' }}
-                            />
-                            <p style={pStyle}>{category.name}</p>
-                        </div>
-                    </Button>
-                ))}
+                {isEmpty(categories) ?
+                    <>
+                    </> :
+                    <>
+
+                        {categories.map(category => (
+                            <Button
+                                key={category.id}
+                                type="primary"
+                                shape="square"
+                                style={{
+                                    ...buttonStyle,
+                                    backgroundColor: category === selectedCategory ? '#BAE0FF' : '#E6F4FF',
+                                }}
+                                onClick={() => onClick(category)}
+                            >
+                                <div style={{ width: '100%' }}>
+                                    <img
+                                        width={55}
+                                        height={55}
+                                        src={menuLogo}
+                                        style={{ objectFit: 'cover' }}
+                                        alt={category.name}
+                                    />
+                                    <p style={pStyle}>{category.name}</p>
+                                </div>
+                            </Button>
+                        ))}
+                    </>}
             </div>
             <CaretRightFilled onClick={() => handleScroll('right')} style={{ display: "flex", alignItems: "center", cursor: 'pointer', height: '90%', width: '20px', backgroundColor: '#fff', border: 'none' }} />
         </div>
