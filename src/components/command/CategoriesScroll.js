@@ -2,6 +2,8 @@ import { useRef } from "react";
 import { Button } from "antd";
 import { CaretLeftOutlined, CaretRightFilled } from "@ant-design/icons";
 
+import '../../styles/categoriesStyle.css';
+
 import menuLogo from '../../img/logos/logo.png'
 
 import { isEmpty } from "lodash";
@@ -40,25 +42,17 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
 
     return (
         <div style={{
-            width: '100%',
             height: '110px',
             display: "flex",
             backgroundColor: '#D9D9D9',
             alignItems: "center",
             padding: '0 10px',
             gap: '10px',
-            marginTop: '10px',
-
+            margin: '10px 0',
         }}>
 
             <CaretLeftOutlined onClick={() => handleScroll('left')} style={{ display: "flex", alignItems: "center", cursor: 'pointer', height: '90%', width: '20px', backgroundColor: '#fff', border: 'none' }} />
-            <div style={{
-                display: 'flex',
-                width: '100%',
-                gap: '11px',
-                overflowX: 'hidden',
-                scrollBehavior: 'smooth'
-            }} ref={categoriesContainer}>
+            <div className="scrollCategories" ref={categoriesContainer}>
 
                 {isEmpty(categories) ?
                     <>

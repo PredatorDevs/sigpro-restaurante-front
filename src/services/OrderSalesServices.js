@@ -62,6 +62,6 @@ orderSalesServices.findByTableId = (tableId) =>
   genRequest('get', `/ordersales/by-table/${tableId}`, {});
 
 orderSalesServices.details.findByOrderId = (orderId) =>
-  genRequest('get', `/ordersales/by-orderid/${orderId}`, {});
+  genRequest('get', `/ordersales/by-orderid/${orderId}`, {}, '', '', 'La información de las ordenes no pudo ser obtenida', 'Error desconocido');
 
 export default orderSalesServices;

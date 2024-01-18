@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Select, Row, Col, Empty, Result } from "antd";
+import { Select, Row, Col, Empty, Result, Button } from "antd";
+import { SaveOutlined, SendOutlined, CopyOutlined, PlusOutlined, MinusOutlined, DeleteFilled } from "@ant-design/icons";
 
 import { Wrapper } from '../../styled-components/Wrapper';
 
@@ -9,18 +10,60 @@ import orderSalesServices from "../../services/OrderSalesServices.js";
 
 import CategoriesScroll from "../../components/command/CategoriesScroll";
 
+import { numberToLetters } from "../../utils/NumberToLetters.js";
+
 import ProductsCard from "../../components/command/ProductsCards.js"
 import AddProduct from "../../components/command/AddProduct.js";
 import DetailsCommand from "../../components/command/DetailsCommad.js";
 
-import { getUserLocation, getUserMyCashier } from '../../utils/LocalData';
+import { getUserLocation, getUserMyCashier, getUserId } from '../../utils/LocalData';
 
 import { customNot } from "../../utils/Notifications.js";
 
 import categoriesServices from '../../services/CategoriesServices.js';
 import productsServices from "../../services/ProductsServices.js";
+import { isEmpty, forEach } from "lodash";
+
+import NumberPath from "../../components/command/Numpad.js";
 
 const { Option } = Select;
+
+const styleSheet = {
+    tableFooter: {
+        footerCotainer: {
+            backgroundColor: '#d9d9d9',
+            borderRadius: '5px',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: 5,
+            width: '100%'
+        },
+        detailContainer: {
+            backgroundColor: '#f5f5f5',
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            borderRadius: '5px',
+            marginBottom: '5px',
+            padding: 5,
+            width: '100%'
+        },
+        detailLabels: {
+            normal: {
+                margin: 0,
+                fontSize: 12,
+                color: '#434343'
+            },
+            emphatized: {
+                margin: 0,
+                fontSize: 12,
+                color: '#434343',
+                fontWeight: 600
+            }
+        }
+    }
+};
+
 
 function NewCommand() {
 
@@ -30,7 +73,7 @@ function NewCommand() {
 
     const [loading, setLoading] = useState(true);
     const [categories, setCategories] = useState([]);
-    const [entityTablesData, setEntityTablesData] = useState([]);
+    const [tablesAvailable, setTablesAvailable] = useState([]);
     const [availableProducts, setAvailableProducts] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [tableOrder, setTableOrder] = useState(0);
@@ -39,6 +82,55 @@ function NewCommand() {
     const [orderInTable, setOrderInTable] = useState([]);
     const [currentShiftcut, setCurrentShiftcutId] = useState(0);
 
+    const [detailsOrder, setDetailsOrder] = useState([]);
+
+    // #region Order Details
+    async function getOrderInfo(tableId) {
+        try {
+            const response = await orderSalesServices.findByTableId(tableId);
+            setOrderInTable(response.data[0]);
+        } catch (error) {
+            console.error("Error fetching order info:", error);
+        }
+    }
+
+    useEffect(() => {
+        if (tableOrder) {
+            getOrderInfo(tableOrder);
+        } else {
+            setOrderInTable([]);
+        }
+    }, [tableOrder]);
+
+    async function getOrderDetails(orderId) {
+        try {
+            const response = await orderSalesServices.details.findByOrderId(orderId);
+            setDetailsOrder(response.data[0]);
+        } catch (error) {
+            console.error("Error fetching order details:", error);
+        }
+    }
+
+    useEffect(() => {
+        if (orderInTable.length > 0) {
+            getOrderDetails(orderInTable[0].id);
+        } else {
+            setDetailsOrder([]);
+        }
+    }, [orderInTable]);
+
+
+    function getTotalCommand() {
+        let total = 0;
+        forEach(detailsOrder, (detail) => {
+            total += (detail.quantity * detail.unitPrice);
+        });
+
+        return total || 0;
+    }
+    // #endregion Order Details
+
+    // #region Check ShiftCut
     async function checkIfAbleToProcess() {
         setFetching(true);
 
@@ -53,10 +145,12 @@ function NewCommand() {
 
         setFetching(false);
     }
+    // #endregion Check ShiftCut
 
+    // #region Loads
     async function loadData() {
         const response = await tablesServices.findTables(getUserLocation());
-        setEntityTablesData(response.data);
+        setTablesAvailable(response.data);
 
         if (response.data.length > 0) {
             setTableOrder(response.data[0].id);
@@ -87,7 +181,9 @@ function NewCommand() {
             //loadProductsData(3);
         }
     }, [selectedCategory]);
+    // #endregion Loads
 
+    // #region
     function selectcategory(category) {
         setSelectedCategory(category);
         if (selectedCategory !== category) {
@@ -99,17 +195,6 @@ function NewCommand() {
         setTableOrder(value);
     }
 
-    async function getOrderDetails(tableId) {
-        const response = await orderSalesServices.findByTableId(tableId);
-        setOrderInTable(response.data[0]);
-    }
-
-    useEffect(() => {
-        if (tableOrder || tableOrder !== 0) {
-            getOrderDetails(tableOrder);
-        }
-    }, [tableOrder]);
-
     function selectedProduct(product) {
         setOpenProductInfo(true);
         setSelectedProductData(product);
@@ -117,6 +202,7 @@ function NewCommand() {
 
     async function createNewComanda(data) {
 
+        console.log(data);
         orderSalesServices.addCommand(
             getUserLocation(),
             4161,
@@ -128,13 +214,14 @@ function NewCommand() {
             data.detailUnitPrice
         ).then(async (response) => {
             customNot('success', 'Operación exitosa', 'Su orden fue añadida');
-            await getOrderDetails(tableOrder);
+            await getOrderInfo(tableOrder);
         }).catch((error) => {
             customNot('error', 'Algo salió mal', 'Su order no fue añadida');
         });
     }
 
     async function updateOrderCommand(data) {
+        console.log(data);
         const { saleDetailToPush, orderInfo } = data;
         if (orderInfo === orderInTable[0]) {
             orderSalesServices.details.addByCommand(
@@ -144,12 +231,13 @@ function NewCommand() {
                 saleDetailToPush.detailQuantity
             ).then(async (response) => {
                 customNot('success', 'Operación exitosa', 'Su orden fue actualizada');
-                await getOrderDetails(tableOrder);
+                await getOrderInfo(tableOrder);
             }).catch((error) => {
                 customNot('error', 'Algo salió mal', 'Su order no fue actualizada');
             });
         }
     }
+    // #endregion
 
     return (
         !ableToProcess ?
@@ -161,28 +249,154 @@ function NewCommand() {
                 />
             </> :
             <Wrapper>
-                <Row gutter={16} style={{ width: '100%' }}>
-                    <Col span={12}>
-                        <div style={{ display: "flex", flexDirection: "column" }}>
-                            <strong>Mesa:</strong>
-                            <Select style={{ width: 200 }} onChange={changeTable} value={tableOrder}>
-                                {entityTablesData.map(item => (
-                                    <Option key={item.id} value={item.id}> {item.name} </Option>
-                                ))}
-                            </Select>
-                        </div>
-                        {
-                            tableOrder > 0 ?
-                                <>
-                                    <CategoriesScroll categories={categories} selectedCategory={selectedCategory} onClick={selectcategory} />
-                                    <ProductsCard products={availableProducts} loading={loading} selectedProduct={selectedProduct} />
-                                </> : <>
-                                    <Empty description="Debe de seleccionar una mesa..." />
-                                </>
-                        }
-                    </Col>
-                    <DetailsCommand tableDetails={tableOrder} orderTable={orderInTable} />
-                </Row>
+                <Col style={{ width: '100%' }}>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                        <strong>Mesa:</strong>
+                        <Select style={{ width: 200 }} onChange={changeTable} value={tableOrder}>
+                            {tablesAvailable.map(item => (
+                                <Option key={item.id} value={item.id}> {item.name} </Option>
+                            ))}
+                        </Select>
+                    </div>
+                    {
+                        tableOrder > 0 ?
+                            <>
+                                <CategoriesScroll categories={categories} selectedCategory={selectedCategory} onClick={selectcategory} />
+                                <ProductsCard products={availableProducts} loading={loading} selectedProduct={selectedProduct} />
+                            </> : <>
+                                <Empty description="Debe de seleccionar una mesa..." />
+                            </>
+                    }
+                </Col>
+
+                <div
+                    style={{
+                        backgroundColor: '#F5F5F5',
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        padding: '10px',
+                        width: '100%'
+                    }}
+                >
+                    <strong>Resumen de la Orden</strong>
+                    <Row gutter={16} style={{ width: '100%' }}>
+                        <Col span={17} style={{
+                            display: "flex",
+                            gap: 15,
+                            flexDirection: 'column'
+                        }}>
+                            {/* <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-around', width: '65%' }}>
+                                    <span> Cantidad </span>
+                                    <span> Detalle </span>
+                                    <span> Precio Unitario </span>
+                                    <span> Total </span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'center', width: '35%' }}>
+                                    <span> Acciones </span>
+                                </div>
+                            </div> */}
+                            {
+                                isEmpty(orderInTable) ?
+                                    <>
+                                        <Empty description="Mesa Disponible" />
+                                    </> :
+                                    <>
+                                        {detailsOrder.map((item) => (
+                                            <div key={item.id}
+                                                style={{
+                                                    backgroundColor: !item.isActive ? '#BAE0FF' : '#D9F7BE',
+                                                    height: 80,
+                                                    width: '100%',
+                                                    display: "flex",
+                                                    padding: 10,
+                                                    cursor: "pointer",
+                                                    fontWeight: "bolder",
+                                                    justifyContent: "space-around",
+                                                    alignItems: 'center'
+                                                }}>
+                                                <div style={{ width: '60%', display: "flex", justifyContent: "space-between" }}>
+                                                    <span>{parseInt(item.quantity)}</span>
+                                                    <span>{item.ProductName}</span>
+                                                    <span>${parseFloat(item.unitPrice).toFixed(2)}</span>
+                                                    <span style={{ color: "green" }}>
+                                                        ${parseFloat(item.unitPrice * item.quantity).toFixed(2)}
+                                                    </span>
+                                                </div>
+                                                <div style={{ display: "flex", gap: 30 }}>
+                                                    <Button type="primary" size="small" hidden={!item.isActive} shape="circle" icon={<PlusOutlined />}></Button>
+                                                    <Button type="primary" size="small" hidden={!item.isActive} shape="circle" icon={<MinusOutlined />}></Button>
+                                                </div>
+                                                <Button shape="circle"
+                                                    style={{
+                                                        border: "none",
+                                                        boxShadow: "none",
+                                                        backgroundColor: "#D9F7BE"
+                                                    }}
+                                                    icon={<DeleteFilled style={{ color: "red" }} />}
+                                                >
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </>
+                            }
+                        </Col>
+                        <Col span={7}>
+                            <div style={styleSheet.tableFooter.footerCotainer}>
+                                <div style={styleSheet.tableFooter.detailContainer}>
+                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`SON:`}</p>
+                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`${numberToLetters(getTotalCommand())}`}</p>
+                                </div>
+                                <div style={styleSheet.tableFooter.detailContainer}>
+                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`GRAVADO:`}</p>
+                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
+                                </div>
+                                <div style={styleSheet.tableFooter.detailContainer}>
+                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`SUBTOTAL:`}</p>
+                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
+                                </div>
+                                <div style={styleSheet.tableFooter.detailContainer}>
+                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`EXENTO:`}</p>
+                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`$0.00`}</p>
+                                </div>
+                                <div style={styleSheet.tableFooter.detailContainer}>
+                                    <p style={styleSheet.tableFooter.detailLabels.emphatized}>{`VENTA TOTAL`}</p>
+                                    <p style={styleSheet.tableFooter.detailLabels.emphatized}>{`$0.00`}</p>
+                                </div>
+                                <Button
+                                    type={'primary'}
+                                    icon={<SaveOutlined />}
+                                    style={{ margin: 5 }}
+                                // onClick={() => formAction()}
+                                // disabled={fetching}
+                                >
+                                    CONFIRMAR
+                                </Button>
+                                <div style={{ display: "flex", width: '100%', justifyContent: "space-between" }}>
+                                    <Button
+                                        type={'button'}
+                                        icon={<SendOutlined />}
+                                        style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
+                                    // onClick={() => formAction()}
+                                    // disabled={fetching}
+                                    >
+                                        ENVIAR A COCINA
+                                    </Button>
+                                    <Button
+                                        icon={<CopyOutlined />}
+                                        style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
+                                    // onClick={() => formAction()}
+                                    // disabled={fetching}
+                                    >
+                                        CREAR DETALLE
+                                    </Button>
+                                </div>
+                            </div>
+                        </Col>
+                    </Row>
+                </div>
+
                 <AddProduct
                     open={openProductInfo}
                     orderDetails={orderInTable}

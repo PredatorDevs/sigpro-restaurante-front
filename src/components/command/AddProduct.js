@@ -13,6 +13,8 @@ import { customNot } from "../../utils/Notifications.js";
 
 import { isEmpty, set } from "lodash";
 
+import Numpad from "./Numpad.js";
+
 const styleSheet = {
     labelStyle: {
         margin: '0px',
@@ -38,6 +40,7 @@ function AddProduct(props) {
     const [updateMode, setUpdateMode] = useState();
     const [orderInfo, setOrderInfo] = useState([]);
 
+    const [inputNumpad, setInputNumpad] = useState('');
 
     async function loadProductData(filter) {
         try {
@@ -79,6 +82,7 @@ function AddProduct(props) {
         setOrderInfo([]);
         // setSelectedProductData({});
         setDetailQuantity(null);
+        setInputNumpad('');
         setDetailUnitPrice(null);
     }
 
@@ -101,6 +105,18 @@ function AddProduct(props) {
             && validUnitPrice
         );
     }
+
+    const handleKeyPress = (key) => {
+        setInputNumpad((prevInput) => prevInput + key);
+    };
+
+    const handleDelete = () => {
+        setInputNumpad((prevInput) => prevInput.slice(0, -1));
+    };
+
+    useEffect(() => {
+        setDetailQuantity(parseInt(inputNumpad));
+    }, [inputNumpad])
 
     const items = [
         {
@@ -129,64 +145,22 @@ function AddProduct(props) {
                             <p style={{ margin: 0, fontSize: 12 }}>{`${productData.currentStock} existencias`}</p>
                         </Space>
                     </Col>
-                    <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <Col style={{ display: 'flex', flexDirection: 'column' }}>
                         <p style={styleSheet.labelStyle}>Cantidad:</p>
                         <InputNumber
+                            readOnly
                             id={'newsale-detail-quantity-input'}
                             style={{ width: '100%' }}
                             size={'large'}
                             placeholder={'0'}
                             min={'0'}
                             max={productData.currentStock}
-                            value={detailQuantity}
-                            onChange={(value) => setDetailQuantity(value)}
+                            value={inputNumpad}
+                            // onChange={changeQuantity}
                             type={'number'}
-                            onKeyDown={
-                                (e) => {
-                                    if (e.key === 'Enter')
-                                        document.getElementById('newsale-detail-unit-price-input').select();
-                                    // document.getElementById('newsale-detail-unit-price-input').focus();
-                                }
-                            }
                         />
-                    </Col>
-                    <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
-                        <p style={styleSheet.labelStyle}>Precio:</p>
-                        <InputNumber
-                            id={'newsale-detail-unit-price-input'}
-                            style={{ width: '100%' }}
-                            size={'large'}
-                            addonBefore='$'
-                            placeholder={'1.25'}
-                            disabled
-                            value={detailUnitPrice}
-                            onChange={(value) => setDetailUnitPrice(value)}
-                            type={'number'}
-                            onKeyDown={
-                                (e) => {
-                                    if (e.key === 'Enter')
-                                        document.getElementById('new-sale-add-detail-button').click();
-                                }
-                            }
-                        />
-                        <p style={{ margin: 0, fontSize: 11, color: '#10239e' }}>
-                            {`Precio aplicado automáticamente: ${priceScale}`}
-                        </p>
-                    </Col>
-                    <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
-                    </Col>
-                    <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
-                        <Button
-                            style={{ width: '100%' }}
-                            // type={'primary'}
-                            onClick={() => {
-                                // setOpenPricesPreviewConfirmation(true);
-                                setOpenPricePicker(true);
-                            }}
-                            icon={<DollarOutlined />}
-                        >
-                            Ver precios disponibles
-                        </Button>
+
+                        <Numpad onKeyPress={handleKeyPress} onDelete={handleDelete} valueNumpad={inputNumpad} />
                     </Col>
                 </Row>
             )
@@ -257,6 +231,7 @@ function AddProduct(props) {
                         size={'large'}
                         icon={<SaveOutlined />}
                         onClick={() => {
+
                             if (!!!productData.productIsService) {
                                 if (productData.currentStock < detailQuantity || productData.productIsService) {
                                     customNot('error', `No hay suficientes existencias para añadir ${productData.productName}`, 'Consulte con su administrador')
@@ -284,31 +259,7 @@ function AddProduct(props) {
                             }
 
                         }}
-                        //onClick={(e) => {
-                        //  // formAction();
-                        //  if (!!!selectedProductData.productIsService) {
-                        //    if (selectedProductData.currentStock < detailQuantity || selectedProductData.productIsService) {
-                        //      customNot('error', `No hay suficientes existencias para añadir ${selectedProductData.productName}`, 'Consulte con su administrador')
-                        //      return;
-                        //    }
-                        //  }
-                        //  if (validateDetail()) {
-                        //    const detailToAdd = new SaleDetailModel(
-                        //      selectedProductData.productId,
-                        //      selectedProductData.productName,
-                        //      selectedProductData.isTaxable,
-                        //      detailQuantity || 0,
-                        //      detailUnitPrice || 0,
-                        //      selectedProductData.taxesData,
-                        //      selectedProductData.productIsService
-                        //    );
-                        //    restoreState();
-                        //    onClose(detailToAdd, true, selectedProductData.currentStock);
-                        //  }
-                        //}}
                         style={{ width: '100%' }}
-                    //loading={fetching}
-                    //disabled={fetching}
                     >
                         {!updateMode ? "Crear Order" : "Añadir Producto"}
                     </Button>

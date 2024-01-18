@@ -23,9 +23,12 @@ function ProductsCard({ products, selectedProduct, loading }) {
                     <div
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                            gap: '16px',
-                            padding: '16px 0',
+                            gap: '15px',
+                            maxHeight: '280px',
+                            marginBottom: '10px',
+                            overflowX: 'auto',
+                            gridTemplateRows: 'auto auto auto',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))'
                         }}
                     >
 
