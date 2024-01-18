@@ -64,4 +64,11 @@ orderSalesServices.findByTableId = (tableId) =>
 orderSalesServices.details.findByOrderId = (orderId) =>
   genRequest('get', `/ordersales/by-orderid/${orderId}`, {}, '', '', 'La información de las ordenes no pudo ser obtenida', 'Error desconocido');
 
+orderSalesServices.details.removeByOrderDetailId = (ordersaleId) =>
+  genRequest('delete', `/ordersales/order-detail/${ordersaleId}`, {}, '', '', 'La información de las ordenes no pudo ser obtenida', 'Error desconocido');
+
+orderSalesServices.details.sendToKitchen = (ordersaleId) =>
+  genRequest('get', `/ordersales/send-to-kitchen/${ordersaleId}`, {}, '', '', 'La información de las ordenes no pudo ser obtenida', 'Error desconocido');
+
+
 export default orderSalesServices;

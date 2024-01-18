@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Select, Row, Col, Empty, Result, Button } from "antd";
-import { SaveOutlined, SendOutlined, CopyOutlined, PlusOutlined, MinusOutlined, DeleteFilled } from "@ant-design/icons";
+import { Select, Row, Col, Empty, Result, Button, Modal, Tag } from "antd";
+import { SaveOutlined, SendOutlined, WarningOutlined, CopyOutlined, PlusOutlined, MinusOutlined, DeleteFilled } from "@ant-design/icons";
 
 import { Wrapper } from '../../styled-components/Wrapper';
 
@@ -70,6 +70,7 @@ function NewCommand() {
     const [ableToProcess, setAbleToProcess] = useState(false);
 
     const [fetching, setFetching] = useState(false);
+    const [fetchingTables, setFetchingTables] = useState(false);
 
     const [loading, setLoading] = useState(true);
     const [categories, setCategories] = useState([]);
@@ -83,6 +84,10 @@ function NewCommand() {
     const [currentShiftcut, setCurrentShiftcutId] = useState(0);
 
     const [detailsOrder, setDetailsOrder] = useState([]);
+
+    const [deleteProduct, setDeleteProduct] = useState(false);
+
+    const [showButtons, setShowButtons] = useState(false);
 
     // #region Order Details
     async function getOrderInfo(tableId) {
@@ -106,6 +111,13 @@ function NewCommand() {
         try {
             const response = await orderSalesServices.details.findByOrderId(orderId);
             setDetailsOrder(response.data[0]);
+
+            if (isEmpty(response.data[0])) {
+                setShowButtons(false);
+            } else {
+                setShowButtons(true);
+            }
+
         } catch (error) {
             console.error("Error fetching order details:", error);
         }
@@ -115,7 +127,7 @@ function NewCommand() {
         if (orderInTable.length > 0) {
             getOrderDetails(orderInTable[0].id);
         } else {
-            setDetailsOrder([]);
+            setShowButtons(false);
         }
     }, [orderInTable]);
 
@@ -192,7 +204,11 @@ function NewCommand() {
     }
 
     const changeTable = (value) => {
-        setTableOrder(value);
+        if (value !== tableOrder) {
+            setTableOrder(value);
+            setDetailsOrder([]);
+            setShowButtons(false);
+        }
     }
 
     function selectedProduct(product) {
@@ -202,7 +218,6 @@ function NewCommand() {
 
     async function createNewComanda(data) {
 
-        console.log(data);
         orderSalesServices.addCommand(
             getUserLocation(),
             4161,
@@ -221,7 +236,7 @@ function NewCommand() {
     }
 
     async function updateOrderCommand(data) {
-        console.log(data);
+
         const { saleDetailToPush, orderInfo } = data;
         if (orderInfo === orderInTable[0]) {
             orderSalesServices.details.addByCommand(
@@ -239,6 +254,57 @@ function NewCommand() {
     }
     // #endregion
 
+    async function deleteProductDetails(productId, productName) {
+        Modal.confirm({
+            title: '¿Desea eliminar este detalle?',
+            centered: true,
+            icon: <WarningOutlined />,
+            content: `${productName || 'Not defined'} será eliminada de la lista de detalles`,
+            okText: 'Confirmar',
+            okType: 'danger',
+            cancelText: 'Cancelar',
+            onOk() {
+                setDeleteProduct(true);
+                orderSalesServices.details.removeByOrderDetailId(productId)
+                    .then(async (response) => {
+                        customNot('success', 'Operación exitosa', 'Detalle eliminado');
+                        setDeleteProduct(false);
+                        await getOrderInfo(tableOrder);
+                    })
+                    .catch((error) => {
+                        setDeleteProduct(false);
+                        customNot('info', 'Algo salió mal', 'El detalle no pudo ser eliminado');
+                    });
+            },
+            onCancel() { },
+        });
+    }
+
+    async function sendToKitchen() {
+        const orderId = orderInTable[0].id;
+
+        Modal.confirm({
+            title: '¿Enviar Detalle a cocina?',
+            centered: true,
+            icon: <WarningOutlined />,
+            content: `Los detalles ya no se podrán modificar`,
+            okText: 'Confirmar',
+            okType: 'info',
+            cancelText: 'Cancelar',
+            onOk() {
+                orderSalesServices.details.sendToKitchen(orderId)
+                    .then(async (response) => {
+                        customNot('success', 'Operación exitosa', 'Detalle enviados a cocina');
+                        await getOrderInfo(tableOrder);
+                    })
+                    .catch((error) => {
+                        customNot('info', 'Algo salió mal', 'No se pudo enviar a cocina');
+                    });
+            },
+            onCancel() { },
+        });
+    }
+
     return (
         !ableToProcess ?
             <>
@@ -250,14 +316,6 @@ function NewCommand() {
             </> :
             <Wrapper>
                 <Col style={{ width: '100%' }}>
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                        <strong>Mesa:</strong>
-                        <Select style={{ width: 200 }} onChange={changeTable} value={tableOrder}>
-                            {tablesAvailable.map(item => (
-                                <Option key={item.id} value={item.id}> {item.name} </Option>
-                            ))}
-                        </Select>
-                    </div>
                     {
                         tableOrder > 0 ?
                             <>
@@ -279,7 +337,7 @@ function NewCommand() {
                         width: '100%'
                     }}
                 >
-                    <strong>Resumen de la Orden</strong>
+                    <strong style={{ marginRight: '30%', paddingBottom: 10 }}>Resumen de la Orden</strong>
                     <Row gutter={16} style={{ width: '100%' }}>
                         <Col span={17} style={{
                             display: "flex",
@@ -297,52 +355,102 @@ function NewCommand() {
                                     <span> Acciones </span>
                                 </div>
                             </div> */}
+
                             {
                                 isEmpty(orderInTable) ?
                                     <>
-                                        <Empty description="Mesa Disponible" />
+                                        <Empty description="Mesa sin ordenes" />
                                     </> :
                                     <>
-                                        {detailsOrder.map((item) => (
-                                            <div key={item.id}
-                                                style={{
-                                                    backgroundColor: !item.isActive ? '#BAE0FF' : '#D9F7BE',
-                                                    height: 80,
-                                                    width: '100%',
-                                                    display: "flex",
-                                                    padding: 10,
-                                                    cursor: "pointer",
-                                                    fontWeight: "bolder",
-                                                    justifyContent: "space-around",
-                                                    alignItems: 'center'
-                                                }}>
-                                                <div style={{ width: '60%', display: "flex", justifyContent: "space-between" }}>
-                                                    <span>{parseInt(item.quantity)}</span>
-                                                    <span>{item.ProductName}</span>
-                                                    <span>${parseFloat(item.unitPrice).toFixed(2)}</span>
-                                                    <span style={{ color: "green" }}>
-                                                        ${parseFloat(item.unitPrice * item.quantity).toFixed(2)}
-                                                    </span>
-                                                </div>
-                                                <div style={{ display: "flex", gap: 30 }}>
-                                                    <Button type="primary" size="small" hidden={!item.isActive} shape="circle" icon={<PlusOutlined />}></Button>
-                                                    <Button type="primary" size="small" hidden={!item.isActive} shape="circle" icon={<MinusOutlined />}></Button>
-                                                </div>
-                                                <Button shape="circle"
-                                                    style={{
-                                                        border: "none",
-                                                        boxShadow: "none",
-                                                        backgroundColor: "#D9F7BE"
-                                                    }}
-                                                    icon={<DeleteFilled style={{ color: "red" }} />}
-                                                >
-                                                </Button>
-                                            </div>
-                                        ))}
+                                        {
+                                            isEmpty(detailsOrder) ?
+                                                <>
+                                                    <Empty description="Cargando detalle..." />
+                                                </> :
+                                                <>
+                                                    {detailsOrder.map((item) => (
+                                                        <div key={item.id}
+                                                            style={{
+                                                                backgroundColor: !item.isActive ? '#BAE0FF' : '#D9F7BE',
+                                                                height: 80,
+                                                                width: '100%',
+                                                                display: "flex",
+                                                                padding: 10,
+                                                                cursor: "pointer",
+                                                                fontWeight: "bolder",
+                                                                justifyContent: "space-around",
+                                                                alignItems: 'center'
+                                                            }}>
+                                                            <div style={{ width: '60%', display: "flex", justifyContent: "space-between" }}>
+                                                                <span>{parseInt(item.quantity)}</span>
+                                                                <span>{item.ProductName}</span>
+                                                                <span>${parseFloat(item.unitPrice).toFixed(2)}</span>
+                                                                <span style={{ color: "green" }}>
+                                                                    ${parseFloat(item.unitPrice * item.quantity).toFixed(2)}
+                                                                </span>
+                                                            </div>
+                                                            <div style={{ display: "flex", gap: 30 }}>
+                                                                <Button type="primary" size="small" hidden={!item.isActive} shape="circle" icon={<PlusOutlined />}></Button>
+                                                                <Button type="primary" size="small" hidden={!item.isActive} shape="circle" icon={<MinusOutlined />}></Button>
+                                                            </div>
+                                                            <Button
+                                                                shape="circle"
+                                                                hidden={!item.isActive}
+                                                                style={{
+                                                                    border: "none",
+                                                                    boxShadow: "none",
+                                                                    backgroundColor: "#D9F7BE"
+                                                                }}
+                                                                loading={deleteProduct}
+                                                                onClick={() =>
+                                                                    deleteProductDetails(item.id, item.ProductName)
+                                                                }
+                                                                icon={<DeleteFilled style={{ color: "red" }} />}
+                                                            >
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+                                                </>
+                                        }
                                     </>
                             }
                         </Col>
                         <Col span={7}>
+                            <div style={{
+                                backgroundColor: '#d9d9d9', marginBottom: 10, borderRadius: '5px', gap: 10, width: '100%', display: "flex", alignItems: "center", flexDirection: 'column'
+                            }}>
+                                <strong style={{paddingTop: 10}}> Mesas Disponibles </strong>
+                                <div
+                                    style={{
+                                        padding: 5,
+                                        width: '100%',
+                                        display: 'grid',
+                                        gap: '15px',
+                                        maxHeight: '280px',
+                                        marginBottom: '10px',
+                                        overflowX: 'auto',
+                                        gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))'
+                                    }}
+                                >
+                                    {tablesAvailable.map((table) => (
+                                        <Button
+                                            style={{
+                                                backgroundColor: table.id === tableOrder ? `${table.color}` : "#fff",
+                                                fontSize: '0.8rem',
+                                                height: 80,
+                                                display: "flex",
+                                                borderRadius: '5px',
+                                                justifyContent: "center",
+                                                alignItems: "center",
+                                            }}
+                                            onClick={() => changeTable(table.id)}
+                                            key={table.id}>
+                                            <div>
+                                            </div>
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
                             <div style={styleSheet.tableFooter.footerCotainer}>
                                 <div style={styleSheet.tableFooter.detailContainer}>
                                     <p style={styleSheet.tableFooter.detailLabels.normal}>{`SON:`}</p>
@@ -362,11 +470,12 @@ function NewCommand() {
                                 </div>
                                 <div style={styleSheet.tableFooter.detailContainer}>
                                     <p style={styleSheet.tableFooter.detailLabels.emphatized}>{`VENTA TOTAL`}</p>
-                                    <p style={styleSheet.tableFooter.detailLabels.emphatized}>{`$0.00`}</p>
+                                    <p style={styleSheet.tableFooter.detailLabels.emphatized}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
                                 </div>
                                 <Button
                                     type={'primary'}
                                     icon={<SaveOutlined />}
+                                    disabled={!showButtons}
                                     style={{ margin: 5 }}
                                 // onClick={() => formAction()}
                                 // disabled={fetching}
@@ -376,8 +485,10 @@ function NewCommand() {
                                 <div style={{ display: "flex", width: '100%', justifyContent: "space-between" }}>
                                     <Button
                                         type={'button'}
+                                        disabled={!showButtons}
                                         icon={<SendOutlined />}
                                         style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
+                                        onClick={() => sendToKitchen()}
                                     // onClick={() => formAction()}
                                     // disabled={fetching}
                                     >
@@ -385,6 +496,7 @@ function NewCommand() {
                                     </Button>
                                     <Button
                                         icon={<CopyOutlined />}
+                                        disabled={!showButtons}
                                         style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
                                     // onClick={() => formAction()}
                                     // disabled={fetching}
@@ -401,7 +513,9 @@ function NewCommand() {
                     open={openProductInfo}
                     orderDetails={orderInTable}
                     productSelected={selectedProductData}
+                    productsInOrder={detailsOrder}
                     onClose={(saleDetailToPush, executePush, currentStock) => {
+
                         setOpenProductInfo(false);
                         const { detailId, detailName, detailQuantity, detailIsService } = saleDetailToPush;
 

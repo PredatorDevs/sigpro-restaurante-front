@@ -11,7 +11,7 @@ import ProductPricePicker from "../pickers/ProductPricePicker.js";
 import { getUserLocation } from "../../utils/LocalData";
 import { customNot } from "../../utils/Notifications.js";
 
-import { isEmpty, set } from "lodash";
+import { isEmpty, set, forEach } from "lodash";
 
 import Numpad from "./Numpad.js";
 
@@ -29,7 +29,7 @@ const styleSheet = {
 
 function AddProduct(props) {
 
-    const { open, productSelected, orderDetails, onClose, onUpdate } = props;
+    const { open, productSelected, productsInOrder, orderDetails, onClose, onUpdate } = props;
 
     const [openPricePicker, setOpenPricePicker] = useState(false);
 
@@ -69,6 +69,7 @@ function AddProduct(props) {
             setUpdateMode(false);
             setOrderInfo([]);
         }
+
     }, [orderDetails])
 
     useEffect(() => {
@@ -79,7 +80,7 @@ function AddProduct(props) {
         // setActiveTab('1');
         // setFormProductFilterSearch('');
         setProductData([]);
-        setOrderInfo([]);
+        // setOrderInfo([]);
         // setSelectedProductData({});
         setDetailQuantity(null);
         setInputNumpad('');
@@ -91,13 +92,9 @@ function AddProduct(props) {
         const validDetailQuantity = detailQuantity !== null && detailQuantity > 0;
         const validUnitPrice = isFinite(detailUnitPrice) && detailUnitPrice >= 0;
 
-        // const validDetailQuantityLimit = (docDetails.length <= 10);
-
         if (!validSelectedDetail) customNot('warning', 'Debe seleccionar un producto', 'Dato no válido');
         if (!validDetailQuantity) customNot('warning', 'Debe definir una cantidad válida', 'Dato no válido');
         if (!validUnitPrice) customNot('warning', 'Debe definir un costo válido', 'Dato no válido');
-
-        // if (!validDetailQuantityLimit) customNot('warning', 'Límite de detalles de venta alcanzado', 'Actualmente el sistema solo permite diez o menos detalles por venta');
 
         return (
             validSelectedDetail
@@ -163,6 +160,15 @@ function AddProduct(props) {
                         <Numpad onKeyPress={handleKeyPress} onDelete={handleDelete} valueNumpad={inputNumpad} />
                     </Col>
                 </Row>
+            )
+        },
+        {
+            key: 2,
+            label: "Comentario",
+            children: (
+                <>
+                    Agregar Comentario
+                </>
             )
         }
     ]
@@ -250,12 +256,13 @@ function AddProduct(props) {
                                     productData.productIsService
                                 );
 
-                                restoreState();
                                 if (!updateMode) {
                                     onClose(detailToAdd, true, productData.currentStock);
                                 } else {
                                     onUpdate(detailToAdd, true, orderInfo);
                                 }
+
+                                restoreState();
                             }
 
                         }}
