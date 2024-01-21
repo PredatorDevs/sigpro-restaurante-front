@@ -14,6 +14,7 @@ import { customNot } from "../../utils/Notifications.js";
 import { isEmpty, set, forEach } from "lodash";
 
 import Numpad from "./Numpad.js";
+import Input from "antd/lib/input/Input.js";
 
 const styleSheet = {
     labelStyle: {
@@ -164,11 +165,35 @@ function AddProduct(props) {
         },
         {
             key: 2,
-            label: "Comentario",
+            label: "Informacion adicional",
             children: (
-                <>
-                    Agregar Comentario
-                </>
+                <Row gutter={[12, 12]}>
+                    {!updateMode ?
+                        <Col
+                            style={{ display: 'flex', flexDirection: 'column' }}>
+                            <p style={styleSheet.labelStyle}>Nombre:</p>
+                            <Input
+                                style={{ width: '100%' }}
+                                size={'large'}
+                                // onChange={changeQuantity}
+                                type={'text'}
+                            />
+
+                        </Col>
+                        : <></>
+                    }
+                    <Col style={{ display: 'flex', flexDirection: 'column' }}>
+                        <p style={styleSheet.labelStyle}>Comentario adicional:</p>
+                        <Input
+                            style={{ width: '100%' }}
+                            size={'large'}
+                            // onChange={changeQuantity}
+                            type={'text'}
+                        />
+
+                    </Col>
+
+                </Row>
             )
         }
     ]

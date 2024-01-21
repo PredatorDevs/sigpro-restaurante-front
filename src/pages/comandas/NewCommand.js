@@ -14,7 +14,6 @@ import { numberToLetters } from "../../utils/NumberToLetters.js";
 
 import ProductsCard from "../../components/command/ProductsCards.js"
 import AddProduct from "../../components/command/AddProduct.js";
-import DetailsCommand from "../../components/command/DetailsCommad.js";
 
 import { getUserLocation, getUserMyCashier, getUserId } from '../../utils/LocalData';
 
@@ -23,10 +22,6 @@ import { customNot } from "../../utils/Notifications.js";
 import categoriesServices from '../../services/CategoriesServices.js';
 import productsServices from "../../services/ProductsServices.js";
 import { isEmpty, forEach } from "lodash";
-
-import NumberPath from "../../components/command/Numpad.js";
-
-const { Option } = Select;
 
 const styleSheet = {
     tableFooter: {
@@ -94,6 +89,7 @@ function NewCommand() {
         try {
             const response = await orderSalesServices.findByTableId(tableId);
             setOrderInTable(response.data[0]);
+            setFetchingTables(false);
         } catch (error) {
             console.error("Error fetching order info:", error);
         }
@@ -111,7 +107,6 @@ function NewCommand() {
         try {
             const response = await orderSalesServices.details.findByOrderId(orderId);
             setDetailsOrder(response.data[0]);
-
             if (isEmpty(response.data[0])) {
                 setShowButtons(false);
             } else {
@@ -216,6 +211,23 @@ function NewCommand() {
         setSelectedProductData(product);
     }
 
+    async function updateTableStatus(status, orderId, tableId, byUpdate) {
+
+        tablesServices.updateTableByOrderId(
+            byUpdate ? orderId : null,
+            !byUpdate ? orderId : null,
+            status,
+            tableId,
+            getUserId()
+        )
+            .then(async (response) => {
+                customNot('success', 'Estado de la mesa actualizado', `Mesa: ${!status ? 'Disponible' : 'Ocupada'}`);
+            })
+            .catch((error) => {
+                customNot('error', 'Algo salió mal', 'No se pudo actualizar el Estado de la mesa');
+            });
+    }
+
     async function createNewComanda(data) {
 
         orderSalesServices.addCommand(
@@ -230,6 +242,7 @@ function NewCommand() {
         ).then(async (response) => {
             customNot('success', 'Operación exitosa', 'Su orden fue añadida');
             await getOrderInfo(tableOrder);
+            await updateTableStatus(1, response.data[0].NewOrderID, tableOrder, true);
         }).catch((error) => {
             customNot('error', 'Algo salió mal', 'Su order no fue añadida');
         });
@@ -419,7 +432,7 @@ function NewCommand() {
                             <div style={{
                                 backgroundColor: '#d9d9d9', marginBottom: 10, borderRadius: '5px', gap: 10, width: '100%', display: "flex", alignItems: "center", flexDirection: 'column'
                             }}>
-                                <strong style={{paddingTop: 10}}> Mesas Disponibles </strong>
+                                <strong style={{ paddingTop: 10 }}> Mesas Disponibles </strong>
                                 <div
                                     style={{
                                         padding: 5,
@@ -443,9 +456,21 @@ function NewCommand() {
                                                 justifyContent: "center",
                                                 alignItems: "center",
                                             }}
-                                            onClick={() => changeTable(table.id)}
+                                            disabled={fetchingTables}
+                                            onClick={() => {
+                                                if (table.id !== tableOrder) {
+                                                    changeTable(table.id);
+                                                    setFetchingTables(true);
+                                                }
+                                            }}
                                             key={table.id}>
                                             <div>
+                                                {
+                                                    table.status ?
+                                                        <Tag color="red">Ocupada</Tag>
+                                                        :
+                                                        <Tag color="green">Libre</Tag>
+                                                }
                                             </div>
                                         </Button>
                                     ))}
@@ -533,7 +558,7 @@ function NewCommand() {
                         }
                     }}
                 />
-            </Wrapper>
+            </Wrapper >
     );
 }
 

@@ -26,4 +26,9 @@ tablesServices.updateTable = (Id, tableGroupId, name, color, updatedBy) =>
 tablesServices.deleteTable = (Id) =>
     genRequest(`delete`, `/tables-group/tables/${Id}`);
 
+
+tablesServices.updateTableByOrderId = (orderSaleId, lastOrderSaleId, status, tableId, updatedBy) =>
+    genRequest(`put`, `/tables-group/tables/update-ordersId/${tableId}`, { orderSaleId, lastOrderSaleId, status, updatedBy });
+
+
 export default tablesServices;
