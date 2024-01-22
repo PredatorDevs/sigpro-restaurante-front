@@ -298,30 +298,20 @@ function NewCommand() {
     }
     // #endregion
 
-    async function deleteProductDetails(productId, productName) {
-        Modal.confirm({
-            title: '¿Desea eliminar este detalle?',
-            centered: true,
-            icon: <WarningOutlined />,
-            content: `${productName || 'Not defined'} será eliminada de la lista de detalles`,
-            okText: 'Confirmar',
-            okType: 'danger',
-            cancelText: 'Cancelar',
-            onOk() {
-                setDeleteProduct(true);
-                orderSalesServices.details.removeByOrderDetailId(productId)
-                    .then(async (response) => {
-                        await getOrderInfo(tableOrder);
-                        customNot('success', 'Operación exitosa', 'Detalle eliminado');
-                        setDeleteProduct(false);
-                    })
-                    .catch((error) => {
-                        setDeleteProduct(false);
-                        customNot('info', 'Algo salió mal', 'El detalle no pudo ser eliminado');
-                    });
-            },
-            onCancel() { },
-        });
+    async function deleteProductDetails(productId) {
+
+        setDeleteProduct(true);
+        orderSalesServices.details.removeByOrderDetailId(productId)
+            .then(async (response) => {
+                await getOrderInfo(tableOrder);
+                customNot('success', 'Operación exitosa', 'Detalle eliminado');
+                setDeleteProduct(false);
+            })
+            .catch((error) => {
+                setDeleteProduct(false);
+                customNot('info', 'Algo salió mal', 'El detalle no pudo ser eliminado');
+            });
+
     }
 
     async function sendToKitchen() {
@@ -361,17 +351,22 @@ function NewCommand() {
         columnActionsDef(
             {
                 title: 'Acciones',
-                dataKey: 'uuid',
+                dataKey: 'id',
                 detail: false,
                 edit: false,
                 del: true,
-                delAction: (value) => {
+                delAction: async (value) => {
                     confirm({
                         centered: true,
                         title: '¿Desea eliminar este detalle?',
                         icon: <DeleteOutlined />,
                         content: 'Acción irreversible',
                         okType: 'danger',
+                        okText: 'Eliminar',
+                        async onOk() {
+                            await deleteProductDetails(value);
+                        },
+                        onCancel() { },
                     });
                 },
             }
@@ -417,7 +412,7 @@ function NewCommand() {
                                     {
                                         isEmpty(orderInTable) ?
                                             <>
-                                                <Empty description="Mesa sin ordenes" />
+                                                <Empty description="Mesa sin ordenes" style={{}} />
                                             </> :
                                             <>
                                                 <Table
