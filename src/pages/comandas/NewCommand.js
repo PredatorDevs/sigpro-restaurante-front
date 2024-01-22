@@ -23,6 +23,8 @@ import categoriesServices from '../../services/CategoriesServices.js';
 import productsServices from "../../services/ProductsServices.js";
 import { isEmpty, forEach } from "lodash";
 
+import AuthorizeUserPINCode from "../../components/confirmations/AuthorizeUserPINCode.js";
+
 const styleSheet = {
     tableFooter: {
         footerCotainer: {
@@ -59,7 +61,6 @@ const styleSheet = {
     }
 };
 
-
 function NewCommand() {
 
     const [ableToProcess, setAbleToProcess] = useState(false);
@@ -77,11 +78,12 @@ function NewCommand() {
     const [selectedProductData, setSelectedProductData] = useState([]);
     const [orderInTable, setOrderInTable] = useState([]);
     const [currentShiftcut, setCurrentShiftcutId] = useState(0);
-
     const [detailsOrder, setDetailsOrder] = useState([]);
 
-    const [deleteProduct, setDeleteProduct] = useState(false);
+    const [currentWaiter, setCurrentWaiter] = useState(0);
+    const [openAuthUserPINCode, setOpenAuthUserPINCode] = useState(true);
 
+    const [deleteProduct, setDeleteProduct] = useState(false);
     const [showButtons, setShowButtons] = useState(false);
 
     // #region Order Details
@@ -152,6 +154,10 @@ function NewCommand() {
 
         setFetching(false);
     }
+
+    async function checkWaiter() {
+
+    }
     // #endregion Check ShiftCut
 
     // #region Loads
@@ -159,9 +165,9 @@ function NewCommand() {
         const response = await tablesServices.findTables(getUserLocation());
         setTablesAvailable(response.data);
 
-        if (response.data.length > 0) {
-            setTableOrder(response.data[0].id);
-        }
+        // if (response.data.length > 0) {
+        //     setTableOrder(response.data[0].id);
+        // }
 
         const responseCategories = await categoriesServices.find();
         setCategories(responseCategories.data);
@@ -207,8 +213,12 @@ function NewCommand() {
     }
 
     function selectedProduct(product) {
-        setOpenProductInfo(true);
-        setSelectedProductData(product);
+        if (tableOrder !== 0) {
+            setOpenProductInfo(true);
+            setSelectedProductData(product);
+        } else {
+            customNot('warning', 'Selecciona una mesa', 'Debe de seleccionar una mesa');
+        }
     }
 
     async function updateTableStatus(status, orderId, tableId, byUpdate) {
@@ -228,7 +238,7 @@ function NewCommand() {
             });
     }
 
-    async function createNewComanda(data) {
+    async function createNewComanda(data, userDetails) {
 
         orderSalesServices.addCommand(
             getUserLocation(),
@@ -238,11 +248,15 @@ function NewCommand() {
             data.detailSubTotal,
             data.detailId,
             data.detailQuantity,
-            data.detailUnitPrice
+            data.detailUnitPrice,
+            getUserId(),
+            userDetails.commentOrder,
+            currentWaiter,
+            userDetails.nameOrder
         ).then(async (response) => {
-            customNot('success', 'Operación exitosa', 'Su orden fue añadida');
             await getOrderInfo(tableOrder);
             await updateTableStatus(1, response.data[0].NewOrderID, tableOrder, true);
+            customNot('success', 'Operación exitosa', 'Su orden fue añadida');
         }).catch((error) => {
             customNot('error', 'Algo salió mal', 'Su order no fue añadida');
         });
@@ -250,16 +264,17 @@ function NewCommand() {
 
     async function updateOrderCommand(data) {
 
-        const { saleDetailToPush, orderInfo } = data;
+        const { saleDetailToPush, orderInfo, userDetails } = data;
         if (orderInfo === orderInTable[0]) {
             orderSalesServices.details.addByCommand(
                 orderInfo.id,
                 saleDetailToPush.detailId,
                 saleDetailToPush.detailUnitPrice,
-                saleDetailToPush.detailQuantity
+                saleDetailToPush.detailQuantity,
+                userDetails.commentOrder
             ).then(async (response) => {
-                customNot('success', 'Operación exitosa', 'Su orden fue actualizada');
                 await getOrderInfo(tableOrder);
+                customNot('success', 'Operación exitosa', 'Su orden fue actualizada');
             }).catch((error) => {
                 customNot('error', 'Algo salió mal', 'Su order no fue actualizada');
             });
@@ -280,9 +295,9 @@ function NewCommand() {
                 setDeleteProduct(true);
                 orderSalesServices.details.removeByOrderDetailId(productId)
                     .then(async (response) => {
+                        await getOrderInfo(tableOrder);
                         customNot('success', 'Operación exitosa', 'Detalle eliminado');
                         setDeleteProduct(false);
-                        await getOrderInfo(tableOrder);
                     })
                     .catch((error) => {
                         setDeleteProduct(false);
@@ -307,8 +322,8 @@ function NewCommand() {
             onOk() {
                 orderSalesServices.details.sendToKitchen(orderId)
                     .then(async (response) => {
-                        customNot('success', 'Operación exitosa', 'Detalle enviados a cocina');
                         await getOrderInfo(tableOrder);
+                        customNot('success', 'Operación exitosa', 'Detalle enviados a cocina');
                     })
                     .catch((error) => {
                         customNot('info', 'Algo salió mal', 'No se pudo enviar a cocina');
@@ -329,15 +344,8 @@ function NewCommand() {
             </> :
             <Wrapper>
                 <Col style={{ width: '100%' }}>
-                    {
-                        tableOrder > 0 ?
-                            <>
-                                <CategoriesScroll categories={categories} selectedCategory={selectedCategory} onClick={selectcategory} />
-                                <ProductsCard products={availableProducts} loading={loading} selectedProduct={selectedProduct} />
-                            </> : <>
-                                <Empty description="Debe de seleccionar una mesa..." />
-                            </>
-                    }
+                    <CategoriesScroll categories={categories} selectedCategory={selectedCategory} onClick={selectcategory} />
+                    <ProductsCard products={availableProducts} loading={loading} selectedProduct={selectedProduct} />
                 </Col>
 
                 <div
@@ -350,132 +358,75 @@ function NewCommand() {
                         width: '100%'
                     }}
                 >
-                    <strong style={{ marginRight: '30%', paddingBottom: 10 }}>Resumen de la Orden</strong>
                     <Row gutter={16} style={{ width: '100%' }}>
                         <Col span={17} style={{
                             display: "flex",
                             gap: 15,
                             flexDirection: 'column'
                         }}>
-                            {/* <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-around', width: '65%' }}>
-                                    <span> Cantidad </span>
-                                    <span> Detalle </span>
-                                    <span> Precio Unitario </span>
-                                    <span> Total </span>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'center', width: '35%' }}>
-                                    <span> Acciones </span>
-                                </div>
-                            </div> */}
-
-                            {
-                                isEmpty(orderInTable) ?
-                                    <>
-                                        <Empty description="Mesa sin ordenes" />
-                                    </> :
-                                    <>
-                                        {
-                                            isEmpty(detailsOrder) ?
-                                                <>
-                                                    <Empty description="Cargando detalle..." />
-                                                </> :
-                                                <>
-                                                    {detailsOrder.map((item) => (
-                                                        <div key={item.id}
-                                                            style={{
-                                                                backgroundColor: !item.isActive ? '#BAE0FF' : '#D9F7BE',
-                                                                height: 80,
-                                                                width: '100%',
-                                                                display: "flex",
-                                                                padding: 10,
-                                                                cursor: "pointer",
-                                                                fontWeight: "bolder",
-                                                                justifyContent: "space-around",
-                                                                alignItems: 'center'
-                                                            }}>
-                                                            <div style={{ width: '60%', display: "flex", justifyContent: "space-between" }}>
-                                                                <span>{parseInt(item.quantity)}</span>
-                                                                <span>{item.ProductName}</span>
-                                                                <span>${parseFloat(item.unitPrice).toFixed(2)}</span>
-                                                                <span style={{ color: "green" }}>
-                                                                    ${parseFloat(item.unitPrice * item.quantity).toFixed(2)}
-                                                                </span>
-                                                            </div>
-                                                            <div style={{ display: "flex", gap: 30 }}>
-                                                                <Button type="primary" size="small" hidden={!item.isActive} shape="circle" icon={<PlusOutlined />}></Button>
-                                                                <Button type="primary" size="small" hidden={!item.isActive} shape="circle" icon={<MinusOutlined />}></Button>
-                                                            </div>
-                                                            <Button
-                                                                shape="circle"
-                                                                hidden={!item.isActive}
-                                                                style={{
-                                                                    border: "none",
-                                                                    boxShadow: "none",
-                                                                    backgroundColor: "#D9F7BE"
-                                                                }}
-                                                                loading={deleteProduct}
-                                                                onClick={() =>
-                                                                    deleteProductDetails(item.id, item.ProductName)
-                                                                }
-                                                                icon={<DeleteFilled style={{ color: "red" }} />}
-                                                            >
-                                                            </Button>
-                                                        </div>
-                                                    ))}
-                                                </>
-                                        }
-                                    </>
-                            }
-                        </Col>
-                        <Col span={7}>
-                            <div style={{
-                                backgroundColor: '#d9d9d9', marginBottom: 10, borderRadius: '5px', gap: 10, width: '100%', display: "flex", alignItems: "center", flexDirection: 'column'
-                            }}>
-                                <strong style={{ paddingTop: 10 }}> Mesas Disponibles </strong>
-                                <div
-                                    style={{
-                                        padding: 5,
-                                        width: '100%',
-                                        display: 'grid',
-                                        gap: '15px',
-                                        maxHeight: '280px',
-                                        marginBottom: '10px',
-                                        overflowX: 'auto',
-                                        gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))'
-                                    }}
-                                >
-                                    {tablesAvailable.map((table) => (
-                                        <Button
-                                            style={{
-                                                backgroundColor: table.id === tableOrder ? `${table.color}` : "#fff",
-                                                fontSize: '0.8rem',
-                                                height: 80,
-                                                display: "flex",
-                                                borderRadius: '5px',
-                                                justifyContent: "center",
-                                                alignItems: "center",
-                                            }}
-                                            disabled={fetchingTables}
-                                            onClick={() => {
-                                                if (table.id !== tableOrder) {
-                                                    changeTable(table.id);
-                                                    setFetchingTables(true);
-                                                }
-                                            }}
-                                            key={table.id}>
-                                            <div>
+                            {!tableOrder ?
+                                <Empty description="Seleccione una mesa..." />
+                                :
+                                <>
+                                    {
+                                        isEmpty(orderInTable) ?
+                                            <>
+                                                <Empty description="Mesa sin ordenes" />
+                                            </> :
+                                            <>
                                                 {
-                                                    table.status ?
-                                                        <Tag color="red">Ocupada</Tag>
-                                                        :
-                                                        <Tag color="green">Libre</Tag>
+                                                    isEmpty(detailsOrder) ?
+                                                        <>
+                                                            <Empty description="Cargando detalle..." />
+                                                        </> :
+                                                        <>
+                                                            {detailsOrder.map((item) => (
+                                                                <div key={item.id}
+                                                                    style={{
+                                                                        backgroundColor: !item.isActive ? '#BAE0FF' : '#D9F7BE',
+                                                                        height: 80,
+                                                                        width: '100%',
+                                                                        display: "flex",
+                                                                        padding: 10,
+                                                                        cursor: "pointer",
+                                                                        fontWeight: "bolder",
+                                                                        justifyContent: "space-around",
+                                                                        alignItems: 'center'
+                                                                    }}>
+                                                                    <div style={{ width: '60%', display: "flex", justifyContent: "space-between" }}>
+                                                                        <span>{parseInt(item.quantity)}</span>
+                                                                        <span>{item.ProductName}</span>
+                                                                        <span>${parseFloat(item.unitPrice).toFixed(2)}</span>
+                                                                        <span style={{ color: "green" }}>
+                                                                            ${parseFloat(item.unitPrice * item.quantity).toFixed(2)}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div style={{ display: "flex", gap: 30 }}>
+                                                                        <Button type="primary" size="small" hidden={!item.isActive} shape="circle" icon={<PlusOutlined />}></Button>
+                                                                        <Button type="primary" size="small" hidden={!item.isActive} shape="circle" icon={<MinusOutlined />}></Button>
+                                                                    </div>
+                                                                    <Button
+                                                                        shape="circle"
+                                                                        hidden={!item.isActive}
+                                                                        style={{
+                                                                            border: "none",
+                                                                            boxShadow: "none",
+                                                                            backgroundColor: "#D9F7BE"
+                                                                        }}
+                                                                        loading={deleteProduct}
+                                                                        onClick={() =>
+                                                                            deleteProductDetails(item.id, item.ProductName)
+                                                                        }
+                                                                        icon={<DeleteFilled style={{ color: "red" }} />}
+                                                                    >
+                                                                    </Button>
+                                                                </div>
+                                                            ))}
+                                                        </>
                                                 }
-                                            </div>
-                                        </Button>
-                                    ))}
-                                </div>
-                            </div>
+                                            </>
+                                    }
+                                </>}
                             <div style={styleSheet.tableFooter.footerCotainer}>
                                 <div style={styleSheet.tableFooter.detailContainer}>
                                     <p style={styleSheet.tableFooter.detailLabels.normal}>{`SON:`}</p>
@@ -531,6 +482,55 @@ function NewCommand() {
                                 </div>
                             </div>
                         </Col>
+                        <Col span={7}>
+                            <div style={{
+                                backgroundColor: '#d9d9d9', marginBottom: 10, borderRadius: '5px', gap: 10, width: '100%', display: "flex", alignItems: "center", flexDirection: 'column'
+                            }}>
+                                <strong style={{ paddingTop: 10 }}> Mesas Disponibles </strong>
+                                <div
+                                    style={{
+                                        padding: 5,
+                                        width: '100%',
+                                        display: 'grid',
+                                        gap: '15px',
+                                        maxHeight: '280px',
+                                        marginBottom: '10px',
+                                        overflowX: 'auto',
+                                        gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))'
+                                    }}
+                                >
+                                    {tablesAvailable.map((table) => (
+                                        <Button
+                                            style={{
+                                                backgroundColor: table.id === tableOrder ? `${table.color}` : "#fff",
+                                                fontSize: '0.8rem',
+                                                height: 80,
+                                                display: "flex",
+                                                borderRadius: '5px',
+                                                justifyContent: "center",
+                                                alignItems: "center",
+                                            }}
+                                            disabled={fetchingTables}
+                                            onClick={() => {
+                                                if (table.id !== tableOrder) {
+                                                    changeTable(table.id);
+                                                    setFetchingTables(true);
+                                                }
+                                            }}
+                                            key={table.id}>
+                                            <div>
+                                                {
+                                                    table.status ?
+                                                        <Tag color="red">Ocupada</Tag>
+                                                        :
+                                                        <Tag color="green">Libre</Tag>
+                                                }
+                                            </div>
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                        </Col>
                     </Row>
                 </div>
 
@@ -539,23 +539,36 @@ function NewCommand() {
                     orderDetails={orderInTable}
                     productSelected={selectedProductData}
                     productsInOrder={detailsOrder}
-                    onClose={(saleDetailToPush, executePush, currentStock) => {
+                    onClose={(saleDetailToPush, executePush, currentStock, userDetails) => {
 
                         setOpenProductInfo(false);
-                        const { detailId, detailName, detailQuantity, detailIsService } = saleDetailToPush;
 
                         if (executePush) {
-                            createNewComanda(saleDetailToPush);
+                            createNewComanda(saleDetailToPush, userDetails);
                         }
 
-
                     }}
-                    onUpdate={(saleDetailToPush, executePut, orderInfo) => {
+                    onUpdate={(saleDetailToPush, executePut, orderInfo, userDetails) => {
                         setOpenProductInfo(false);
 
                         if (executePut) {
-                            updateOrderCommand({ saleDetailToPush, orderInfo });
+                            updateOrderCommand({ saleDetailToPush, orderInfo, userDetails });
                         }
+                    }}
+                />
+
+                <AuthorizeUserPINCode
+                    open={openAuthUserPINCode}
+                    title={`PIN requerido`}
+                    confirmButtonText={'Confirmar'}
+                    onClose={(authorized, userAuthorizer) => {
+                        const { successAuth } = userAuthorizer;
+                        if (authorized, successAuth) {
+                            const { userPINCode } = userAuthorizer;
+                            console.log(userPINCode);
+                            setCurrentWaiter(userPINCode);
+                        }
+                        setOpenAuthUserPINCode(false);
                     }}
                 />
             </Wrapper >

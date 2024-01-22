@@ -8,7 +8,7 @@ class SaleDetailModel {
     this.detailId = detailId != null ? detailId : 0;
 
     this.detailName = detailName != null ? detailName : '';
-
+  
     this.detailIsTaxable = detailIsTaxable != null ? detailIsTaxable : '';
 
     this.detailQuantity = detailQuantity != null ? detailQuantity : 0;
@@ -35,8 +35,8 @@ class SaleDetailModel {
   }
 
   getDetailTotalTaxes(taxesData, quantity, unitPrice) {
-    let totalTaxes = 0; 
-    
+    let totalTaxes = 0;
+
     if (this.detailIsTaxable === 1) {
       forEach(taxesData, (tax) => {
         if (tax.isPercentage === 1) {
@@ -50,8 +50,8 @@ class SaleDetailModel {
   }
 
   getDetailUnitPriceTaxValue(taxesData, unitPrice) {
-    let totalTaxes = 0; 
-    
+    let totalTaxes = 0;
+
     if (this.detailIsTaxable === 1) {
       forEach(taxesData, (tax) => {
         if (tax.isPercentage === 1) {

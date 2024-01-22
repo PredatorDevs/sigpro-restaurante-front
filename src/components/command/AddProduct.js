@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Col, Button, Divider, Modal, Row, Tabs, Space, Tag, InputNumber } from "antd";
-import { CloseOutlined, DollarOutlined, SaveOutlined } from "@ant-design/icons";
+import { CloseOutlined, DollarOutlined, SaveOutlined, ArrowRightOutlined } from "@ant-design/icons";
 
 
 import productsServices from '../../services/ProductsServices.js';
@@ -40,6 +40,10 @@ function AddProduct(props) {
     const [priceScale, setPriceScale] = useState(1);
     const [updateMode, setUpdateMode] = useState();
     const [orderInfo, setOrderInfo] = useState([]);
+    const [activeTab, setActiveTab] = useState(1);
+
+    const [nameOrder, setNameOrder] = useState('');
+    const [commentOrder, setCommentOrder] = useState('');
 
     const [inputNumpad, setInputNumpad] = useState('');
 
@@ -86,22 +90,41 @@ function AddProduct(props) {
         setDetailQuantity(null);
         setInputNumpad('');
         setDetailUnitPrice(null);
+        setActiveTab(1);
+        setNameOrder('');
+        setCommentOrder('');
     }
 
     function validateDetail() {
         const validSelectedDetail = !isEmpty(productData) && productData !== null;
         const validDetailQuantity = detailQuantity !== null && detailQuantity > 0;
         const validUnitPrice = isFinite(detailUnitPrice) && detailUnitPrice >= 0;
+        const validateIdentifier = nameOrder !== null && nameOrder !== '';
 
+        const validateTab = activeTab === 2;
+
+        if (!validateIdentifier && validateTab && !updateMode) customNot('warning', 'Debe de ingresar un identificador', 'Dato no válido');
         if (!validSelectedDetail) customNot('warning', 'Debe seleccionar un producto', 'Dato no válido');
         if (!validDetailQuantity) customNot('warning', 'Debe definir una cantidad válida', 'Dato no válido');
         if (!validUnitPrice) customNot('warning', 'Debe definir un costo válido', 'Dato no válido');
 
-        return (
-            validSelectedDetail
-            && validDetailQuantity
-            && validUnitPrice
-        );
+        if (validateTab && !updateMode) {
+
+            return (
+                validSelectedDetail
+                && validDetailQuantity
+                && validUnitPrice
+                && validateIdentifier
+            );
+
+        } else {
+
+            return (
+                validSelectedDetail
+                && validDetailQuantity
+                && validUnitPrice
+            );
+        }
     }
 
     const handleKeyPress = (key) => {
@@ -115,6 +138,14 @@ function AddProduct(props) {
     useEffect(() => {
         setDetailQuantity(parseInt(inputNumpad));
     }, [inputNumpad])
+
+    const handleNameOrder = (e) => {
+        setNameOrder(e.target.value);
+    }
+
+    const handleCommentOrder = (e) => {
+        setCommentOrder(e.target.value);
+    }
 
     const items = [
         {
@@ -156,6 +187,7 @@ function AddProduct(props) {
                             value={inputNumpad}
                             // onChange={changeQuantity}
                             type={'number'}
+                            name="Cantidad"
                         />
 
                         <Numpad onKeyPress={handleKeyPress} onDelete={handleDelete} valueNumpad={inputNumpad} />
@@ -171,12 +203,16 @@ function AddProduct(props) {
                     {!updateMode ?
                         <Col
                             style={{ display: 'flex', flexDirection: 'column' }}>
-                            <p style={styleSheet.labelStyle}>Nombre:</p>
+                            <p style={styleSheet.labelStyle}>Identificador:</p>
                             <Input
                                 style={{ width: '100%' }}
                                 size={'large'}
                                 // onChange={changeQuantity}
                                 type={'text'}
+                                maxLength={250}
+                                value={nameOrder}
+                                name="Nombre"
+                                onChange={handleNameOrder}
                             />
 
                         </Col>
@@ -189,6 +225,10 @@ function AddProduct(props) {
                             size={'large'}
                             // onChange={changeQuantity}
                             type={'text'}
+                            value={commentOrder}
+                            onChange={handleCommentOrder}
+                            maxLength={250}
+                            name="Comentario"
                         />
 
                     </Col>
@@ -211,7 +251,7 @@ function AddProduct(props) {
             <Tabs
                 tabPosition={'left'}
                 tabBarStyle={{ backgroundColor: 'transparent' }}
-                defaultActiveKey={1}
+                activeKey={activeTab}
                 items={items}
             >
             </Tabs>
@@ -256,45 +296,70 @@ function AddProduct(props) {
                     </Button>
                 </Col>
                 <Col span={12}>
-                    <Button
-                        id={'new-sale-add-detail-button'}
-                        type={'primary'}
-                        size={'large'}
-                        icon={<SaveOutlined />}
-                        onClick={() => {
-
-                            if (!!!productData.productIsService) {
-                                if (productData.currentStock < detailQuantity || productData.productIsService) {
-                                    customNot('error', `No hay suficientes existencias para añadir ${productData.productName}`, 'Consulte con su administrador')
-                                    return;
-                                }
-                            }
-
-                            if (validateDetail()) {
-                                const detailToAdd = new SaleDetailModel(
-                                    productData.productId,
-                                    productData.productName,
-                                    productData.isTaxable,
-                                    detailQuantity || 0,
-                                    detailUnitPrice || 0,
-                                    productData.taxesData,
-                                    productData.productIsService
-                                );
-
-                                if (!updateMode) {
-                                    onClose(detailToAdd, true, productData.currentStock);
-                                } else {
-                                    onUpdate(detailToAdd, true, orderInfo);
+                    {activeTab === 1 ?
+                        <Button
+                            type={'primary'}
+                            size={'large'}
+                            icon={<ArrowRightOutlined />}
+                            style={{ width: '100%' }}
+                            onClick={() => {
+                                if (!!!productData.productIsService) {
+                                    if (productData.currentStock < detailQuantity || productData.productIsService) {
+                                        customNot('error', `No hay suficientes existencias para añadir ${productData.productName}`, 'Consulte con su administrador')
+                                        return;
+                                    }
                                 }
 
-                                restoreState();
-                            }
+                                if (validateDetail()) {
+                                    setActiveTab(2);
+                                }
+                            }}
+                        >
+                            Siguiente
+                        </Button>
+                        :
+                        <Button
+                            id={'new-sale-add-detail-button'}
+                            type={'primary'}
+                            size={'large'}
+                            icon={<SaveOutlined />}
+                            onClick={() => {
 
-                        }}
-                        style={{ width: '100%' }}
-                    >
-                        {!updateMode ? "Crear Order" : "Añadir Producto"}
-                    </Button>
+                                if (!!!productData.productIsService) {
+                                    if (productData.currentStock < detailQuantity || productData.productIsService) {
+                                        customNot('error', `No hay suficientes existencias para añadir ${productData.productName}`, 'Consulte con su administrador')
+                                        return;
+                                    }
+                                }
+
+                                if (validateDetail()) {
+                                    const detailToAdd = new SaleDetailModel(
+                                        productData.productId,
+                                        productData.productName,
+                                        productData.isTaxable,
+                                        detailQuantity || 0,
+                                        detailUnitPrice || 0,
+                                        productData.taxesData,
+                                        productData.productIsService
+                                    );
+
+                                    const userDetails = { nameOrder, commentOrder }
+
+                                    if (!updateMode) {
+                                        onClose(detailToAdd, true, productData.currentStock, userDetails);
+                                    } else {
+                                        onUpdate(detailToAdd, true, orderInfo, userDetails);
+                                    }
+
+                                    restoreState();
+                                }
+
+                            }}
+                            style={{ width: '100%' }}
+                        >
+                            {!updateMode ? "Crear Order" : "Añadir Producto"}
+                        </Button>
+                    }
                 </Col>
             </Row>
             <ProductPricePicker

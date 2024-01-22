@@ -52,11 +52,11 @@ orderSalesServices.details.remove = (orderSaleDetailId) =>
   genRequest(`delete`, `/ordersales/details/${orderSaleDetailId}`);
 
 //Commands
-orderSalesServices.addCommand = (locationId, customerId, tableId, shiftcutId, total, productId, quantity, unitPrice, createdBy) =>
-  genRequest('post', '/ordersales/command/new', { locationId, customerId, tableId, shiftcutId, total, productId, quantity, unitPrice, createdBy });
+orderSalesServices.addCommand = (locationId, customerId, tableId, shiftcutId, total, productId, quantity, unitPrice, createdBy, commentsDetails, userPINCode, orderIdentifier) =>
+  genRequest('post', '/ordersales/command/new', { locationId, customerId, tableId, shiftcutId, total, productId, quantity, unitPrice, createdBy, commentsDetails, userPINCode, orderIdentifier });
 
-orderSalesServices.details.addByCommand = (orderSaleId, productId, unitPrice, quantity) =>
-  genRequest(`post`, `/ordersales/details/by-command`, { orderSaleId, productId, unitPrice, quantity });
+orderSalesServices.details.addByCommand = (orderSaleId, productId, unitPrice, quantity, comments) =>
+  genRequest(`post`, `/ordersales/details/by-command`, { orderSaleId, productId, unitPrice, quantity, comments });
 
 orderSalesServices.findByTableId = (tableId) =>
   genRequest('get', `/ordersales/by-table/${tableId}`, {});
