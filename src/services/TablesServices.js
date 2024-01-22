@@ -5,6 +5,12 @@ const tablesServices = {};
 tablesServices.findGroup = (location) =>
     genRequest(`get`, `/tables-group/location/${location}`, {}, '', '', 'La información de las categorías no pudo ser obtenida', 'Error desconocido');
 
+tablesServices.findAllInCommand = (location) =>
+    genRequest(`get`, `/tables-group/tables-no-orders/location/${location}`, {}, '', '', 'La información de las categorías no pudo ser obtenida', 'Error desconocido');
+
+tablesServices.findByPin = (location, pin) =>
+    genRequest(`get`, `/tables-group/tables-by-pin/location/${location}/${pin}`, {}, '', '', 'La información de las categorías no pudo ser obtenida', 'Error desconocido');
+
 tablesServices.add = (locationId, name, createdBy) =>
     genRequest(`post`, `/tables-group`, { locationId, name, createdBy });
 

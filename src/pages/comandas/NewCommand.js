@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { Select, Row, Col, Empty, Result, Button, Modal, Tag } from "antd";
-import { SaveOutlined, SendOutlined, WarningOutlined, CopyOutlined, PlusOutlined, MinusOutlined, DeleteFilled } from "@ant-design/icons";
+import { Row, Col, Empty, Result, Button, Modal, Table, Tag, Divider } from "antd";
+import { SaveOutlined, SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined, PlusOutlined, MinusOutlined, DeleteFilled } from "@ant-design/icons";
+
+import { columnActionsDef, columnDef, columnMoneyDef } from '../../utils/ColumnsDefinitions';
 
 import { Wrapper } from '../../styled-components/Wrapper';
 
@@ -31,9 +33,10 @@ const styleSheet = {
             backgroundColor: '#d9d9d9',
             borderRadius: '5px',
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: 'row',
             padding: 5,
-            width: '100%'
+            width: '100%',
+            gap: 5
         },
         detailContainer: {
             backgroundColor: '#f5f5f5',
@@ -44,6 +47,17 @@ const styleSheet = {
             marginBottom: '5px',
             padding: 5,
             width: '100%'
+        },
+        detailContainerLetters: {
+            backgroundColor: '#f5f5f5',
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            borderRadius: '5px',
+            marginBottom: '5px',
+            padding: 5,
+            width: '70%',
+            height: 25
         },
         detailLabels: {
             normal: {
@@ -60,6 +74,8 @@ const styleSheet = {
         }
     }
 };
+
+const { confirm } = Modal;
 
 function NewCommand() {
 
@@ -333,6 +349,35 @@ function NewCommand() {
         });
     }
 
+    const columns = [
+        columnDef({ title: 'Cantidad', dataKey: 'quantity' }),
+        columnDef({ title: 'Detalle', dataKey: 'ProductName' }),
+        columnMoneyDef({ title: 'Precio Unitario', dataKey: 'unitPrice' }),
+        columnMoneyDef({ title: 'Exento', dataKey: 'detailNoTaxableTotal' }),
+        columnMoneyDef({
+            title: 'Gravado',
+            dataKey: 'TotalDetail',
+        }),
+        columnActionsDef(
+            {
+                title: 'Acciones',
+                dataKey: 'uuid',
+                detail: false,
+                edit: false,
+                del: true,
+                delAction: (value) => {
+                    confirm({
+                        centered: true,
+                        title: '¿Desea eliminar este detalle?',
+                        icon: <DeleteOutlined />,
+                        content: 'Acción irreversible',
+                        okType: 'danger',
+                    });
+                },
+            }
+        ),
+    ];
+
     return (
         !ableToProcess ?
             <>
@@ -362,7 +407,8 @@ function NewCommand() {
                         <Col span={17} style={{
                             display: "flex",
                             gap: 15,
-                            flexDirection: 'column'
+                            flexDirection: 'column',
+                            justifyContent: "space-between"
                         }}>
                             {!tableOrder ?
                                 <Empty description="Seleccione una mesa..." />
@@ -374,117 +420,50 @@ function NewCommand() {
                                                 <Empty description="Mesa sin ordenes" />
                                             </> :
                                             <>
-                                                {
-                                                    isEmpty(detailsOrder) ?
-                                                        <>
-                                                            <Empty description="Cargando detalle..." />
-                                                        </> :
-                                                        <>
-                                                            {detailsOrder.map((item) => (
-                                                                <div key={item.id}
-                                                                    style={{
-                                                                        backgroundColor: !item.isActive ? '#BAE0FF' : '#D9F7BE',
-                                                                        height: 80,
-                                                                        width: '100%',
-                                                                        display: "flex",
-                                                                        padding: 10,
-                                                                        cursor: "pointer",
-                                                                        fontWeight: "bolder",
-                                                                        justifyContent: "space-around",
-                                                                        alignItems: 'center'
-                                                                    }}>
-                                                                    <div style={{ width: '60%', display: "flex", justifyContent: "space-between" }}>
-                                                                        <span>{parseInt(item.quantity)}</span>
-                                                                        <span>{item.ProductName}</span>
-                                                                        <span>${parseFloat(item.unitPrice).toFixed(2)}</span>
-                                                                        <span style={{ color: "green" }}>
-                                                                            ${parseFloat(item.unitPrice * item.quantity).toFixed(2)}
-                                                                        </span>
-                                                                    </div>
-                                                                    <div style={{ display: "flex", gap: 30 }}>
-                                                                        <Button type="primary" size="small" hidden={!item.isActive} shape="circle" icon={<PlusOutlined />}></Button>
-                                                                        <Button type="primary" size="small" hidden={!item.isActive} shape="circle" icon={<MinusOutlined />}></Button>
-                                                                    </div>
-                                                                    <Button
-                                                                        shape="circle"
-                                                                        hidden={!item.isActive}
-                                                                        style={{
-                                                                            border: "none",
-                                                                            boxShadow: "none",
-                                                                            backgroundColor: "#D9F7BE"
-                                                                        }}
-                                                                        loading={deleteProduct}
-                                                                        onClick={() =>
-                                                                            deleteProductDetails(item.id, item.ProductName)
-                                                                        }
-                                                                        icon={<DeleteFilled style={{ color: "red" }} />}
-                                                                    >
-                                                                    </Button>
-                                                                </div>
-                                                            ))}
-                                                        </>
-                                                }
+                                                <Table
+                                                    columns={columns}
+                                                    rowKey={'uuid'}
+                                                    size={'small'}
+                                                    pagination={false}
+                                                    dataSource={detailsOrder || []}
+                                                />
                                             </>
                                     }
                                 </>}
                             <div style={styleSheet.tableFooter.footerCotainer}>
-                                <div style={styleSheet.tableFooter.detailContainer}>
+                                <div style={styleSheet.tableFooter.detailContainerLetters}>
                                     <p style={styleSheet.tableFooter.detailLabels.normal}>{`SON:`}</p>
                                     <p style={styleSheet.tableFooter.detailLabels.normal}>{`${numberToLetters(getTotalCommand())}`}</p>
                                 </div>
-                                <div style={styleSheet.tableFooter.detailContainer}>
-                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`GRAVADO:`}</p>
-                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
-                                </div>
-                                <div style={styleSheet.tableFooter.detailContainer}>
-                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`SUBTOTAL:`}</p>
-                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
-                                </div>
-                                <div style={styleSheet.tableFooter.detailContainer}>
-                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`EXENTO:`}</p>
-                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`$0.00`}</p>
-                                </div>
-                                <div style={styleSheet.tableFooter.detailContainer}>
-                                    <p style={styleSheet.tableFooter.detailLabels.emphatized}>{`VENTA TOTAL`}</p>
-                                    <p style={styleSheet.tableFooter.detailLabels.emphatized}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
-                                </div>
-                                <Button
-                                    type={'primary'}
-                                    icon={<SaveOutlined />}
-                                    disabled={!showButtons}
-                                    style={{ margin: 5 }}
-                                // onClick={() => formAction()}
-                                // disabled={fetching}
-                                >
-                                    CONFIRMAR
-                                </Button>
-                                <div style={{ display: "flex", width: '100%', justifyContent: "space-between" }}>
-                                    <Button
-                                        type={'button'}
-                                        disabled={!showButtons}
-                                        icon={<SendOutlined />}
-                                        style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                        onClick={() => sendToKitchen()}
-                                    // onClick={() => formAction()}
-                                    // disabled={fetching}
-                                    >
-                                        ENVIAR A COCINA
-                                    </Button>
-                                    <Button
-                                        icon={<CopyOutlined />}
-                                        disabled={!showButtons}
-                                        style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                    // onClick={() => formAction()}
-                                    // disabled={fetching}
-                                    >
-                                        CREAR DETALLE
-                                    </Button>
+                                <div style={{ width: '30%' }}>
+                                    <div style={styleSheet.tableFooter.detailContainer}>
+                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`GRAVADO:`}</p>
+                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
+                                    </div>
+                                    <div style={styleSheet.tableFooter.detailContainer}>
+                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`SUBTOTAL:`}</p>
+                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
+                                    </div>
+                                    <div style={styleSheet.tableFooter.detailContainer}>
+                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`EXENTO:`}</p>
+                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`$0.00`}</p>
+                                    </div>
+                                    <div style={styleSheet.tableFooter.detailContainer}>
+                                        <p style={styleSheet.tableFooter.detailLabels.emphatized}>{`VENTA TOTAL`}</p>
+                                        <p style={styleSheet.tableFooter.detailLabels.emphatized}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
+                                    </div>
                                 </div>
                             </div>
                         </Col>
                         <Col span={7}>
                             <div style={{
-                                backgroundColor: '#d9d9d9', marginBottom: 10, borderRadius: '5px', gap: 10, width: '100%', display: "flex", alignItems: "center", flexDirection: 'column'
+                                backgroundColor: '#d9d9d9',
+                                borderRadius: '5px',
+                                gap: 10,
+                                width: '100%',
+                                display: "flex",
+                                alignItems: "center",
+                                flexDirection: 'column'
                             }}>
                                 <strong style={{ paddingTop: 10 }}> Mesas Disponibles </strong>
                                 <div
@@ -528,6 +507,41 @@ function NewCommand() {
                                             </div>
                                         </Button>
                                     ))}
+
+                                </div>
+                                <div style={{ width: '100%' }}>
+                                    <Button
+                                        type={'primary'}
+                                        icon={<SaveOutlined />}
+                                        disabled={!showButtons}
+                                        style={{ margin: 5, width: 'calc(100% - 10px)' }}
+                                    // onClick={() => formAction()}
+                                    // disabled={fetching}
+                                    >
+                                        CONFIRMAR
+                                    </Button>
+                                    <div style={{ display: "flex", width: '100%', justifyContent: "space-between" }}>
+                                        <Button
+                                            type={'button'}
+                                            disabled={!showButtons}
+                                            icon={<SendOutlined />}
+                                            style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
+                                            onClick={() => sendToKitchen()}
+                                        // onClick={() => formAction()}
+                                        // disabled={fetching}
+                                        >
+                                            ENVIAR A COCINA
+                                        </Button>
+                                        <Button
+                                            icon={<CopyOutlined />}
+                                            disabled={!showButtons}
+                                            style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
+                                        // onClick={() => formAction()}
+                                        // disabled={fetching}
+                                        >
+                                            CREAR DETALLE
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </Col>
@@ -565,7 +579,7 @@ function NewCommand() {
                         const { successAuth } = userAuthorizer;
                         if (authorized, successAuth) {
                             const { userPINCode } = userAuthorizer;
-                            console.log(userPINCode);
+
                             setCurrentWaiter(userPINCode);
                         }
                         setOpenAuthUserPINCode(false);
