@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Row, Col, Empty, Result, Button, Modal, Table, Tag, Divider } from "antd";
-import { SaveOutlined, SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined, PlusOutlined, MinusOutlined, DeleteFilled } from "@ant-design/icons";
+import { Row, Col, Empty, Result, Button, Modal, Table, Tag } from "antd";
+import { SaveOutlined, SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined } from "@ant-design/icons";
 
 import { columnActionsDef, columnDef, columnMoneyDef } from '../../utils/ColumnsDefinitions';
 
@@ -18,6 +18,8 @@ import ProductsCard from "../../components/command/ProductsCards.js"
 import AddProduct from "../../components/command/AddProduct.js";
 
 import { getUserLocation, getUserMyCashier, getUserId } from '../../utils/LocalData';
+
+import TableButton from "../../components/command/TableButton.js";
 
 import { customNot } from "../../utils/Notifications.js";
 
@@ -72,6 +74,32 @@ const styleSheet = {
                 fontWeight: 600
             }
         }
+    },
+    TableStyles: {
+        containerStyle: {
+            backgroundColor: '#d9d9d9',
+            borderRadius: '5px',
+            gap: 10,
+            width: '100%',
+            display: "flex",
+            alignItems: "center",
+            flexDirection: 'column',
+        },
+        headerStyle: {
+            width: '100%',
+            textAlign: 'center',
+            paddingTop: 10,
+        },
+        gridContainerStyle: {
+            padding: 5,
+            width: '100%',
+            display: 'grid',
+            gap: '15px',
+            maxHeight: '280px',
+            marginBottom: '10px',
+            overflowX: 'auto',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+        }
     }
 };
 
@@ -86,7 +114,10 @@ function NewCommand() {
 
     const [loading, setLoading] = useState(true);
     const [categories, setCategories] = useState([]);
+
     const [tablesAvailable, setTablesAvailable] = useState([]);
+    const [myTablesAvailable, setMyTablesAvailable] = useState([]);
+
     const [availableProducts, setAvailableProducts] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [tableOrder, setTableOrder] = useState(0);
@@ -99,7 +130,6 @@ function NewCommand() {
     const [currentWaiter, setCurrentWaiter] = useState(0);
     const [openAuthUserPINCode, setOpenAuthUserPINCode] = useState(true);
 
-    const [deleteProduct, setDeleteProduct] = useState(false);
     const [showButtons, setShowButtons] = useState(false);
 
     // #region Order Details
@@ -170,16 +200,12 @@ function NewCommand() {
 
         setFetching(false);
     }
-
-    async function checkWaiter() {
-
-    }
     // #endregion Check ShiftCut
 
     // #region Loads
     async function loadData() {
-        const response = await tablesServices.findTables(getUserLocation());
-        setTablesAvailable(response.data);
+        const response = await tablesServices.findAllInCommand(getUserLocation());
+        setTablesAvailable(response.data[0]);
 
         // if (response.data.length > 0) {
         //     setTableOrder(response.data[0].id);
@@ -192,6 +218,21 @@ function NewCommand() {
             setSelectedCategory(responseCategories.data[0]);
         }
     }
+
+    async function loadMyTables() {
+        try {
+            const response = await tablesServices.findByPin(getUserLocation(), currentWaiter);
+            setMyTablesAvailable(response.data[0]);
+        } catch (error) {
+            console.error("Error fetching tables:", error);
+        }
+    }
+
+    useEffect(async () => {
+        if (currentWaiter !== 0) {
+            await loadMyTables();
+        }
+    }, [currentWaiter]);
 
     useEffect(() => {
         checkIfAbleToProcess();
@@ -222,9 +263,10 @@ function NewCommand() {
 
     const changeTable = (value) => {
         if (value !== tableOrder) {
-            setTableOrder(value);
             setDetailsOrder([]);
+            setOrderInTable([]);
             setShowButtons(false);
+            setTableOrder(value);
         }
     }
 
@@ -247,6 +289,8 @@ function NewCommand() {
             getUserId()
         )
             .then(async (response) => {
+                await loadData();
+                await loadMyTables();
                 customNot('success', 'Estado de la mesa actualizado', `Mesa: ${!status ? 'Disponible' : 'Ocupada'}`);
             })
             .catch((error) => {
@@ -300,18 +344,14 @@ function NewCommand() {
 
     async function deleteProductDetails(productId) {
 
-        setDeleteProduct(true);
         orderSalesServices.details.removeByOrderDetailId(productId)
             .then(async (response) => {
                 await getOrderInfo(tableOrder);
                 customNot('success', 'Operación exitosa', 'Detalle eliminado');
-                setDeleteProduct(false);
             })
             .catch((error) => {
-                setDeleteProduct(false);
                 customNot('info', 'Algo salió mal', 'El detalle no pudo ser eliminado');
             });
-
     }
 
     async function sendToKitchen() {
@@ -344,10 +384,7 @@ function NewCommand() {
         columnDef({ title: 'Detalle', dataKey: 'ProductName' }),
         columnMoneyDef({ title: 'Precio Unitario', dataKey: 'unitPrice' }),
         columnMoneyDef({ title: 'Exento', dataKey: 'detailNoTaxableTotal' }),
-        columnMoneyDef({
-            title: 'Gravado',
-            dataKey: 'TotalDetail',
-        }),
+        columnMoneyDef({ title: 'Gravado', dataKey: 'TotalDetail' }),
         columnActionsDef(
             {
                 title: 'Acciones',
@@ -417,8 +454,9 @@ function NewCommand() {
                                             <>
                                                 <Table
                                                     columns={columns}
-                                                    rowKey={'uuid'}
+                                                    rowKey={'id'}
                                                     size={'small'}
+                                                    loading={isEmpty(detailsOrder)}
                                                     pagination={false}
                                                     dataSource={detailsOrder || []}
                                                 />
@@ -460,50 +498,42 @@ function NewCommand() {
                                 alignItems: "center",
                                 flexDirection: 'column'
                             }}>
-                                <strong style={{ paddingTop: 10 }}> Mesas Disponibles </strong>
-                                <div
-                                    style={{
-                                        padding: 5,
-                                        width: '100%',
-                                        display: 'grid',
-                                        gap: '15px',
-                                        maxHeight: '280px',
-                                        marginBottom: '10px',
-                                        overflowX: 'auto',
-                                        gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))'
-                                    }}
-                                >
+                                <strong style={styleSheet.TableStyles.headerStyle}>Mesas Disponibles</strong>
+                                <div style={styleSheet.TableStyles.gridContainerStyle}>
                                     {tablesAvailable.map((table) => (
-                                        <Button
-                                            style={{
-                                                backgroundColor: table.id === tableOrder ? `${table.color}` : "#fff",
-                                                fontSize: '0.8rem',
-                                                height: 80,
-                                                display: "flex",
-                                                borderRadius: '5px',
-                                                justifyContent: "center",
-                                                alignItems: "center",
-                                            }}
-                                            disabled={fetchingTables}
-                                            onClick={() => {
-                                                if (table.id !== tableOrder) {
-                                                    changeTable(table.id);
-                                                    setFetchingTables(true);
-                                                }
-                                            }}
-                                            key={table.id}>
-                                            <div>
-                                                {
-                                                    table.status ?
-                                                        <Tag color="red">Ocupada</Tag>
-                                                        :
-                                                        <Tag color="green">Libre</Tag>
-                                                }
-                                            </div>
-                                        </Button>
+                                        <TableButton
+                                            key={table.id}
+                                            table={table}
+                                            tableOrder={tableOrder}
+                                            fetchingTables={fetchingTables}
+                                            onChangeTable={changeTable}
+                                        />
                                     ))}
-
                                 </div>
+                                <div style={{ width: '100%', textAlign: 'center' }}>
+
+                                    {
+                                        isEmpty(myTablesAvailable) ?
+                                            <>
+                                            </>
+                                            :
+                                            <>
+                                                <strong style={styleSheet.TableStyles.headerStyle}>Mis Mesas</strong>
+                                                <div style={styleSheet.TableStyles.gridContainerStyle}>
+                                                    {myTablesAvailable.map((table) => (
+                                                        <TableButton
+                                                            key={table.id}
+                                                            table={table}
+                                                            tableOrder={tableOrder}
+                                                            fetchingTables={fetchingTables}
+                                                            onChangeTable={changeTable}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </>
+                                    }
+                                </div>
+
                                 <div style={{ width: '100%' }}>
                                     <Button
                                         type={'primary'}
@@ -572,7 +602,7 @@ function NewCommand() {
                     confirmButtonText={'Confirmar'}
                     onClose={(authorized, userAuthorizer) => {
                         const { successAuth } = userAuthorizer;
-                        if (authorized, successAuth) {
+                        if (authorized && successAuth) {
                             const { userPINCode } = userAuthorizer;
 
                             setCurrentWaiter(userPINCode);
@@ -580,6 +610,8 @@ function NewCommand() {
                         setOpenAuthUserPINCode(false);
                     }}
                 />
+
+
             </Wrapper >
     );
 }
