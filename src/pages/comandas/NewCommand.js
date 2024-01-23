@@ -380,7 +380,22 @@ function NewCommand() {
     }
 
     const columns = [
-        columnDef({ title: 'Cantidad', dataKey: 'quantity' }),
+        columnDef({
+            title: 'Estado', dataKey: 'isActive', customRender: isActive => (
+                <Tag
+                    color={isActive ? '#D9F7BE' : '#BAE0FF'}
+                    style={{
+                        display: 'block',
+                        maxWidth: '100%',
+                        height: '20px',
+                        textAlign: "center",
+                        color: "black",
+                    }}>
+                    {isActive ? 'Ordenando' : 'En Cocina'}
+                </Tag >
+            )
+        }),
+        columnDef({ title: 'Cantidad', dataKey: 'quantity', customRender: quantity => (parseInt(quantity)) }),
         columnDef({ title: 'Detalle', dataKey: 'ProductName' }),
         columnMoneyDef({ title: 'Precio Unitario', dataKey: 'unitPrice' }),
         columnMoneyDef({ title: 'Exento', dataKey: 'detailNoTaxableTotal' }),
@@ -439,8 +454,7 @@ function NewCommand() {
                         <Col span={17} style={{
                             display: "flex",
                             gap: 15,
-                            flexDirection: 'column',
-                            justifyContent: "space-between"
+                            flexDirection: 'column'
                         }}>
                             {!tableOrder ?
                                 <Empty description="Seleccione una mesa..." />
@@ -456,7 +470,6 @@ function NewCommand() {
                                                     columns={columns}
                                                     rowKey={'id'}
                                                     size={'small'}
-                                                    loading={isEmpty(detailsOrder)}
                                                     pagination={false}
                                                     dataSource={detailsOrder || []}
                                                 />

@@ -4,6 +4,7 @@ const buttonStyle = {
     backgroundColor: "#fff",
     fontSize: '0.8rem',
     height: 80,
+    padding: 0,
     display: "flex",
     borderRadius: '5px',
     justifyContent: "center",
@@ -25,8 +26,21 @@ function TableButton({ table, tableOrder, fetchingTables, onChangeTable }) {
             }}
             key={table.id}
         >
-            <div>
-                <p style={{ fontWeight: "bolder" }}>{table.name}</p>
+            <div style={{
+                display: "flex",
+                flexDirection: 'column',
+                maxWidth: '100%',
+                alignItems: 'center',
+                gap: 5
+            }}>
+                <p style={{
+                    fontWeight: "bolder",
+                    margin: 0,
+                    maxWidth: '100%',
+                    color: "black",
+                }}>
+                    {table.name}
+                </p>
                 {table.status ? <Tag color="red">Ocupada</Tag> : <Tag color="green">Libre</Tag>}
             </div>
         </Button>
