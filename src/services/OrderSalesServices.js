@@ -70,5 +70,7 @@ orderSalesServices.details.removeByOrderDetailId = (ordersaleId) =>
 orderSalesServices.details.sendToKitchen = (ordersaleId) =>
   genRequest('get', `/ordersales/send-to-kitchen/${ordersaleId}`, {}, '', '', 'La información de las ordenes no pudo ser obtenida', 'Error desconocido');
 
+orderSalesServices.updateComment = ( orderSaleId, commentOrder, total, updateBy, locationId, status ) =>
+  genRequest('put', `/ordersales/update-by-command`, { orderSaleId, commentOrder, total, updateBy, locationId, status }, '', '', 'La información de las ordenes no pudo ser obtenida', 'Error desconocido');
 
 export default orderSalesServices;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Row, Col, Empty, Result, Button, Modal, Table, Tag } from "antd";
+import { Row, Col, Empty, Result, Button, Modal, Table, Tag, Spin } from "antd";
 import { SaveOutlined, SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined } from "@ant-design/icons";
 
 import { columnActionsDef, columnDef, columnMoneyDef } from '../../utils/ColumnsDefinitions';
@@ -28,6 +28,7 @@ import productsServices from "../../services/ProductsServices.js";
 import { isEmpty, forEach } from "lodash";
 
 import AuthorizeUserPINCode from "../../components/confirmations/AuthorizeUserPINCode.js";
+import ConfirmOrder from "../../components/command/ConfirmOrder.js";
 
 const styleSheet = {
     tableFooter: {
@@ -111,6 +112,7 @@ function NewCommand() {
 
     const [fetching, setFetching] = useState(false);
     const [fetchingTables, setFetchingTables] = useState(false);
+    const [fetchingMyTables, setFetchingMyTables] = useState(false);
 
     const [loading, setLoading] = useState(true);
     const [categories, setCategories] = useState([]);
@@ -127,10 +129,11 @@ function NewCommand() {
     const [currentShiftcut, setCurrentShiftcutId] = useState(0);
     const [detailsOrder, setDetailsOrder] = useState([]);
 
-    const [currentWaiter, setCurrentWaiter] = useState(0);
+    const [currentWaiter, setCurrentWaiter] = useState({});
     const [openAuthUserPINCode, setOpenAuthUserPINCode] = useState(true);
 
     const [showButtons, setShowButtons] = useState(false);
+    const [confirmOrder, setConfirmOrder] = useState(false);
 
     // #region Order Details
     async function getOrderInfo(tableId) {
@@ -221,15 +224,17 @@ function NewCommand() {
 
     async function loadMyTables() {
         try {
-            const response = await tablesServices.findByPin(getUserLocation(), currentWaiter);
+            const response = await tablesServices.findByPin(getUserLocation(), currentWaiter.userPINCode);
             setMyTablesAvailable(response.data[0]);
+            setFetchingMyTables(false);
         } catch (error) {
             console.error("Error fetching tables:", error);
         }
     }
 
     useEffect(async () => {
-        if (currentWaiter !== 0) {
+        if (currentWaiter.currentWaiter !== 0) {
+            setFetchingMyTables(true);
             await loadMyTables();
         }
     }, [currentWaiter]);
@@ -280,7 +285,7 @@ function NewCommand() {
     }
 
     async function updateTableStatus(status, orderId, tableId, byUpdate) {
-
+        
         tablesServices.updateTableByOrderId(
             byUpdate ? orderId : null,
             !byUpdate ? orderId : null,
@@ -291,7 +296,7 @@ function NewCommand() {
             .then(async (response) => {
                 await loadData();
                 await loadMyTables();
-                customNot('success', 'Estado de la mesa actualizado', `Mesa: ${!status ? 'Disponible' : 'Ocupada'}`);
+                customNot('success', 'Estado de la mesa actualizado', `Mesa: ${!byUpdate ? 'Libre' : 'Ocupada'}`);
             })
             .catch((error) => {
                 customNot('error', 'Algo salió mal', 'No se pudo actualizar el Estado de la mesa');
@@ -309,11 +314,12 @@ function NewCommand() {
             data.detailId,
             data.detailQuantity,
             data.detailUnitPrice,
-            getUserId(),
+            currentWaiter.userId,
             userDetails.commentOrder,
-            currentWaiter,
+            currentWaiter.userPINCode,
             userDetails.nameOrder
         ).then(async (response) => {
+            setFetchingMyTables(true);
             await getOrderInfo(tableOrder);
             await updateTableStatus(1, response.data[0].NewOrderID, tableOrder, true);
             customNot('success', 'Operación exitosa', 'Su orden fue añadida');
@@ -377,6 +383,48 @@ function NewCommand() {
             },
             onCancel() { },
         });
+    }
+
+    async function confirmOrderToCheckout(comment) {
+        if (!isEmpty(orderInTable)) {
+            const orderId = orderInTable[0].id;
+            const totalOrder = parseFloat(getTotalCommand()).toFixed(2);
+            orderSalesServices.updateComment(
+                orderId,
+                comment.comment,
+                totalOrder,
+                currentWaiter.userId,
+                getUserLocation(),
+                0
+            )
+                .then(async (response) => {
+                    setFetchingMyTables(true);
+                    await getOrderInfo(tableOrder);
+                    await updateTableStatus(0, orderId, tableOrder, false);
+                    customNot('success', 'Orden Guardada', 'La orden fue enviada a caja');
+                })
+                .catch(error => {
+                    customNot('danger', 'Algo salió mal', 'La orden no pudo ser enviada a caja');
+                    console.error("Error fetching order info:", error);
+                });
+        }
+    }
+
+    function detailsOrderValidation() {
+
+        if (detailsOrder.length === 0) {
+
+            return { isValid: false, message: 'La orden no debe estar vacía' };
+        }
+
+        const allObjectsHaveStatusZero = detailsOrder.every(obj => obj.isActive === 0);
+
+        if (!allObjectsHaveStatusZero) {
+
+            return { isValid: allObjectsHaveStatusZero, message: 'Al menos un detalle no está en cocina' };
+        }
+
+        return { isValid: true, message: 'Orden enviada a caja' };
     }
 
     const columns = [
@@ -502,86 +550,88 @@ function NewCommand() {
                             </div>
                         </Col>
                         <Col span={7}>
-                            <div style={{
-                                backgroundColor: '#d9d9d9',
-                                borderRadius: '5px',
-                                gap: 10,
-                                width: '100%',
-                                display: "flex",
-                                alignItems: "center",
-                                flexDirection: 'column'
-                            }}>
-                                <strong style={styleSheet.TableStyles.headerStyle}>Mesas Disponibles</strong>
-                                <div style={styleSheet.TableStyles.gridContainerStyle}>
-                                    {tablesAvailable.map((table) => (
-                                        <TableButton
-                                            key={table.id}
-                                            table={table}
-                                            tableOrder={tableOrder}
-                                            fetchingTables={fetchingTables}
-                                            onChangeTable={changeTable}
-                                        />
-                                    ))}
-                                </div>
-                                <div style={{ width: '100%', textAlign: 'center' }}>
+                            <Spin spinning={fetchingMyTables}>
+                                <div style={{
+                                    backgroundColor: '#d9d9d9',
+                                    borderRadius: '5px',
+                                    gap: 10,
+                                    width: '100%',
+                                    display: "flex",
+                                    alignItems: "center",
+                                    flexDirection: 'column'
+                                }}>
+                                    <strong style={styleSheet.TableStyles.headerStyle}>Mesas Disponibles</strong>
+                                    <div style={styleSheet.TableStyles.gridContainerStyle}>
+                                        {tablesAvailable.map((table) => (
+                                            <TableButton
+                                                key={table.id}
+                                                table={table}
+                                                tableOrder={tableOrder}
+                                                fetchingTables={fetchingTables}
+                                                onChangeTable={changeTable}
+                                            />
+                                        ))}
+                                    </div>
+                                    <div style={{ width: '100%', textAlign: 'center' }}>
 
-                                    {
-                                        isEmpty(myTablesAvailable) ?
-                                            <>
-                                            </>
-                                            :
-                                            <>
-                                                <strong style={styleSheet.TableStyles.headerStyle}>Mis Mesas</strong>
-                                                <div style={styleSheet.TableStyles.gridContainerStyle}>
-                                                    {myTablesAvailable.map((table) => (
-                                                        <TableButton
-                                                            key={table.id}
-                                                            table={table}
-                                                            tableOrder={tableOrder}
-                                                            fetchingTables={fetchingTables}
-                                                            onChangeTable={changeTable}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </>
-                                    }
-                                </div>
+                                        {
+                                            isEmpty(myTablesAvailable) ?
+                                                <>
+                                                </>
+                                                :
+                                                <>
+                                                    <strong style={styleSheet.TableStyles.headerStyle}>Mis Mesas</strong>
+                                                    <div style={styleSheet.TableStyles.gridContainerStyle}>
+                                                        {myTablesAvailable.map((table) => (
+                                                            <TableButton
+                                                                key={table.id}
+                                                                table={table}
+                                                                tableOrder={tableOrder}
+                                                                fetchingTables={fetchingTables}
+                                                                onChangeTable={changeTable}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </>
+                                        }
+                                    </div>
 
-                                <div style={{ width: '100%' }}>
-                                    <Button
-                                        type={'primary'}
-                                        icon={<SaveOutlined />}
-                                        disabled={!showButtons}
-                                        style={{ margin: 5, width: 'calc(100% - 10px)' }}
-                                    // onClick={() => formAction()}
-                                    // disabled={fetching}
-                                    >
-                                        CONFIRMAR
-                                    </Button>
-                                    <div style={{ display: "flex", width: '100%', justifyContent: "space-between" }}>
+                                    <div style={{ width: '100%' }}>
                                         <Button
-                                            type={'button'}
+                                            type={'primary'}
+                                            icon={<SaveOutlined />}
                                             disabled={!showButtons}
-                                            icon={<SendOutlined />}
-                                            style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                            onClick={() => sendToKitchen()}
-                                        // onClick={() => formAction()}
+                                            style={{ margin: 5, width: 'calc(100% - 10px)' }}
+                                            onClick={() => setConfirmOrder(true)}
                                         // disabled={fetching}
                                         >
-                                            ENVIAR A COCINA
+                                            CONFIRMAR
                                         </Button>
-                                        <Button
-                                            icon={<CopyOutlined />}
-                                            disabled={!showButtons}
-                                            style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                        // onClick={() => formAction()}
-                                        // disabled={fetching}
-                                        >
-                                            CREAR DETALLE
-                                        </Button>
+                                        <div style={{ display: "flex", width: '100%', justifyContent: "space-between" }}>
+                                            <Button
+                                                type={'button'}
+                                                disabled={!showButtons}
+                                                icon={<SendOutlined />}
+                                                style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
+                                                onClick={() => sendToKitchen()}
+                                            // onClick={() => formAction()}
+                                            // disabled={fetching}
+                                            >
+                                                ENVIAR A COCINA
+                                            </Button>
+                                            <Button
+                                                icon={<CopyOutlined />}
+                                                disabled={!showButtons}
+                                                style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
+                                            // onClick={() => formAction()}
+                                            // disabled={fetching}
+                                            >
+                                                CREAR DETALLE
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </Spin>
                         </Col>
                     </Row>
                 </div>
@@ -616,15 +666,32 @@ function NewCommand() {
                     onClose={(authorized, userAuthorizer) => {
                         const { successAuth } = userAuthorizer;
                         if (authorized && successAuth) {
-                            const { userPINCode } = userAuthorizer;
-
-                            setCurrentWaiter(userPINCode);
+                            const { userId, userPINCode } = userAuthorizer;
+                            setCurrentWaiter({ userId, userPINCode });
                         }
                         setOpenAuthUserPINCode(false);
                     }}
                 />
 
+                <ConfirmOrder
+                    open={confirmOrder}
+                    totalOrder={parseFloat(getTotalCommand()).toFixed(2)}
+                    onClose={async (comment, status) => {
 
+                        if (status) {
+                            const validated = detailsOrderValidation();
+
+                            if (!validated.isValid) {
+                                customNot('warning', 'Verifica la orden', validated.message);
+                            } else {
+                                await confirmOrderToCheckout(comment);
+                                customNot('success', 'Confirmando orden', validated.message);
+                            }
+                        }
+
+                        setConfirmOrder(false);
+                    }}
+                />
             </Wrapper >
     );
 }
