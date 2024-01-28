@@ -14,6 +14,7 @@ import { getUserLocation, getUserLocationAddress, getUserLocationName } from '..
 import { MainMenuCard } from '../styled-components/MainMenuCard';
 import { customNot } from '../utils/Notifications';
 
+
 const { confirm } = Modal;
 
 const Container = styled.div`

@@ -10,6 +10,7 @@ import { customNot } from './utils/Notifications';
 
 import { checkToken } from './services/AuthServices';
 
+import Main from './pages/Main';
 import ComponentToPrint from './components/tickets/ComponentToPrint';
 import Customers from './pages/Customers';
 import Login from './pages/Login';
@@ -104,7 +105,7 @@ const App = () => {
           </ProtectedRoute>
         }
       >
-        {renderProtectedRoute('', [1, 2, 4, 5], <>Home Page</>)}
+        {renderProtectedRoute('', [1, 2, 4, 5],<Main />)}
         {renderProtectedRoute('contracts', [1, 2], <>Contratos</>)}
         {renderProtectedRoute('sales', [1, 2, 4, 5], <>Ventas</>)}
         {renderProtectedRoute('sales/new', [1, 2, 4, 5], <NewSale />)}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Row, Col, Empty, Result, Button, Modal, Table, Tag, Spin } from "antd";
-import { SaveOutlined, SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined } from "@ant-design/icons";
+import { SaveOutlined, SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined, CloseOutlined } from "@ant-design/icons";
 
 import { columnActionsDef, columnDef, columnMoneyDef } from '../../utils/ColumnsDefinitions';
 
@@ -99,7 +99,7 @@ const styleSheet = {
             maxHeight: '280px',
             marginBottom: '10px',
             overflowX: 'auto',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
         }
     }
 };
@@ -210,9 +210,6 @@ function NewCommand() {
         const response = await tablesServices.findAllInCommand(getUserLocation());
         setTablesAvailable(response.data[0]);
 
-        // if (response.data.length > 0) {
-        //     setTableOrder(response.data[0].id);
-        // }
 
         const responseCategories = await categoriesServices.find();
         setCategories(responseCategories.data);
@@ -232,10 +229,10 @@ function NewCommand() {
         }
     }
 
-    useEffect(async () => {
+    useEffect(() => {
         if (currentWaiter.currentWaiter !== 0) {
             setFetchingMyTables(true);
-            await loadMyTables();
+            loadMyTables();
         }
     }, [currentWaiter]);
 
@@ -280,12 +277,12 @@ function NewCommand() {
             setOpenProductInfo(true);
             setSelectedProductData(product);
         } else {
-            customNot('warning', 'Selecciona una mesa', 'Debe de seleccionar una mesa');
+            customNot('warning', 'Selecciona una cuenta', 'Debe de seleccionar una cuenta');
         }
     }
 
     async function updateTableStatus(status, orderId, tableId, byUpdate) {
-        
+
         tablesServices.updateTableByOrderId(
             byUpdate ? orderId : null,
             !byUpdate ? orderId : null,
@@ -296,10 +293,10 @@ function NewCommand() {
             .then(async (response) => {
                 await loadData();
                 await loadMyTables();
-                customNot('success', 'Estado de la mesa actualizado', `Mesa: ${!byUpdate ? 'Libre' : 'Ocupada'}`);
+                customNot('success', 'Estado de la cuenta fue actualizado', `Cuenta: ${!byUpdate ? 'Libre' : 'Ocupada'}`);
             })
             .catch((error) => {
-                customNot('error', 'Algo salió mal', 'No se pudo actualizar el Estado de la mesa');
+                customNot('error', 'Algo salió mal', 'No se pudo actualizar el Estado de la Cueta');
             });
     }
 
@@ -428,25 +425,10 @@ function NewCommand() {
     }
 
     const columns = [
-        columnDef({
-            title: 'Estado', dataKey: 'isActive', customRender: isActive => (
-                <Tag
-                    color={isActive ? '#D9F7BE' : '#BAE0FF'}
-                    style={{
-                        display: 'block',
-                        maxWidth: '100%',
-                        height: '20px',
-                        textAlign: "center",
-                        color: "black",
-                    }}>
-                    {isActive ? 'Ordenando' : 'En Cocina'}
-                </Tag >
-            )
-        }),
         columnDef({ title: 'Cantidad', dataKey: 'quantity', customRender: quantity => (parseInt(quantity)) }),
         columnDef({ title: 'Detalle', dataKey: 'ProductName' }),
         columnMoneyDef({ title: 'Precio Unitario', dataKey: 'unitPrice' }),
-        columnMoneyDef({ title: 'Exento', dataKey: 'detailNoTaxableTotal' }),
+        columnMoneyDef({ title: 'Exento', dataKey: 'detailNoTaxableTotal', customRender: () => ('$0.00') }),
         columnMoneyDef({ title: 'Gravado', dataKey: 'TotalDetail' }),
         columnActionsDef(
             {
@@ -483,35 +465,22 @@ function NewCommand() {
                 />
             </> :
             <Wrapper>
-                <Col style={{ width: '100%' }}>
-                    <CategoriesScroll categories={categories} selectedCategory={selectedCategory} onClick={selectcategory} />
-                    <ProductsCard products={availableProducts} loading={loading} selectedProduct={selectedProduct} />
-                </Col>
+                <Row style={{maxWidth: '100%'}}>
 
-                <div
-                    style={{
-                        backgroundColor: '#F5F5F5',
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        padding: '10px',
-                        width: '100%'
-                    }}
-                >
-                    <Row gutter={16} style={{ width: '100%' }}>
-                        <Col span={17} style={{
+                    <Col span={12} style={{paddingRight: 5}}>
+                        <div style={{
                             display: "flex",
                             gap: 15,
                             flexDirection: 'column'
                         }}>
                             {!tableOrder ?
-                                <Empty description="Seleccione una mesa..." />
+                                <Empty description="Seleccione una Cuenta..." />
                                 :
                                 <>
                                     {
                                         isEmpty(orderInTable) ?
                                             <>
-                                                <Empty description="Mesa sin ordenes" style={{}} />
+                                                <Empty description="Cuenta sin ordenes" style={{}} />
                                             </> :
                                             <>
                                                 <Table
@@ -548,8 +517,8 @@ function NewCommand() {
                                     </div>
                                 </div>
                             </div>
-                        </Col>
-                        <Col span={7}>
+                        </div>
+                        <div style={{paddingTop: 10}}>
                             <Spin spinning={fetchingMyTables}>
                                 <div style={{
                                     backgroundColor: '#d9d9d9',
@@ -560,7 +529,7 @@ function NewCommand() {
                                     alignItems: "center",
                                     flexDirection: 'column'
                                 }}>
-                                    <strong style={styleSheet.TableStyles.headerStyle}>Mesas Disponibles</strong>
+                                    <strong style={styleSheet.TableStyles.headerStyle}>Cuentas Disponibles</strong>
                                     <div style={styleSheet.TableStyles.gridContainerStyle}>
                                         {tablesAvailable.map((table) => (
                                             <TableButton
@@ -580,7 +549,7 @@ function NewCommand() {
                                                 </>
                                                 :
                                                 <>
-                                                    <strong style={styleSheet.TableStyles.headerStyle}>Mis Mesas</strong>
+                                                    <strong style={styleSheet.TableStyles.headerStyle}>Mis Cuentas</strong>
                                                     <div style={styleSheet.TableStyles.gridContainerStyle}>
                                                         {myTablesAvailable.map((table) => (
                                                             <TableButton
@@ -599,25 +568,25 @@ function NewCommand() {
                                     <div style={{ width: '100%' }}>
                                         <Button
                                             type={'primary'}
-                                            icon={<SaveOutlined />}
+                                            icon={<SendOutlined />}
                                             disabled={!showButtons}
                                             style={{ margin: 5, width: 'calc(100% - 10px)' }}
-                                            onClick={() => setConfirmOrder(true)}
+                                            onClick={() => sendToKitchen()}
                                         // disabled={fetching}
                                         >
-                                            CONFIRMAR
+
+                                            ENVIAR A COCINA
                                         </Button>
                                         <div style={{ display: "flex", width: '100%', justifyContent: "space-between" }}>
                                             <Button
-                                                type={'button'}
+                                                type={'danger'}
                                                 disabled={!showButtons}
-                                                icon={<SendOutlined />}
+                                                icon={<CloseOutlined />}
                                                 style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                                onClick={() => sendToKitchen()}
                                             // onClick={() => formAction()}
                                             // disabled={fetching}
                                             >
-                                                ENVIAR A COCINA
+                                                Salir
                                             </Button>
                                             <Button
                                                 icon={<CopyOutlined />}
@@ -626,16 +595,20 @@ function NewCommand() {
                                             // onClick={() => formAction()}
                                             // disabled={fetching}
                                             >
-                                                CREAR DETALLE
+                                                Pre-Cuenta
                                             </Button>
                                         </div>
                                     </div>
                                 </div>
                             </Spin>
-                        </Col>
-                    </Row>
-                </div>
+                        </div>
+                    </Col>
 
+                    <Col span={12}>
+                        <CategoriesScroll categories={categories} selectedCategory={selectedCategory} onClick={selectcategory} />
+                        <ProductsCard products={availableProducts} loading={loading} selectedProduct={selectedProduct} />
+                    </Col>
+                </Row>
                 <AddProduct
                     open={openProductInfo}
                     orderDetails={orderInTable}
@@ -668,8 +641,10 @@ function NewCommand() {
                         if (authorized && successAuth) {
                             const { userId, userPINCode } = userAuthorizer;
                             setCurrentWaiter({ userId, userPINCode });
+                            setOpenAuthUserPINCode(false);
+                        } else {
+
                         }
-                        setOpenAuthUserPINCode(false);
                     }}
                 />
 
