@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Row, Col, Empty, Result, Button, Modal, Table, Tag, Spin } from "antd";
-import { SaveOutlined, SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined, CloseOutlined } from "@ant-design/icons";
+import { SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined, CloseOutlined } from "@ant-design/icons";
 
 import { columnActionsDef, columnDef, columnMoneyDef } from '../../utils/ColumnsDefinitions';
 
@@ -107,6 +108,8 @@ const styleSheet = {
 const { confirm } = Modal;
 
 function NewCommand() {
+
+    const navigate = useNavigate();
 
     const [ableToProcess, setAbleToProcess] = useState(false);
 
@@ -268,6 +271,7 @@ function NewCommand() {
             setDetailsOrder([]);
             setOrderInTable([]);
             setShowButtons(false);
+            setFetchingTables(true);
             setTableOrder(value);
         }
     }
@@ -382,6 +386,23 @@ function NewCommand() {
         });
     }
 
+    function redirectToMain() {
+
+        Modal.confirm({
+            title: '¿Desea salir del modulo de comandas?',
+            centered: true,
+            icon: <WarningOutlined />,
+            content: `Los detalles no se guardaran`,
+            okText: 'Confirmar',
+            okType: 'danger',
+            cancelText: 'Cancelar',
+            onOk() {
+                navigate("/main");
+            },
+            onCancel() { },
+        });
+    }
+
     async function confirmOrderToCheckout(comment) {
         if (!isEmpty(orderInTable)) {
             const orderId = orderInTable[0].id;
@@ -428,7 +449,6 @@ function NewCommand() {
         columnDef({ title: 'Cantidad', dataKey: 'quantity', customRender: quantity => (parseInt(quantity)) }),
         columnDef({ title: 'Detalle', dataKey: 'ProductName' }),
         columnMoneyDef({ title: 'Precio Unitario', dataKey: 'unitPrice' }),
-        columnMoneyDef({ title: 'Exento', dataKey: 'detailNoTaxableTotal', customRender: () => ('$0.00') }),
         columnMoneyDef({ title: 'Gravado', dataKey: 'TotalDetail' }),
         columnActionsDef(
             {
@@ -465,13 +485,17 @@ function NewCommand() {
                 />
             </> :
             <Wrapper>
-                <Row style={{maxWidth: '100%'}}>
+            <Col span={12}>
+            Información del mesero, cuenta seleccionada
+            </Col>
+                <Row style={{ width: '100%', maxWidth: '100%', maxHeight: '100%' }}>
 
-                    <Col span={12} style={{paddingRight: 5}}>
+                    <Col span={12} style={{ paddingRight: 5 }}>
                         <div style={{
                             display: "flex",
                             gap: 15,
-                            flexDirection: 'column'
+                            flexDirection: 'column',
+                            width: "100%"
                         }}>
                             {!tableOrder ?
                                 <Empty description="Seleccione una Cuenta..." />
@@ -518,7 +542,7 @@ function NewCommand() {
                                 </div>
                             </div>
                         </div>
-                        <div style={{paddingTop: 10}}>
+                        <div style={{ paddingTop: 10 }}>
                             <Spin spinning={fetchingMyTables}>
                                 <div style={{
                                     backgroundColor: '#d9d9d9',
@@ -580,9 +604,9 @@ function NewCommand() {
                                         <div style={{ display: "flex", width: '100%', justifyContent: "space-between" }}>
                                             <Button
                                                 type={'danger'}
-                                                disabled={!showButtons}
                                                 icon={<CloseOutlined />}
                                                 style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
+                                                onClick={() => redirectToMain()}
                                             // onClick={() => formAction()}
                                             // disabled={fetching}
                                             >
@@ -643,7 +667,7 @@ function NewCommand() {
                             setCurrentWaiter({ userId, userPINCode });
                             setOpenAuthUserPINCode(false);
                         } else {
-
+                            navigate("/main");
                         }
                     }}
                 />

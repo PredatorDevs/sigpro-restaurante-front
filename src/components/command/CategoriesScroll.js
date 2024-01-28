@@ -44,11 +44,12 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
         <div style={{
             height: '110px',
             display: "flex",
+            maxWidth: '100%',
             backgroundColor: '#D9D9D9',
             alignItems: "center",
             padding: '0 10px',
             gap: '10px',
-            margin: '10px 0',
+            margin: '0 0 10px 0',
         }}>
 
             <CaretLeftOutlined onClick={() => handleScroll('left')} style={{ display: "flex", alignItems: "center", cursor: 'pointer', height: '90%', width: '20px', backgroundColor: '#fff', border: 'none' }} />

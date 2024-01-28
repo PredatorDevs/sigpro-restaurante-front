@@ -24,7 +24,7 @@ function ProductsCard({ products, selectedProduct, loading }) {
                         style={{
                             display: 'grid',
                             gap: '15px',
-                            maxHeight: '280px',
+                            maxHeight: '460px',
                             marginBottom: '10px',
                             overflowX: 'auto',
                             gridTemplateRows: 'auto auto auto',

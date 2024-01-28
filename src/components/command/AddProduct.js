@@ -171,7 +171,6 @@ function AddProduct(props) {
                             {
                                 productData.productIsService ? <Tag color='blue'>{`Servicio`}</Tag> : <></>
                             }
-                            <p style={{ margin: 0, fontSize: 12 }}>{`${productData.currentStock} existencias`}</p>
                         </Space>
                     </Col>
                     <Col style={{ display: 'flex', flexDirection: 'column' }}>
@@ -183,7 +182,6 @@ function AddProduct(props) {
                             size={'large'}
                             placeholder={'0'}
                             min={'0'}
-                            max={productData.currentStock}
                             value={inputNumpad}
                             // onChange={changeQuantity}
                             type={'number'}
@@ -303,13 +301,7 @@ function AddProduct(props) {
                             icon={<ArrowRightOutlined />}
                             style={{ width: '100%' }}
                             onClick={() => {
-                                if (!!!productData.productIsService) {
-                                    if (productData.currentStock < detailQuantity || productData.productIsService) {
-                                        customNot('error', `No hay suficientes existencias para añadir ${productData.productName}`, 'Consulte con su administrador')
-                                        return;
-                                    }
-                                }
-
+                                
                                 if (validateDetail()) {
                                     setActiveTab(2);
                                 }
@@ -324,13 +316,6 @@ function AddProduct(props) {
                             size={'large'}
                             icon={<SaveOutlined />}
                             onClick={() => {
-
-                                if (!!!productData.productIsService) {
-                                    if (productData.currentStock < detailQuantity || productData.productIsService) {
-                                        customNot('error', `No hay suficientes existencias para añadir ${productData.productName}`, 'Consulte con su administrador')
-                                        return;
-                                    }
-                                }
 
                                 if (validateDetail()) {
                                     const detailToAdd = new SaleDetailModel(
