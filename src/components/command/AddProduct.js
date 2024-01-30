@@ -11,7 +11,7 @@ import ProductPricePicker from "../pickers/ProductPricePicker.js";
 import { getUserLocation } from "../../utils/LocalData";
 import { customNot } from "../../utils/Notifications.js";
 
-import { isEmpty, set, forEach } from "lodash";
+import { isEmpty } from "lodash";
 
 import Numpad from "./Numpad.js";
 import Input from "antd/lib/input/Input.js";
@@ -137,7 +137,7 @@ function AddProduct(props) {
 
     useEffect(() => {
         setDetailQuantity(parseInt(inputNumpad));
-    }, [inputNumpad])
+    }, [inputNumpad]);
 
     const handleNameOrder = (e) => {
         setNameOrder(e.target.value);
@@ -188,7 +188,7 @@ function AddProduct(props) {
                             name="Cantidad"
                         />
 
-                        <Numpad onKeyPress={handleKeyPress} onDelete={handleDelete} valueNumpad={inputNumpad} />
+                        <Numpad onKeyPress={handleKeyPress} onDelete={handleDelete} valueNumpad={inputNumpad} validCero={true} />
                     </Col>
                 </Row>
             )

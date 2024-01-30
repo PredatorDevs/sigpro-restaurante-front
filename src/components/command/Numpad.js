@@ -2,7 +2,7 @@ import React from 'react';
 
 import { CloseOutlined } from '@ant-design/icons';
 
-const Numpad = ({ onKeyPress, onDelete, valueNumpad}) => {
+const Numpad = ({ onKeyPress, onDelete, valueNumpad, validCero}) => {
 
   const handleKeyPress = (key) => {
     onKeyPress(key);
@@ -17,7 +17,7 @@ const Numpad = ({ onKeyPress, onDelete, valueNumpad}) => {
           </button>
         ))}
         <div></div>
-        <button onClick={() => handleKeyPress(0)} disabled={valueNumpad === ''}
+        <button onClick={() => handleKeyPress(0)} disabled={valueNumpad === '' && validCero}
         >
           0
         </button>

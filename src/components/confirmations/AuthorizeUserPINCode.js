@@ -5,16 +5,19 @@ import 'moment/locale/es-mx';
 import { authUserPINCode } from '../../services/AuthServices';
 import { customNot } from '../../utils/Notifications';
 import { includes } from 'lodash';
+import Numpad from '../command/Numpad';
 
 function AuthorizeUserPINCode(props) {
   const [fetching, setFetching] = useState(false);
   const [userPINCode, setUserPINCode] = useState('');
 
+  const [inputNumpad, setInputNumpad] = useState('');
+
   const { open, title, confirmButtonText, onClose } = props;
 
   useEffect(() => {
     if (open) document.getElementById('input-form-user-pin-code').focus();
-  }, [ open ]);
+  }, [open]);
 
   async function formAction() {
     setFetching(true);
@@ -31,6 +34,20 @@ function AuthorizeUserPINCode(props) {
     }
     setFetching(false);
   }
+
+  const handleKeyPress = (key) => {
+    if (inputNumpad.length < 5) {
+      setInputNumpad((prevInput) => prevInput + key);
+    }
+  };
+
+  const handleDelete = () => {
+    setInputNumpad((prevInput) => prevInput.slice(0, -1));
+  };
+
+  useEffect(() => {
+    setUserPINCode(parseInt(inputNumpad));
+  }, [inputNumpad]);
 
   return (
     <Modal
@@ -52,28 +69,23 @@ function AuthorizeUserPINCode(props) {
       <Alert message="Requiere el uso de su PIN personal para ejecutar esta acción" type="warning" />
       <div style={{ height: 15 }} />
       <Row gutter={8}>
-        <Col span={12}>
-          <p style={{ margin: '0px 0px 0px 0px' }}>PIN:</p>  
+        <Col span={24}>
+          <p style={{ margin: '0px 0px 0px 0px' }}>PIN:</p>
           <Input.Password
+            readOnly
             id={'input-form-user-pin-code'}
-            onChange={(e) => setUserPINCode(e.target.value)}
             name={'userPINCode'}
             maxLength={5}
-            value={userPINCode}
-            onKeyDown={
-              (e) => {
-                if (e.key === 'Enter')
-                  formAction();
-              }
-            }
+            value={inputNumpad}
           />
         </Col>
       </Row>
+      <Numpad onKeyPress={handleKeyPress} onDelete={handleDelete} valueNumpad={inputNumpad} validCero={false} />
       <Divider />
       <Row gutter={8}>
         <Col span={24}>
-          <Button 
-            type={'primary'} 
+          <Button
+            type={'primary'}
             onClick={(e) => {
               formAction();
             }}
@@ -84,8 +96,8 @@ function AuthorizeUserPINCode(props) {
           </Button>
         </Col>
         <Col span={24}>
-          <Button 
-            type={'default'} 
+          <Button
+            type={'default'}
             onClick={(e) => {
               setUserPINCode('');
               onClose(false, { userId: null, roleId: null, successAuth: null });

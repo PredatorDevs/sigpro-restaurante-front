@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Row, Col, Empty, Result, Button, Modal, Table, Tag, Spin } from "antd";
+import { Row, Col, Empty, Result, Button, Modal, Table, Card, Spin, Avatar } from "antd";
 import { SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined, CloseOutlined } from "@ant-design/icons";
 
 import { columnActionsDef, columnDef, columnMoneyDef } from '../../utils/ColumnsDefinitions';
@@ -26,7 +26,7 @@ import { customNot } from "../../utils/Notifications.js";
 
 import categoriesServices from '../../services/CategoriesServices.js';
 import productsServices from "../../services/ProductsServices.js";
-import { isEmpty, forEach } from "lodash";
+import { isEmpty, forEach, find } from "lodash";
 
 import AuthorizeUserPINCode from "../../components/confirmations/AuthorizeUserPINCode.js";
 import ConfirmOrder from "../../components/command/ConfirmOrder.js";
@@ -106,6 +106,7 @@ const styleSheet = {
 };
 
 const { confirm } = Modal;
+const { Meta } = Card;
 
 function NewCommand() {
 
@@ -458,18 +459,27 @@ function NewCommand() {
                 edit: false,
                 del: true,
                 delAction: async (value) => {
-                    confirm({
-                        centered: true,
-                        title: '¿Desea eliminar este detalle?',
-                        icon: <DeleteOutlined />,
-                        content: 'Acción irreversible',
-                        okType: 'danger',
-                        okText: 'Eliminar',
-                        async onOk() {
-                            await deleteProductDetails(value);
-                        },
-                        onCancel() { },
-                    });
+                    const lengthProducts = detailsOrder.length;
+                    const productCheck = find(detailsOrder, ['id', value]);
+
+                    if (lengthProducts === 1) {
+                        customNot('warning', 'No se puede eliminar el detalle', 'La cuenta no puede quedar sin detalles');
+                    } else if (productCheck.isActive === 0) {
+                        customNot('info', 'No se puede eliminar el detalle', 'El detalle ya se encuentra en cocina');
+                    } else {
+                        confirm({
+                            centered: true,
+                            title: '¿Desea eliminar este detalle?',
+                            icon: <DeleteOutlined />,
+                            content: 'Acción irreversible',
+                            okType: 'danger',
+                            okText: 'Eliminar',
+                            async onOk() {
+                                await deleteProductDetails(value);
+                            },
+                            onCancel() { },
+                        });
+                    }
                 },
             }
         ),
@@ -485,9 +495,6 @@ function NewCommand() {
                 />
             </> :
             <Wrapper>
-            <Col span={12}>
-            Información del mesero, cuenta seleccionada
-            </Col>
                 <Row style={{ width: '100%', maxWidth: '100%', maxHeight: '100%' }}>
 
                     <Col span={12} style={{ paddingRight: 5 }}>
@@ -630,7 +637,9 @@ function NewCommand() {
 
                     <Col span={12}>
                         <CategoriesScroll categories={categories} selectedCategory={selectedCategory} onClick={selectcategory} />
-                        <ProductsCard products={availableProducts} loading={loading} selectedProduct={selectedProduct} />
+                        <div style={{height: 'calc(100% - 110px)', maxHeight: 'calc(100vh - 385px)', overflowX: "auto"}}>
+                            <ProductsCard products={availableProducts} loading={loading} selectedProduct={selectedProduct} />
+                        </div>
                     </Col>
                 </Row>
                 <AddProduct
@@ -663,8 +672,8 @@ function NewCommand() {
                     onClose={(authorized, userAuthorizer) => {
                         const { successAuth } = userAuthorizer;
                         if (authorized && successAuth) {
-                            const { userId, userPINCode } = userAuthorizer;
-                            setCurrentWaiter({ userId, userPINCode });
+                            const { userId, userPINCode, fullName } = userAuthorizer;
+                            setCurrentWaiter({ userId, userPINCode, fullName });
                             setOpenAuthUserPINCode(false);
                         } else {
                             navigate("/main");

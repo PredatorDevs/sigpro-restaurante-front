@@ -24,9 +24,6 @@ function ProductsCard({ products, selectedProduct, loading }) {
                         style={{
                             display: 'grid',
                             gap: '15px',
-                            maxHeight: '460px',
-                            marginBottom: '10px',
-                            overflowX: 'auto',
                             gridTemplateRows: 'auto auto auto',
                             gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))'
                         }}
