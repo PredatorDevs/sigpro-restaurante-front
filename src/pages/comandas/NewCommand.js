@@ -146,10 +146,8 @@ function NewCommand() {
             const orderInformation = response.data[0];
 
             if (!isEmpty(orderInformation) && parseInt(orderInformation[0].userPINCode) !== currentWaiter.userPINCode) {
-                setDetailsOrder([]);
-                setOrderInTable([]);
+                restoreBasicData();
                 setTableOrder(0);
-                setFetchingMyTables(true);
                 await loadData();
                 await loadMyTables();
                 customNot('warning', 'Cuenta No disponible', 'La cuenta seleccionada ya fue ocupada.');
@@ -280,12 +278,16 @@ function NewCommand() {
         }
     }
 
+    function restoreBasicData() {
+        setDetailsOrder([]);
+        setOrderInTable([]);
+        setFetchingTables(true);
+    }
+
     const changeTable = (value) => {
         if (value !== tableOrder) {
-            setDetailsOrder([]);
-            setOrderInTable([]);
+            restoreBasicData();
             setShowButtons(false);
-            setFetchingTables(true);
             setTableOrder(value);
         }
     }
@@ -339,10 +341,8 @@ function NewCommand() {
             await updateTableStatus(1, response.data[0].NewOrderID, tableOrder, true);
             customNot('success', 'Operación exitosa', 'Su orden fue añadida');
         }).catch(async (error) => {
-            setDetailsOrder([]);
-            setOrderInTable([]);
+            restoreBasicData();
             setTableOrder(0);
-            setFetchingMyTables(true);
             await loadData();
             await loadMyTables();
             customNot('error', 'Algo salió mal', 'Su order no fue añadida, verifique que la cuenta este libre');
