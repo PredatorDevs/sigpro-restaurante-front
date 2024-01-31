@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Row, Col, Empty, Result, Button, Modal, Table, Card, Spin, Avatar } from "antd";
+import { Row, Col, Empty, Result, Button, Modal, Table, Card, Spin } from "antd";
 import { SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined, CloseOutlined } from "@ant-design/icons";
 
 import { columnActionsDef, columnDef, columnMoneyDef } from '../../utils/ColumnsDefinitions';
@@ -29,7 +29,6 @@ import productsServices from "../../services/ProductsServices.js";
 import { isEmpty, forEach, find } from "lodash";
 
 import AuthorizeUserPINCode from "../../components/confirmations/AuthorizeUserPINCode.js";
-import ConfirmOrder from "../../components/command/ConfirmOrder.js";
 
 const styleSheet = {
     tableFooter: {
@@ -137,7 +136,6 @@ function NewCommand() {
     const [openAuthUserPINCode, setOpenAuthUserPINCode] = useState(true);
 
     const [showButtons, setShowButtons] = useState(false);
-    const [confirmOrder, setConfirmOrder] = useState(false);
 
     // #region Order Details
     async function getOrderInfo(tableId) {
@@ -385,7 +383,7 @@ function NewCommand() {
         const orderId = orderInTable[0].id;
 
         const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
-        
+
         if (detailActives.length >= 1) {
             const activeIds = detailActives.map(obj => obj.id);
 
@@ -409,8 +407,8 @@ function NewCommand() {
                 },
                 onCancel() { },
             });
-            
-        }  else {
+
+        } else {
             customNot('info', 'Todos los detalles en cocina', 'Todos los detalles ya se encuentran en cocina');
         }
     }
@@ -621,9 +619,9 @@ function NewCommand() {
                         </div>
                     </Col>
 
-                    <Col span={12}>
+                    <Col span={12} style={{position: "relative"}}>
                         <CategoriesScroll categories={categories} selectedCategory={selectedCategory} onClick={selectcategory} />
-                        <div style={{ height: 'calc(100% - 110px)', maxHeight: 'calc(100vh - 385px)', overflowX: "auto" }}>
+                        <div style={{ overflowX: "auto", position: "absolute", height: '100%', maxHeight: 'calc(100% - 120px)', width: '100%' }}>
                             <ProductsCard products={availableProducts} loading={loading} selectedProduct={selectedProduct} />
                         </div>
                     </Col>

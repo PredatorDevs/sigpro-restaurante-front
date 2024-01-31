@@ -76,15 +76,7 @@ function Main() {
         <Row gutter={8}>
           {
             [
-              { title: 'Contratos', image: <GContractIcon width='calc(50%)' />, action: () => customNot('info', 'En desarrollo', 'Próximamente') }, // 0
-              { title: 'Clientes', image: <GCustomersIcon width='calc(50%)' />, action: () => navigate('/main/customers') }, // 1
-              { title: 'Ventas', image: <GCashierThreeIcon width='calc(50%)' />, action: () => customNot('info', 'En desarrollo', 'Próximamente') }, // 2
-              { title: 'Compras', image: <GPurchasesIcon width='calc(50%)' />, action: () => customNot('info', 'En desarrollo', 'Próximamente') }, // 3
-              { title: 'Gastos', image: <GExpensesIcon width='calc(50%)' />, action: () => customNot('info', 'En desarrollo', 'Próximamente') }, // 4
-              { title: 'Inventario', image: <GInventoryIcon width='calc(50%)' />, action: () => customNot('info', 'En desarrollo', 'Próximamente') }, // 5
-              { title: 'Caja', image: <GCashierIcon width='calc(50%)' />, action: () => customNot('info', 'En desarrollo', 'Próximamente') }, // 6
-              { title: 'Reportes', image: <GReportsIcon width='calc(50%)' />, action: () => customNot('info', 'En desarrollo', 'Próximamente') }, // 7
-              { title: 'Administrativo', image: <GAdministrationIcon width='calc(50%)' />, action: () => navigate('/admin') }, // 8
+              { title: 'Comandas', image: <GCashierIcon width='calc(50%)' />, action: () => navigate('/main/command/new') }, // 1
               { title: 'Salir', image: <GLogoutIcon width='calc(50%)' />, action: () => logoutAction() }, // 9
             ].map((element, index) => (
               <Col 
