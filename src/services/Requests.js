@@ -14,7 +14,7 @@ export function serverUrl() {
   // FOR SOME CLIENT
   // return `http://192.168.150.11:5001/api`;
   // return `http://127.0.0.1:5001/api`;
-   return `http://192.168.0.3:5001/api`;
+   return `http://192.168.0.5:5001/api`;
   //return `http://192.168.167.83/api`;
   // return `http://192.168.56.1:5001/api`;
   // return 'https://distribuidora-panaderia.vercel.app/api';

@@ -143,10 +143,23 @@ function NewCommand() {
     async function getOrderInfo(tableId) {
         try {
             const response = await orderSalesServices.findByTableId(tableId);
-            setOrderInTable(response.data[0]);
-            setFetchingTables(false);
+            const orderInformation = response.data[0];
+
+            if (!isEmpty(orderInformation) && parseInt(orderInformation[0].userPINCode) !== currentWaiter.userPINCode) {
+                setDetailsOrder([]);
+                setOrderInTable([]);
+                setTableOrder(0);
+                setFetchingMyTables(true);
+                await loadData();
+                await loadMyTables();
+                customNot('warning', 'Cuenta No disponible', 'La cuenta seleccionada ya fue ocupada.');
+            } else {
+                setOrderInTable(orderInformation);
+            }
         } catch (error) {
             console.error("Error fetching order info:", error);
+        } finally {
+            setFetchingTables(false);
         }
     }
 
@@ -325,8 +338,10 @@ function NewCommand() {
             await getOrderInfo(tableOrder);
             await updateTableStatus(1, response.data[0].NewOrderID, tableOrder, true);
             customNot('success', 'Operación exitosa', 'Su orden fue añadida');
-        }).catch((error) => {
-            customNot('error', 'Algo salió mal', 'Su order no fue añadida');
+        }).catch(async (error) => {
+            await loadData();
+            await loadMyTables();
+            customNot('error', 'Algo salió mal', 'Su order no fue añadida, verifique que la cuenta este libre');
         });
     }
 
@@ -402,48 +417,6 @@ function NewCommand() {
             },
             onCancel() { },
         });
-    }
-
-    async function confirmOrderToCheckout(comment) {
-        if (!isEmpty(orderInTable)) {
-            const orderId = orderInTable[0].id;
-            const totalOrder = parseFloat(getTotalCommand()).toFixed(2);
-            orderSalesServices.updateComment(
-                orderId,
-                comment.comment,
-                totalOrder,
-                currentWaiter.userId,
-                getUserLocation(),
-                0
-            )
-                .then(async (response) => {
-                    setFetchingMyTables(true);
-                    await getOrderInfo(tableOrder);
-                    await updateTableStatus(0, orderId, tableOrder, false);
-                    customNot('success', 'Orden Guardada', 'La orden fue enviada a caja');
-                })
-                .catch(error => {
-                    customNot('danger', 'Algo salió mal', 'La orden no pudo ser enviada a caja');
-                    console.error("Error fetching order info:", error);
-                });
-        }
-    }
-
-    function detailsOrderValidation() {
-
-        if (detailsOrder.length === 0) {
-
-            return { isValid: false, message: 'La orden no debe estar vacía' };
-        }
-
-        const allObjectsHaveStatusZero = detailsOrder.every(obj => obj.isActive === 0);
-
-        if (!allObjectsHaveStatusZero) {
-
-            return { isValid: allObjectsHaveStatusZero, message: 'Al menos un detalle no está en cocina' };
-        }
-
-        return { isValid: true, message: 'Orden enviada a caja' };
     }
 
     const columns = [
@@ -637,7 +610,7 @@ function NewCommand() {
 
                     <Col span={12}>
                         <CategoriesScroll categories={categories} selectedCategory={selectedCategory} onClick={selectcategory} />
-                        <div style={{height: 'calc(100% - 110px)', maxHeight: 'calc(100vh - 385px)', overflowX: "auto"}}>
+                        <div style={{ height: 'calc(100% - 110px)', maxHeight: 'calc(100vh - 385px)', overflowX: "auto" }}>
                             <ProductsCard products={availableProducts} loading={loading} selectedProduct={selectedProduct} />
                         </div>
                     </Col>
@@ -678,26 +651,6 @@ function NewCommand() {
                         } else {
                             navigate("/main");
                         }
-                    }}
-                />
-
-                <ConfirmOrder
-                    open={confirmOrder}
-                    totalOrder={parseFloat(getTotalCommand()).toFixed(2)}
-                    onClose={async (comment, status) => {
-
-                        if (status) {
-                            const validated = detailsOrderValidation();
-
-                            if (!validated.isValid) {
-                                customNot('warning', 'Verifica la orden', validated.message);
-                            } else {
-                                await confirmOrderToCheckout(comment);
-                                customNot('success', 'Confirmando orden', validated.message);
-                            }
-                        }
-
-                        setConfirmOrder(false);
                     }}
                 />
             </Wrapper >
