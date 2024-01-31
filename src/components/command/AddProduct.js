@@ -347,12 +347,6 @@ function AddProduct(props) {
                     }
                 </Col>
             </Row>
-            <ProductPricePicker
-                open={openPricePicker}
-                productId={productData.productId || 0}
-                onClose={() => setOpenPricePicker(false)}
-                onSelect={(value) => setDetailUnitPrice(value)}
-            />
         </Modal>
     );
 }

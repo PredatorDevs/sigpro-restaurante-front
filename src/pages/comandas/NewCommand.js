@@ -146,8 +146,10 @@ function NewCommand() {
             const orderInformation = response.data[0];
 
             if (!isEmpty(orderInformation) && parseInt(orderInformation[0].userPINCode) !== currentWaiter.userPINCode) {
-                restoreBasicData();
+                setDetailsOrder([]);
+                setOrderInTable([]);
                 setTableOrder(0);
+                setFetchingMyTables(true);
                 await loadData();
                 await loadMyTables();
                 customNot('warning', 'Cuenta No disponible', 'La cuenta seleccionada ya fue ocupada.');
@@ -278,15 +280,11 @@ function NewCommand() {
         }
     }
 
-    function restoreBasicData() {
-        setDetailsOrder([]);
-        setOrderInTable([]);
-        setFetchingTables(true);
-    }
-
     const changeTable = (value) => {
         if (value !== tableOrder) {
-            restoreBasicData();
+            setDetailsOrder([]);
+            setOrderInTable([]);
+            setFetchingTables(true);
             setShowButtons(false);
             setTableOrder(value);
         }
@@ -341,8 +339,10 @@ function NewCommand() {
             await updateTableStatus(1, response.data[0].NewOrderID, tableOrder, true);
             customNot('success', 'Operación exitosa', 'Su orden fue añadida');
         }).catch(async (error) => {
-            restoreBasicData();
+            setDetailsOrder([]);
+            setOrderInTable([]);
             setTableOrder(0);
+            setFetchingMyTables(true);
             await loadData();
             await loadMyTables();
             customNot('error', 'Algo salió mal', 'Su order no fue añadida, verifique que la cuenta este libre');
@@ -384,26 +384,35 @@ function NewCommand() {
     async function sendToKitchen() {
         const orderId = orderInTable[0].id;
 
-        Modal.confirm({
-            title: '¿Enviar Detalle a cocina?',
-            centered: true,
-            icon: <WarningOutlined />,
-            content: `Los detalles ya no se podrán modificar`,
-            okText: 'Confirmar',
-            okType: 'info',
-            cancelText: 'Cancelar',
-            onOk() {
-                orderSalesServices.details.sendToKitchen(orderId)
-                    .then(async (response) => {
-                        await getOrderInfo(tableOrder);
-                        customNot('success', 'Operación exitosa', 'Detalle enviados a cocina');
-                    })
-                    .catch((error) => {
-                        customNot('info', 'Algo salió mal', 'No se pudo enviar a cocina');
-                    });
-            },
-            onCancel() { },
-        });
+        const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
+        
+        if (detailActives.length >= 1) {
+            const activeIds = detailActives.map(obj => obj.id);
+
+            Modal.confirm({
+                title: '¿Enviar Detalle a cocina?',
+                centered: true,
+                icon: <WarningOutlined />,
+                content: `Los detalles ya no se podrán modificar`,
+                okText: 'Confirmar',
+                okType: 'info',
+                cancelText: 'Cancelar',
+                onOk() {
+                    orderSalesServices.details.sendToKitchen(orderId, activeIds)
+                        .then(async (response) => {
+                            await getOrderInfo(tableOrder);
+                            customNot('success', 'Operación exitosa', 'Detalle enviados a cocina');
+                        })
+                        .catch((error) => {
+                            customNot('info', 'Algo salió mal', 'No se pudo enviar a cocina');
+                        });
+                },
+                onCancel() { },
+            });
+            
+        }  else {
+            customNot('info', 'Todos los detalles en cocina', 'Todos los detalles ya se encuentran en cocina');
+        }
     }
 
     function redirectToMain() {
