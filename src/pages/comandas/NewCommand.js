@@ -339,6 +339,10 @@ function NewCommand() {
             await updateTableStatus(1, response.data[0].NewOrderID, tableOrder, true);
             customNot('success', 'Operación exitosa', 'Su orden fue añadida');
         }).catch(async (error) => {
+            setDetailsOrder([]);
+            setOrderInTable([]);
+            setTableOrder(0);
+            setFetchingMyTables(true);
             await loadData();
             await loadMyTables();
             customNot('error', 'Algo salió mal', 'Su order no fue añadida, verifique que la cuenta este libre');
