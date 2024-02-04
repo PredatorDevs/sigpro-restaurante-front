@@ -13,7 +13,7 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
     const categoriesContainer = useRef(null);
 
     const buttonStyle = {
-        width: 83,
+        width: 166,
         height: 83,
         borderRadius: '5px',
         border: '2px solid #1677FF',
@@ -22,13 +22,15 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
     };
 
     const pStyle = {
+        maxWidth: '100%',
         color: '#000',
         margin: 0,
-        // fontWeight: 500
+        fontWeight: 500,
+        fontSize: '0.7em'
     }
 
     const handleScroll = (scrollDirection) => {
-        const scrollAmount = 94;
+        const scrollAmount = 177;
         const container = categoriesContainer.current;
 
         if (container) {
@@ -57,6 +59,25 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
 
                 {isEmpty(categories) ?
                     <>
+                        <Button
+                            key={1}
+                            type="primary"
+                            shape="square"
+                            style={{
+                                ...buttonStyle,
+                                backgroundColor: '#BAE0FF',
+                            }}
+                        >
+                            <div style={{ width: '100%' }}>
+                                <img
+                                    width={55}
+                                    height={55}
+                                    src={menuLogo}
+                                    style={{ objectFit: 'cover' }}
+                                />
+                                <p style={pStyle}>No hay categorias disponibles</p>
+                            </div>
+                        </Button>
                     </> :
                     <>
 

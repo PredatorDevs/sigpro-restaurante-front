@@ -544,18 +544,6 @@ function NewCommand() {
                                     alignItems: "center",
                                     flexDirection: 'column'
                                 }}>
-                                    <strong style={styleSheet.TableStyles.headerStyle}>Cuentas Disponibles</strong>
-                                    <div style={styleSheet.TableStyles.gridContainerStyle}>
-                                        {tablesAvailable.map((table) => (
-                                            <TableButton
-                                                key={table.id}
-                                                table={table}
-                                                tableOrder={tableOrder}
-                                                fetchingTables={fetchingTables}
-                                                onChangeTable={changeTable}
-                                            />
-                                        ))}
-                                    </div>
                                     <div style={{ width: '100%', textAlign: 'center' }}>
 
                                         {
@@ -578,6 +566,19 @@ function NewCommand() {
                                                     </div>
                                                 </>
                                         }
+                                    </div>
+
+                                    <strong style={styleSheet.TableStyles.headerStyle}>Cuentas Disponibles</strong>
+                                    <div style={styleSheet.TableStyles.gridContainerStyle}>
+                                        {tablesAvailable.map((table) => (
+                                            <TableButton
+                                                key={table.id}
+                                                table={table}
+                                                tableOrder={tableOrder}
+                                                fetchingTables={fetchingTables}
+                                                onChangeTable={changeTable}
+                                            />
+                                        ))}
                                     </div>
 
                                     <div style={{ width: '100%' }}>
@@ -619,7 +620,7 @@ function NewCommand() {
                         </div>
                     </Col>
 
-                    <Col span={12} style={{position: "relative"}}>
+                    <Col span={12} style={{ position: "relative" }}>
                         <CategoriesScroll categories={categories} selectedCategory={selectedCategory} onClick={selectcategory} />
                         <div style={{ overflowX: "auto", position: "absolute", height: '100%', maxHeight: 'calc(100% - 120px)', width: '100%' }}>
                             <ProductsCard products={availableProducts} loading={loading} selectedProduct={selectedProduct} />
@@ -659,6 +660,8 @@ function NewCommand() {
                             const { userId, userPINCode, fullName } = userAuthorizer;
                             setCurrentWaiter({ userId, userPINCode, fullName });
                             setOpenAuthUserPINCode(false);
+                            const titleCommand = document.querySelector('.details-command');
+                            titleCommand.textContent = 'Comandas de ' + fullName;
                         } else {
                             navigate("/main");
                         }

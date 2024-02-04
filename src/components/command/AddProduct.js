@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
-import { Col, Button, Divider, Modal, Row, Tabs, Space, Tag, InputNumber } from "antd";
-import { CloseOutlined, DollarOutlined, SaveOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import { Col, Button, Divider, Modal, Row, Space, Tag, InputNumber } from "antd";
+import { CloseOutlined, SaveOutlined } from "@ant-design/icons";
 
 
 import productsServices from '../../services/ProductsServices.js';
 
 import SaleDetailModel from "../../models/SaleDetail.js";
 
-import ProductPricePicker from "../pickers/ProductPricePicker.js";
 import { getUserLocation } from "../../utils/LocalData";
 import { customNot } from "../../utils/Notifications.js";
 
@@ -30,9 +29,7 @@ const styleSheet = {
 
 function AddProduct(props) {
 
-    const { open, productSelected, productsInOrder, orderDetails, onClose, onUpdate } = props;
-
-    const [openPricePicker, setOpenPricePicker] = useState(false);
+    const { open, productSelected, orderDetails, onClose, onUpdate } = props;
 
     const [productData, setProductData] = useState([]);
     const [detailQuantity, setDetailQuantity] = useState(null);
@@ -40,7 +37,6 @@ function AddProduct(props) {
     const [priceScale, setPriceScale] = useState(1);
     const [updateMode, setUpdateMode] = useState();
     const [orderInfo, setOrderInfo] = useState([]);
-    const [activeTab, setActiveTab] = useState(1);
 
     const [nameOrder, setNameOrder] = useState('');
     const [commentOrder, setCommentOrder] = useState('');
@@ -90,7 +86,6 @@ function AddProduct(props) {
         setDetailQuantity(null);
         setInputNumpad('');
         setDetailUnitPrice(null);
-        setActiveTab(1);
         setNameOrder('');
         setCommentOrder('');
     }
@@ -100,15 +95,13 @@ function AddProduct(props) {
         const validDetailQuantity = detailQuantity !== null && detailQuantity > 0;
         const validUnitPrice = isFinite(detailUnitPrice) && detailUnitPrice >= 0;
         const validateIdentifier = nameOrder !== null && nameOrder !== '';
-
-        const validateTab = activeTab === 2;
-
-        if (!validateIdentifier && validateTab && !updateMode) customNot('warning', 'Debe de ingresar un identificador', 'Dato no válido');
+        
+        if (!validateIdentifier && !updateMode) customNot('warning', 'Cliente no válido', 'Ingrese información del cliente');
         if (!validSelectedDetail) customNot('warning', 'Debe seleccionar un producto', 'Dato no válido');
         if (!validDetailQuantity) customNot('warning', 'Debe definir una cantidad válida', 'Dato no válido');
         if (!validUnitPrice) customNot('warning', 'Debe definir un costo válido', 'Dato no válido');
 
-        if (validateTab && !updateMode) {
+        if (!updateMode) {
 
             return (
                 validSelectedDetail
@@ -152,7 +145,32 @@ function AddProduct(props) {
             key: 1,
             label: "Detalle",
             children: (
-                <Row gutter={[12, 12]}>
+                <>
+                </>
+            )
+        },
+        {
+            key: 2,
+            label: "Informacion adicional",
+            children: (
+                <>
+                </>
+            )
+        }
+    ]
+
+    return (
+        <Modal
+            centered
+            width={600}
+            closable={false}
+            maskClosable={false}
+            open={open}
+            // bodyStyle={{ backgroundColor: '#353941', border: '1px solid #787B80' }}
+            footer={null}
+        >
+            <div style={{ display: 'flex', justifyContent: "space-between" }}>
+                <Row gutter={[12, 12]} style={{ width: '50%' }}>
                     <Col span={24} style={{ display: 'flex', flexDirection: 'column' }}>
                         <Space>
                             <p
@@ -191,17 +209,11 @@ function AddProduct(props) {
                         <Numpad onKeyPress={handleKeyPress} onDelete={handleDelete} valueNumpad={inputNumpad} validCero={true} />
                     </Col>
                 </Row>
-            )
-        },
-        {
-            key: 2,
-            label: "Informacion adicional",
-            children: (
-                <Row gutter={[12, 12]}>
+                <Row gutter={[12, 12]} style={{ width: '50%' }}>
                     {!updateMode ?
                         <Col
                             style={{ display: 'flex', flexDirection: 'column' }}>
-                            <p style={styleSheet.labelStyle}>Identificador:</p>
+                            <p style={styleSheet.labelStyle}>Cliente:</p>
                             <Input
                                 style={{ width: '100%' }}
                                 size={'large'}
@@ -232,49 +244,6 @@ function AddProduct(props) {
                     </Col>
 
                 </Row>
-            )
-        }
-    ]
-
-    return (
-        <Modal
-            centered
-            width={700}
-            closable={false}
-            maskClosable={false}
-            open={open}
-            // bodyStyle={{ backgroundColor: '#353941', border: '1px solid #787B80' }}
-            footer={null}
-        >
-            <Tabs
-                tabPosition={'left'}
-                tabBarStyle={{ backgroundColor: 'transparent' }}
-                activeKey={activeTab}
-                items={items}
-            >
-            </Tabs>
-            <Divider />
-            <div
-                style={{
-                    width: '100%',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: 5,
-                    padding: 10
-                }}
-            >
-                <Row gutter={[12, 12]}>
-                    <Col span={24}>
-                        <p style={styleSheet.labelStyle}>Resumen</p>
-                    </Col>
-                    <Col span={12}>
-                        {/* <p style={styleSheet.labelStyle}>{`Id: ${selectedProductData.productId}`}</p> */}
-                        <p style={styleSheet.labelStyle}>{productData.productName}</p>
-                        <p style={styleSheet.labelStyle}>{`${detailQuantity || 0} x $${detailUnitPrice || 0}`}</p>
-                    </Col>
-                    <Col span={12}>
-                        <p style={styleSheet.labelStyle}>{`$${((detailQuantity || 0) * (detailUnitPrice || 0)).toFixed(2)}`}</p>
-                    </Col>
-                </Row>
             </div>
             <Divider />
             <Row gutter={[12, 12]}>
@@ -294,30 +263,19 @@ function AddProduct(props) {
                     </Button>
                 </Col>
                 <Col span={12}>
-                    {activeTab === 1 ?
-                        <Button
-                            type={'primary'}
-                            size={'large'}
-                            icon={<ArrowRightOutlined />}
-                            style={{ width: '100%' }}
-                            onClick={() => {
-                                
-                                if (validateDetail()) {
-                                    setActiveTab(2);
-                                }
-                            }}
-                        >
-                            Siguiente
-                        </Button>
-                        :
-                        <Button
-                            id={'new-sale-add-detail-button'}
-                            type={'primary'}
-                            size={'large'}
-                            icon={<SaveOutlined />}
-                            onClick={() => {
+                    <Button
+                        id={'new-sale-add-detail-button'}
+                        type={'primary'}
+                        size={'large'}
+                        icon={<SaveOutlined />}
+                        onClick={() => {
 
-                                if (validateDetail()) {
+                            if (validateDetail()) {
+
+                                const validateTotalsDetails = parseInt(detailQuantity * detailUnitPrice);
+
+                                if (validateTotalsDetails !== 0) {
+
                                     const detailToAdd = new SaleDetailModel(
                                         productData.productId,
                                         productData.productName,
@@ -337,14 +295,16 @@ function AddProduct(props) {
                                     }
 
                                     restoreState();
+                                } else {
+                                    customNot('warning', 'El total es incorrecto', 'La orden no puede ser $0.00')
                                 }
+                            }
 
-                            }}
-                            style={{ width: '100%' }}
-                        >
-                            {!updateMode ? "Crear Order" : "Añadir Producto"}
-                        </Button>
-                    }
+                        }}
+                        style={{ width: '100%' }}
+                    >
+                        {!updateMode ? "Crear Order" : "Añadir Producto"}
+                    </Button>
                 </Col>
             </Row>
         </Modal>

@@ -270,7 +270,7 @@ const MainLayout = () => {
         <Breadcrumb.Item>Rechazados</Breadcrumb.Item>
       </>);
       case "/main/command/new": return (<>
-        <Breadcrumb.Item>Comandas</Breadcrumb.Item>
+        <Breadcrumb.Item className='details-command'>Comandas</Breadcrumb.Item>
       </>);
       case "/main/command/control": return (<>
         <Breadcrumb.Item>Comandas</Breadcrumb.Item>
