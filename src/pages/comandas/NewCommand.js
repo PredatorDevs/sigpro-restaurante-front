@@ -30,6 +30,9 @@ import { isEmpty, forEach, find } from "lodash";
 
 import AuthorizeUserPINCode from "../../components/confirmations/AuthorizeUserPINCode.js";
 
+import download from "downloadjs";
+import reportsServices from "../../services/ReportsServices.js";
+
 const styleSheet = {
     tableFooter: {
         footerCotainer: {
@@ -136,6 +139,7 @@ function NewCommand() {
     const [openAuthUserPINCode, setOpenAuthUserPINCode] = useState(true);
 
     const [showButtons, setShowButtons] = useState(false);
+    const [chargePreAccount, setChargePreAccount] = useState(false);
 
     // #region Order Details
     async function getOrderInfo(tableId) {
@@ -288,10 +292,25 @@ function NewCommand() {
         }
     }
 
-    function selectedProduct(product) {
+    async function selectedProduct(product) {
         if (tableOrder !== 0) {
-            setOpenProductInfo(true);
-            setSelectedProductData(product);
+
+            const response = await orderSalesServices.findByTableId(tableOrder);
+            const orderInformation = response.data[0];
+
+            if (!isEmpty(orderInformation) && parseInt(orderInformation[0].userPINCode) !== currentWaiter.userPINCode) {
+                setDetailsOrder([]);
+                setOrderInTable([]);
+                setTableOrder(0);
+                setFetchingMyTables(true);
+                await loadData();
+                await loadMyTables();
+                customNot('warning', 'Cuenta No disponible', 'La cuenta seleccionada ya fue ocupada.');
+            } else {
+                setOpenProductInfo(true);
+                setSelectedProductData(product);
+            }
+
         } else {
             customNot('warning', 'Selecciona una cuenta', 'Debe de seleccionar una cuenta');
         }
@@ -318,6 +337,8 @@ function NewCommand() {
 
     async function createNewComanda(data, userDetails) {
 
+        const unitPrice = parseFloat(data.detailUnitPrice).toFixed(2);
+
         orderSalesServices.addCommand(
             getUserLocation(),
             4161,
@@ -326,7 +347,7 @@ function NewCommand() {
             data.detailSubTotal,
             data.detailId,
             data.detailQuantity,
-            data.detailUnitPrice,
+            unitPrice,
             currentWaiter.userId,
             userDetails.commentOrder,
             currentWaiter.userPINCode,
@@ -351,10 +372,12 @@ function NewCommand() {
 
         const { saleDetailToPush, orderInfo, userDetails } = data;
         if (orderInfo === orderInTable[0]) {
+            const unitPrice = parseFloat(saleDetailToPush.detailUnitPrice).toFixed(2);
+
             orderSalesServices.details.addByCommand(
                 orderInfo.id,
                 saleDetailToPush.detailId,
-                saleDetailToPush.detailUnitPrice,
+                unitPrice,
                 saleDetailToPush.detailQuantity,
                 userDetails.commentOrder
             ).then(async (response) => {
@@ -379,11 +402,20 @@ function NewCommand() {
             });
     }
 
+    async function kitchenTicket(orderId, details) {
+        try {
+            const response = await reportsServices.getKitchenTicket(orderId, details);
+            const ticketName = `TicketCocina_${orderId}.pdf`; 
+            download(response.data, ticketName);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     async function sendToKitchen() {
         const orderId = orderInTable[0].id;
 
         const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
-
         if (detailActives.length >= 1) {
             const activeIds = detailActives.map(obj => obj.id);
 
@@ -398,6 +430,7 @@ function NewCommand() {
                 onOk() {
                     orderSalesServices.details.sendToKitchen(orderId, activeIds)
                         .then(async (response) => {
+                            await kitchenTicket(orderId, activeIds);
                             await getOrderInfo(tableOrder);
                             customNot('success', 'Operación exitosa', 'Detalle enviados a cocina');
                         })
@@ -468,6 +501,20 @@ function NewCommand() {
             }
         ),
     ];
+
+    async function createPreCuenta() {
+        const orderId = orderInTable[0].id;
+        setChargePreAccount(true);
+        try {
+            const response = await reportsServices.getPreAccountTicket(orderId);
+            const ticketName = `TicketPrecuenta_${orderId}.pdf`; 
+            download(response.data, ticketName);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setChargePreAccount(false);
+        }
+    }
 
     return (
         !ableToProcess ?
@@ -605,11 +652,11 @@ function NewCommand() {
                                                 Salir
                                             </Button>
                                             <Button
+                                                loading={chargePreAccount}
                                                 icon={<CopyOutlined />}
                                                 disabled={!showButtons}
                                                 style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                            // onClick={() => formAction()}
-                                            // disabled={fetching}
+                                                onClick={() => createPreCuenta()}
                                             >
                                                 Pre-Cuenta
                                             </Button>

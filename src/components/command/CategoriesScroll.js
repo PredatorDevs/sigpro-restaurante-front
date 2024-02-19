@@ -22,6 +22,8 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
     };
 
     const pStyle = {
+        width: 166,
+        padding: '5px 0',
         maxWidth: '100%',
         color: '#000',
         margin: 0,
@@ -59,25 +61,6 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
 
                 {isEmpty(categories) ?
                     <>
-                        <Button
-                            key={1}
-                            type="primary"
-                            shape="square"
-                            style={{
-                                ...buttonStyle,
-                                backgroundColor: '#BAE0FF',
-                            }}
-                        >
-                            <div style={{ width: '100%' }}>
-                                <img
-                                    width={55}
-                                    height={55}
-                                    src={menuLogo}
-                                    style={{ objectFit: 'cover' }}
-                                />
-                                <p style={pStyle}>No hay categorias disponibles</p>
-                            </div>
-                        </Button>
                     </> :
                     <>
 

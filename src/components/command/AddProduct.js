@@ -44,6 +44,7 @@ function AddProduct(props) {
     const [inputNumpad, setInputNumpad] = useState('');
 
     async function loadProductData(filter) {
+        
         try {
             if (filter) {
                 const response = await productsServices.findByMultipleParams(getUserLocation(), filter, 0);
@@ -78,11 +79,7 @@ function AddProduct(props) {
     }, [productSelected, open])
 
     function restoreState() {
-        // setActiveTab('1');
-        // setFormProductFilterSearch('');
         setProductData([]);
-        // setOrderInfo([]);
-        // setSelectedProductData({});
         setDetailQuantity(null);
         setInputNumpad('');
         setDetailUnitPrice(null);
@@ -139,25 +136,6 @@ function AddProduct(props) {
     const handleCommentOrder = (e) => {
         setCommentOrder(e.target.value);
     }
-
-    const items = [
-        {
-            key: 1,
-            label: "Detalle",
-            children: (
-                <>
-                </>
-            )
-        },
-        {
-            key: 2,
-            label: "Informacion adicional",
-            children: (
-                <>
-                </>
-            )
-        }
-    ]
 
     return (
         <Modal
@@ -275,13 +253,13 @@ function AddProduct(props) {
                                 const validateTotalsDetails = parseInt(detailQuantity * detailUnitPrice);
 
                                 if (validateTotalsDetails !== 0) {
-
+                                    const unitPrice = parseFloat(detailUnitPrice).toFixed(2);
                                     const detailToAdd = new SaleDetailModel(
                                         productData.productId,
                                         productData.productName,
                                         productData.isTaxable,
                                         detailQuantity || 0,
-                                        detailUnitPrice || 0,
+                                        unitPrice || 0,
                                         productData.taxesData,
                                         productData.productIsService
                                     );
