@@ -140,6 +140,7 @@ function NewCommand() {
 
     const [showButtons, setShowButtons] = useState(false);
     const [chargePreAccount, setChargePreAccount] = useState(false);
+    const [chargeKitchen, setChargeKitchen] = useState(false);
 
     // #region Order Details
     async function getOrderInfo(tableId) {
@@ -350,6 +351,7 @@ function NewCommand() {
             unitPrice,
             currentWaiter.userId,
             userDetails.commentOrder,
+            userDetails.commentDetail,
             currentWaiter.userPINCode,
             userDetails.nameOrder
         ).then(async (response) => {
@@ -379,7 +381,7 @@ function NewCommand() {
                 saleDetailToPush.detailId,
                 unitPrice,
                 saleDetailToPush.detailQuantity,
-                userDetails.commentOrder
+                userDetails.commentDetail
             ).then(async (response) => {
                 await getOrderInfo(tableOrder);
                 customNot('success', 'Operación exitosa', 'Su orden fue actualizada');
@@ -405,44 +407,54 @@ function NewCommand() {
     async function kitchenTicket(orderId, details) {
         try {
             const response = await reportsServices.getKitchenTicket(orderId, details);
-            const ticketName = `TicketCocina_${orderId}.pdf`; 
+            const ticketName = `TicketCocina_${orderId}.pdf`;
             download(response.data, ticketName);
         } catch (error) {
             console.error(error);
+            customNot('info', 'No es posible crear el ticket', 'No fue posible generar el PDF');
         }
     }
 
     async function sendToKitchen() {
-        const orderId = orderInTable[0].id;
+        try {
+            const orderId = orderInTable[0].id;
 
-        const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
-        if (detailActives.length >= 1) {
-            const activeIds = detailActives.map(obj => obj.id);
+            const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
+            if (detailActives.length >= 1) {
+                const activeIds = detailActives.map(obj => obj.id);
 
-            Modal.confirm({
-                title: '¿Enviar Detalle a cocina?',
-                centered: true,
-                icon: <WarningOutlined />,
-                content: `Los detalles ya no se podrán modificar`,
-                okText: 'Confirmar',
-                okType: 'info',
-                cancelText: 'Cancelar',
-                onOk() {
-                    orderSalesServices.details.sendToKitchen(orderId, activeIds)
-                        .then(async (response) => {
-                            await kitchenTicket(orderId, activeIds);
-                            await getOrderInfo(tableOrder);
-                            customNot('success', 'Operación exitosa', 'Detalle enviados a cocina');
-                        })
-                        .catch((error) => {
-                            customNot('info', 'Algo salió mal', 'No se pudo enviar a cocina');
-                        });
-                },
-                onCancel() { },
-            });
+                Modal.confirm({
+                    title: '¿Enviar Detalle a cocina?',
+                    centered: true,
+                    icon: <WarningOutlined />,
+                    content: `Los detalles ya no se podrán modificar`,
+                    okText: 'Confirmar',
+                    okType: 'info',
+                    cancelText: 'Cancelar',
+                    onOk() {
 
-        } else {
-            customNot('info', 'Todos los detalles en cocina', 'Todos los detalles ya se encuentran en cocina');
+                        setChargeKitchen(true);
+                        orderSalesServices.details.sendToKitchen(orderId, activeIds)
+                            .then(async (response) => {
+                                await kitchenTicket(orderId, activeIds);
+                                await getOrderInfo(tableOrder);
+                                customNot('success', 'Operación exitosa', 'Detalle enviados a cocina');
+                                setChargeKitchen(false);
+                            })
+                            .catch((error) => {
+                                customNot('info', 'Algo salió mal', 'No se pudo enviar a cocina');
+                                setChargeKitchen(false);
+                            });
+                    },
+                    onCancel() { },
+                });
+
+            } else {
+                customNot('info', 'Todos los detalles en cocina', 'Todos los detalles ya se encuentran en cocina');
+            }
+        } catch (error) {
+            console.log(error);
+            customNot('info', 'Algo salió mal', 'No se pudo enviar a cocina');
         }
     }
 
@@ -507,10 +519,12 @@ function NewCommand() {
         setChargePreAccount(true);
         try {
             const response = await reportsServices.getPreAccountTicket(orderId);
-            const ticketName = `TicketPrecuenta_${orderId}.pdf`; 
+            const ticketName = `TicketPrecuenta_${orderId}.pdf`;
             download(response.data, ticketName);
         } catch (error) {
             console.error(error);
+            customNot('info', 'No es posible crear el ticket', 'No fue posible generar el PDF');
+
         } finally {
             setChargePreAccount(false);
         }
@@ -630,6 +644,7 @@ function NewCommand() {
 
                                     <div style={{ width: '100%' }}>
                                         <Button
+                                            loading={chargeKitchen}
                                             type={'primary'}
                                             icon={<SendOutlined />}
                                             disabled={!showButtons}

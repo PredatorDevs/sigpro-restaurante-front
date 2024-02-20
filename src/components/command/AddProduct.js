@@ -40,11 +40,12 @@ function AddProduct(props) {
 
     const [nameOrder, setNameOrder] = useState('');
     const [commentOrder, setCommentOrder] = useState('');
+    const [commentDetail, setCommentDetail] = useState('');
 
     const [inputNumpad, setInputNumpad] = useState('');
 
     async function loadProductData(filter) {
-        
+
         try {
             if (filter) {
                 const response = await productsServices.findByMultipleParams(getUserLocation(), filter, 0);
@@ -85,6 +86,7 @@ function AddProduct(props) {
         setDetailUnitPrice(null);
         setNameOrder('');
         setCommentOrder('');
+        setCommentDetail('');
     }
 
     function validateDetail() {
@@ -92,7 +94,7 @@ function AddProduct(props) {
         const validDetailQuantity = detailQuantity !== null && detailQuantity > 0;
         const validUnitPrice = isFinite(detailUnitPrice) && detailUnitPrice >= 0;
         const validateIdentifier = nameOrder !== null && nameOrder !== '';
-        
+
         if (!validateIdentifier && !updateMode) customNot('warning', 'Cliente no válido', 'Ingrese información del cliente');
         if (!validSelectedDetail) customNot('warning', 'Debe seleccionar un producto', 'Dato no válido');
         if (!validDetailQuantity) customNot('warning', 'Debe definir una cantidad válida', 'Dato no válido');
@@ -135,6 +137,10 @@ function AddProduct(props) {
 
     const handleCommentOrder = (e) => {
         setCommentOrder(e.target.value);
+    }
+
+    const handleCommentDetail = (e) => {
+        setCommentDetail(e.target.value);
     }
 
     return (
@@ -203,18 +209,31 @@ function AddProduct(props) {
                                 onChange={handleNameOrder}
                             />
 
+                            <p style={styleSheet.labelStyle}>Comentario adicional de la orden:</p>
+                            <Input
+                                style={{ width: '100%' }}
+                                size={'large'}
+                                // onChange={changeQuantity}
+                                type={'text'}
+                                value={commentOrder}
+                                onChange={handleCommentOrder}
+                                maxLength={250}
+                                name="Comentario"
+                            />
+
                         </Col>
+
                         : <></>
                     }
                     <Col style={{ display: 'flex', flexDirection: 'column' }}>
-                        <p style={styleSheet.labelStyle}>Comentario adicional:</p>
+                        <p style={styleSheet.labelStyle}>Comentario adicional del detalle:</p>
                         <Input
                             style={{ width: '100%' }}
                             size={'large'}
                             // onChange={changeQuantity}
                             type={'text'}
-                            value={commentOrder}
-                            onChange={handleCommentOrder}
+                            value={commentDetail}
+                            onChange={handleCommentDetail}
                             maxLength={250}
                             name="Comentario"
                         />
@@ -264,7 +283,7 @@ function AddProduct(props) {
                                         productData.productIsService
                                     );
 
-                                    const userDetails = { nameOrder, commentOrder }
+                                    const userDetails = { nameOrder, commentOrder, commentDetail }
 
                                     if (!updateMode) {
                                         onClose(detailToAdd, true, productData.currentStock, userDetails);

@@ -8,7 +8,7 @@ import sigproLogo from '../img/logos/sigpro-logo.png';
 
 import { LogoutOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import { GAdministrationIcon, GCashierIcon, GCashierThreeIcon, GContractIcon, GCustomersIcon, GDispatchIcon, GExpensesIcon, GInventoryIcon, GKardexIcon, GLogoutIcon, GOrdersIcon, GPendingSalesIcon, GPolicyIcon, GProductionIcon, GPurchasesIcon, GReportsIcon, GRequisitionIcon, GShippingIcon } from '../utils/IconImageProvider';
+import { GAdministrationIcon, GCashierIcon, GCashierThreeIcon, GContractIcon, GCustomersIcon, GDispatchIcon, GExpensesIcon, GInventoryIcon, GKardexIcon, GLogoutIcon, GOrdersIcon, GPendingSalesIcon, GPolicyIcon, GProductionIcon, GPurchasesIcon, GReportsIcon, GRequisitionIcon, GSalesAgentIcon, GShippingIcon, GTrackIcon, GTruckIcon } from '../utils/IconImageProvider';
 import { DeveloperInformation } from '../styled-components/DeveloperInformation';
 import { getUserLocation, getUserLocationAddress, getUserLocationName } from '../utils/LocalData';
 import { MainMenuCard } from '../styled-components/MainMenuCard';
@@ -77,6 +77,7 @@ function Main() {
           {
             [
               { title: 'Comandas', image: <GCashierIcon width='calc(50%)' />, action: () => navigate('/main/command/new') }, // 1
+              { title: 'Delivery', image: <GTrackIcon width='calc(50%)' />, action: () => navigate('/main/command/new') }, // 1
               { title: 'Salir', image: <GLogoutIcon width='calc(50%)' />, action: () => logoutAction() }, // 9
             ].map((element, index) => (
               <Col 
