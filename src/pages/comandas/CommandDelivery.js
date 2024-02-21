@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Row, Col, Empty, Result, Button, Modal, Table, Card, Spin } from "antd";
+import { Row, Col, Empty, Result, Button, Modal, Table, Space, Spin, Card } from "antd";
 import { SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined, CloseOutlined } from "@ant-design/icons";
+import { GAddUserIcon, GClearIcon, GEditUserIcon, GSearchForIcon } from "../../utils/IconImageProvider.js";
 
 import { columnActionsDef, columnDef, columnMoneyDef } from '../../utils/ColumnsDefinitions';
 
@@ -29,9 +30,11 @@ import productsServices from "../../services/ProductsServices.js";
 import { isEmpty, forEach, find } from "lodash";
 
 import AuthorizeUserPINCode from "../../components/confirmations/AuthorizeUserPINCode.js";
-
+import CustomerForm from "../../components/forms/CustomerForm.js";
+import SearchCustomer from "../../components/forms/SearchCustomer.js";
 import download from "downloadjs";
 import reportsServices from "../../services/ReportsServices.js";
+import customersServices from "../../services/CustomersServices.js";
 
 const styleSheet = {
     tableFooter: {
@@ -108,9 +111,8 @@ const styleSheet = {
 };
 
 const { confirm } = Modal;
-const { Meta } = Card;
 
-function NewCommand() {
+function NewCommandDelivery() {
 
     const navigate = useNavigate();
 
@@ -142,6 +144,13 @@ function NewCommand() {
     const [chargePreAccount, setChargePreAccount] = useState(false);
     const [chargeKitchen, setChargeKitchen] = useState(false);
 
+    //Clients
+    const [openForm, setOpenForm] = useState(false);
+    const [openSearchForm, setOpenSearchForm] = useState(false);
+    const [customerUpdateMode, setCustomerUpdateMode] = useState(false);
+    const [customerToUpdate, setCustomerToUpdate] = useState({});
+    const [customerInfo, setCustomerInfo] = useState({});
+
     // #region Order Details
     async function getOrderInfo(tableId) {
         try {
@@ -158,6 +167,11 @@ function NewCommand() {
                 customNot('warning', 'Cuenta No disponible', 'La cuenta seleccionada ya fue ocupada.');
             } else {
                 setOrderInTable(orderInformation);
+                if (!isEmpty(orderInformation)) {
+                    const clientInfo = await customersServices.findByNewId(orderInformation[0].customerId);
+                    setCustomerUpdateMode(true);
+                    setCustomerInfo(clientInfo.data[0]);
+                }
             }
         } catch (error) {
             console.error("Error fetching order info:", error);
@@ -284,6 +298,7 @@ function NewCommand() {
     }
 
     const changeTable = (value) => {
+
         if (value !== tableOrder) {
             setDetailsOrder([]);
             setOrderInTable([]);
@@ -338,36 +353,41 @@ function NewCommand() {
 
     async function createNewComanda(data, userDetails) {
 
-        const unitPrice = parseFloat(data.detailUnitPrice).toFixed(2);
 
-        orderSalesServices.addCommand(
-            getUserLocation(),
-            4161,
-            tableOrder,
-            currentShiftcut,
-            data.detailSubTotal,
-            data.detailId,
-            data.detailQuantity,
-            unitPrice,
-            currentWaiter.userId,
-            userDetails.commentOrder,
-            userDetails.commentDetail,
-            currentWaiter.userPINCode,
-            userDetails.nameOrder
-        ).then(async (response) => {
-            setFetchingMyTables(true);
-            await getOrderInfo(tableOrder);
-            await updateTableStatus(1, response.data[0].NewOrderID, tableOrder, true);
-            customNot('success', 'Operación exitosa', 'Su orden fue añadida');
-        }).catch(async (error) => {
-            setDetailsOrder([]);
-            setOrderInTable([]);
-            setTableOrder(0);
-            setFetchingMyTables(true);
-            await loadData();
-            await loadMyTables();
-            customNot('error', 'Algo salió mal', 'Su order no fue añadida, verifique que la cuenta este libre');
-        });
+        if (isEmpty(customerInfo)) {
+            customNot('warning', 'No se ha seleccionado un cliente', 'Para crear una comanda debe de seleccionar un cliente');
+        } else {
+
+            const unitPrice = parseFloat(data.detailUnitPrice).toFixed(2);
+            orderSalesServices.addCommand(
+                getUserLocation(),
+                customerInfo.id,
+                tableOrder,
+                currentShiftcut,
+                data.detailSubTotal,
+                data.detailId,
+                data.detailQuantity,
+                unitPrice,
+                currentWaiter.userId,
+                userDetails.commentOrder,
+                userDetails.commentDetail,
+                currentWaiter.userPINCode,
+                userDetails.nameOrder
+            ).then(async (response) => {
+                setFetchingMyTables(true);
+                await getOrderInfo(tableOrder);
+                await updateTableStatus(1, response.data[0].NewOrderID, tableOrder, true);
+                customNot('success', 'Operación exitosa', 'Su orden fue añadida');
+            }).catch(async (error) => {
+                setDetailsOrder([]);
+                setOrderInTable([]);
+                setTableOrder(0);
+                setFetchingMyTables(true);
+                await loadData();
+                await loadMyTables();
+                customNot('error', 'Algo salió mal', 'Su order no fue añadida, verifique que la cuenta este libre');
+            });
+        }
     }
 
     async function updateOrderCommand(data) {
@@ -530,6 +550,18 @@ function NewCommand() {
         }
     }
 
+    async function restoreClient() {
+        setCustomerUpdateMode(false);
+        setCustomerToUpdate({});
+        setCustomerInfo({});
+        setDetailsOrder([]);
+        setOrderInTable([]);
+        setTableOrder(0);
+        setFetchingMyTables(true);
+        await loadData();
+        await loadMyTables();
+    }
+
     return (
         !ableToProcess ?
             <>
@@ -540,14 +572,93 @@ function NewCommand() {
                 />
             </> :
             <Wrapper>
-                <Row style={{ width: '100%', maxWidth: '100%', maxHeight: '100%' }}>
-
+                <Row style={{ width: '100%', maxWidth: '100%', maxHeight: '100%', marginTop: 10 }}>
                     <Col span={12} style={{ paddingRight: 5 }}>
+
+                        <Col
+                            style={{
+                                width: '100%',
+                                paddingTop: '10px',
+                                paddingBottom: '10px',
+                                paddingLeft: '10px',
+                                paddingRight: '10px',
+                                backgroundColor: '#e6f4ff',
+                                borderRadius: '5px'
+                            }}
+                        >
+                            <p style={{ margin: '0px', fontSize: 12 }}>{'Opciones:'}</p>
+                            <Space wrap>
+                                <Button
+                                    disabled={customerUpdateMode}
+                                    onClick={() => setOpenSearchForm(true)}
+                                >
+                                    <Space>
+                                        <GSearchForIcon width={'16px'} />
+                                        {'Buscar Cliente'}
+                                    </Space>
+                                </Button>
+                                <Button
+                                    disabled={customerUpdateMode}
+                                    onClick={() => setOpenForm(true)}
+                                >
+                                    <Space>
+                                        <GAddUserIcon width={'16px'} />
+                                        {'Añadir Cliente'}
+                                    </Space>
+                                </Button>
+                                <Button
+                                    disabled={!customerUpdateMode}
+                                    onClick={async () => {
+                                        const response = await customersServices.findById(customerInfo.id);
+                                        setCustomerToUpdate(response.data);
+                                        setCustomerUpdateMode(true);
+                                        setOpenForm(true);
+                                    }}
+                                >
+                                    <Space>
+                                        <GEditUserIcon width={'16px'} />
+                                        {'Actualizar Cliente'}
+                                    </Space>
+                                </Button>
+                                <Button
+                                    disabled={!customerUpdateMode}
+                                    onClick={() => {
+                                        restoreClient();
+                                    }}
+                                >
+                                    <Space>
+                                        <GClearIcon width={'16px'} />
+                                        {'Limpiar Cliente'}
+                                    </Space>
+                                </Button>
+                            </Space>
+                            {
+                                isEmpty(customerInfo) ? <></> :
+                                    <>
+                                        <Card
+                                            title={customerInfo.fullName}
+                                            style={{
+                                                width: '100%',
+                                                marginTop: 5,
+                                                marginBottom: 5
+                                            }}
+                                        >
+                                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                                <p>Email: {customerInfo.email}</p>
+                                                <p>Telefono: {customerInfo.phoneNumber}</p>
+                                            </div>
+                                            <p>Dirección: {customerInfo.FullAddress}</p>
+                                        </Card>
+                                    </>
+                            }
+                        </Col>
+
                         <div style={{
                             display: "flex",
                             gap: 15,
                             flexDirection: 'column',
-                            width: "100%"
+                            width: "100%",
+                            marginTop: 5
                         }}>
                             {!tableOrder ?
                                 <Empty description="Seleccione una Cuenta..." />
@@ -694,7 +805,7 @@ function NewCommand() {
                     orderDetails={orderInTable}
                     productSelected={selectedProductData}
                     productsInOrder={detailsOrder}
-                    provitionalClient={""}
+                    provitionalClient={customerInfo.fullName}
                     onClose={(saleDetailToPush, executePush, currentStock, userDetails) => {
 
                         setOpenProductInfo(false);
@@ -730,8 +841,34 @@ function NewCommand() {
                         }
                     }}
                 />
+
+                <CustomerForm
+                    open={openForm}
+                    showDeleteButton={false}
+                    updateMode={customerUpdateMode}
+                    dataToUpdate={customerToUpdate}
+                    onClose={(refresh) => {
+                        setOpenForm(false);
+                        setCustomerUpdateMode(false);
+                        setCustomerToUpdate({});
+                    }}
+                />
+
+                <SearchCustomer
+                    open={openSearchForm}
+                    updateMode={customerUpdateMode}
+                    onClose={(close, customer) => {
+
+                        setOpenSearchForm(close);
+
+                        if (!isEmpty(customer)) {
+                            setCustomerUpdateMode(true);
+                            setCustomerInfo(customer);
+                        }
+                    }}
+                />
             </Wrapper >
     );
 }
 
-export default NewCommand;
+export default NewCommandDelivery;

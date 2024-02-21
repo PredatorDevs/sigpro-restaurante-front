@@ -29,7 +29,7 @@ const styleSheet = {
 
 function AddProduct(props) {
 
-    const { open, productSelected, orderDetails, onClose, onUpdate } = props;
+    const { open, productSelected, provitionalClient, orderDetails, onClose, onUpdate } = props;
 
     const [productData, setProductData] = useState([]);
     const [detailQuantity, setDetailQuantity] = useState(null);
@@ -77,6 +77,11 @@ function AddProduct(props) {
 
     useEffect(() => {
         loadProductData(productSelected.productName);
+        if(provitionalClient !== "")
+        {
+            setNameOrder(provitionalClient);
+        }
+        
     }, [productSelected, open])
 
     function restoreState() {

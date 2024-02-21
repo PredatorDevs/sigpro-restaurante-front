@@ -48,6 +48,7 @@ import SaleBooks from './pages/reports/SaleBooks';
 import TablesRecord from './pages/tables/TablesRecord';
 import NewCommand from './pages/comandas/NewCommand';
 import ControlCommand from './pages/comandas/ControlCommand';
+import NewCommandDelivery from './pages/comandas/CommandDelivery';
 
 const App = () => {
   const isLoggedIn = getUserIsLoggedIn();
@@ -139,6 +140,7 @@ const App = () => {
         {renderProtectedRoute('transfers/rejecteds', [1, 2, 5], <RejectedTransfers />)}
         {renderProtectedRoute('command/new', [1, 2, 5], <NewCommand />)}
         {renderProtectedRoute('command/control', [1, 2, 5], <ControlCommand />)}
+        {renderProtectedRoute('command/new/delivery', [1, 2, 5], <NewCommandDelivery />)}
         <Route path='*' element={<Page404 />} />
       </Route>
       <Route path="/noauth" element={<Page403 />}></Route>

@@ -11,7 +11,7 @@ customersServices.findTypes = () => genRequest(`get`, `/customers/types`, {});
 
 customersServices.findPendingSales = (customerId) => genRequest(`get`, `/customers/pending-sales/${customerId}`, {});
 
-customersServices.add = (customerTypeId, locationId, fullName, address, phone, email, dui, nit, nrc) => 
+customersServices.add = (customerTypeId, locationId, fullName, address, phone, email, dui, nit, nrc) =>
   genRequest(`post`, `/customers`, { customerTypeId, locationId, fullName, address, phone, email, dui, nit, nrc });
 
 customersServices.addv2 = (
@@ -36,7 +36,7 @@ customersServices.addv2 = (
   defPriceIndex,
   customerPhones,
   customerRelatives
-) => 
+) =>
   genRequest(
     `post`, `/customers`,
     {
@@ -68,10 +68,10 @@ customersServices.addv2 = (
     'Error desconocido. Consulte los registros.'
   );
 
-customersServices.addPhones = (customerPhones) => 
+customersServices.addPhones = (customerPhones) =>
   genRequest(`post`, `/customers/add-phones`, { customerPhones }, 'Teléfonos añadidos existosamente', '', 'Los teléfonos no fueron añadidos', '');
 
-customersServices.addRelatives = (customerRelatives) => 
+customersServices.addRelatives = (customerRelatives) =>
   genRequest(`post`, `/customers/add-relatives`, { customerRelatives }, 'Referencias familiares añadidas existosamente', '', 'Las referencias familiares no fueron añadidas', '');
 
 customersServices.update = (
@@ -95,7 +95,7 @@ customersServices.update = (
   creditLimit,
   defPriceIndex,
   customerId
-) => 
+) =>
   genRequest(
     `put`,
     `/customers`,
@@ -123,13 +123,20 @@ customersServices.update = (
     }
   );
 
-customersServices.remove = (customerId) => 
+customersServices.remove = (customerId) =>
   genRequest(`delete`, `/customers/${customerId}`);
 
-customersServices.removePhone = (customerPhoneId) => 
+customersServices.removePhone = (customerPhoneId) =>
   genRequest(`delete`, `/customers/phone/${customerPhoneId}`, {}, 'Teléfono removido exitosamente', '', 'El teléfono no fue removido', '');
 
-customersServices.removeRelative = (customerRelativeId) => 
+customersServices.removeRelative = (customerRelativeId) =>
   genRequest(`delete`, `/customers/relative/${customerRelativeId}`, {}, 'Referencia removida exitosamente', '', 'La referencia no fue removida', '');
+
+customersServices.findByPhone = (phone) =>
+  genRequest(`get`, `/customers/by-phone/${phone}`, {}, '', '', 'Cliente no encontrado', '');
+
+
+customersServices.findByNewId = (customerId) =>
+  genRequest(`get`, `/customers/by-id/${customerId}`, {}, '', '', 'Cliente no encontrado', '');
 
 export default customersServices;

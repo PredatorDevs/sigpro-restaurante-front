@@ -77,7 +77,7 @@ function Main() {
           {
             [
               { title: 'Comandas', image: <GCashierIcon width='calc(50%)' />, action: () => navigate('/main/command/new') }, // 1
-              { title: 'Delivery', image: <GTrackIcon width='calc(50%)' />, action: () => navigate('/main/command/new') }, // 1
+              { title: 'Delivery', image: <GTrackIcon width='calc(50%)' />, action: () => navigate('/main/command/new/delivery') }, // 1
               { title: 'Salir', image: <GLogoutIcon width='calc(50%)' />, action: () => logoutAction() }, // 9
             ].map((element, index) => (
               <Col 
