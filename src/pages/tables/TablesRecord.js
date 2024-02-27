@@ -15,14 +15,14 @@ function TablesRecord() {
     const items = [
         {
             key: '1',
-            label: 'Mesas',
+            label: 'Cuentas',
             children: (
                 <Tables />
             )
         },
         {
             key: '2',
-            label: 'Grupo de Mesas',
+            label: 'Grupo de Cuentas',
             children: (
                 <TablesGroups />
             )

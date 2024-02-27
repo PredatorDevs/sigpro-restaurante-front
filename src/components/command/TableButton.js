@@ -12,6 +12,7 @@ const buttonStyle = {
 };
 
 function TableButton({ table, tableOrder, fetchingTables, onChangeTable }) {
+
     return (
         <Button
             style={{
@@ -41,7 +42,11 @@ function TableButton({ table, tableOrder, fetchingTables, onChangeTable }) {
                 }}>
                     {table.name}
                 </p>
-                {table.status ? <Tag color="red">Ocupada</Tag> : <Tag color="green">Libre</Tag>}
+                {table.packoff ? <Tag color="blue">En Entrega</Tag> :
+                    <>
+                        {table.status ? <Tag color="red">Ocupada</Tag> : <Tag color="green">Libre</Tag>}
+                    </>
+                }
             </div>
         </Button>
     );

@@ -160,7 +160,7 @@ function NewCommandDelivery() {
         try {
             const response = await orderSalesServices.findByTableId(tableId);
             const orderInformation = response.data[0];
-
+            
             if (!isEmpty(orderInformation) && parseInt(orderInformation[0].userPINCode) !== currentWaiter.userPINCode) {
                 setDetailsOrder([]);
                 setOrderInTable([]);
@@ -252,9 +252,8 @@ function NewCommandDelivery() {
 
     // #region Loads
     async function loadData() {
-        const response = await tablesServices.findAllInCommand(getUserLocation());
+        const response = await tablesServices.findAllInCommand(getUserLocation(), 2);
         setTablesAvailable(response.data[0]);
-
 
         const responseCategories = await categoriesServices.find();
         setCategories(responseCategories.data);
@@ -266,7 +265,7 @@ function NewCommandDelivery() {
 
     async function loadMyTables() {
         try {
-            const response = await tablesServices.findByPin(getUserLocation(), currentWaiter.userPINCode);
+            const response = await tablesServices.findByPin(getUserLocation(), currentWaiter.userPINCode, 2);
             setMyTablesAvailable(response.data[0]);
             setFetchingMyTables(false);
         } catch (error) {
@@ -313,7 +312,7 @@ function NewCommandDelivery() {
 
             const response = await orderSalesServices.findByTableId(tableOrder);
             const orderInformation = response.data[0];
-
+            
             if (!isEmpty(orderInformation) && parseInt(orderInformation[0].userPINCode) !== currentWaiter.userPINCode) {
                 setDetailsOrder([]);
                 setOrderInTable([]);
@@ -373,7 +372,8 @@ function NewCommandDelivery() {
                 currentWaiter.userPINCode,
                 userDetails.nameOrder,
                 customerInfo.AddressIdentifier,
-                customerInfo.PhoneIdentifier
+                customerInfo.PhoneIdentifier,
+                2
             ).then(async (response) => {
                 setFetchingMyTables(true);
                 await getOrderInfo(tableOrder);
@@ -534,22 +534,6 @@ function NewCommandDelivery() {
             }
         ),
     ];
-
-    async function createPreCuenta() {
-        const orderId = orderInTable[0].id;
-        setChargePreAccount(true);
-        try {
-            const response = await reportsServices.getPreAccountTicket(orderId);
-            const ticketName = `TicketPrecuenta_${orderId}.pdf`;
-            download(response.data, ticketName);
-        } catch (error) {
-            console.error(error);
-            customNot('info', 'No es posible crear el ticket', 'No fue posible generar el PDF');
-
-        } finally {
-            setChargePreAccount(false);
-        }
-    }
 
     async function restoreClient() {
         setCustomerUpdateMode(false);
@@ -743,7 +727,7 @@ function NewCommandDelivery() {
                                                 </>
                                                 :
                                                 <>
-                                                    <strong style={styleSheet.TableStyles.headerStyle}>Mis Cuentas</strong>
+                                                    <strong style={styleSheet.TableStyles.headerStyle}>Mis Domicilios</strong>
                                                     <div style={styleSheet.TableStyles.gridContainerStyle}>
                                                         {myTablesAvailable.map((table) => (
                                                             <TableButton
@@ -759,7 +743,7 @@ function NewCommandDelivery() {
                                         }
                                     </div>
 
-                                    <strong style={styleSheet.TableStyles.headerStyle}>Cuentas Disponibles</strong>
+                                    <strong style={styleSheet.TableStyles.headerStyle}>Domicilios Disponibles</strong>
                                     <div style={styleSheet.TableStyles.gridContainerStyle}>
                                         {tablesAvailable.map((table) => (
                                             <TableButton
@@ -798,12 +782,11 @@ function NewCommandDelivery() {
                                             </Button>
                                             <Button
                                                 loading={chargePreAccount}
-                                                icon={<CopyOutlined />}
                                                 disabled={!showButtons}
                                                 style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                                onClick={() => createPreCuenta()}
+                                                //onClick={() => createPreCuenta()}
                                             >
-                                                Pre-Cuenta
+                                                Despachar
                                             </Button>
                                         </div>
                                     </div>
@@ -811,7 +794,6 @@ function NewCommandDelivery() {
                             </Spin>
                         </div>
                     </Col>
-
                     <Col span={12} style={{ position: "relative" }}>
                         <CategoriesScroll categories={categories} selectedCategory={selectedCategory} onClick={selectcategory} />
                         <div style={{ overflowX: "auto", position: "absolute", height: '100%', maxHeight: 'calc(100% - 120px)', width: '100%' }}>

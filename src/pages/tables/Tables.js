@@ -66,6 +66,7 @@ function Tables() {
                 </Tag>
             )
         }),
+        columnDef({ title: 'Tipo de Cuenta', dataKey: 'OrderType' }),
         columnActionsDef(
             {
                 title: 'Acciones',

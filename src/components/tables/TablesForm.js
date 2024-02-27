@@ -21,6 +21,7 @@ function TablesForm(props) {
 
     const [formId, setId] = useState(0);
     const [groupInfo, setGroupInfo] = useState([]);
+    const [orderTypes, setOrderTypes] = useState([]);
 
     const [colorPicker, setColorPicker] = useState('#000');
 
@@ -31,18 +32,21 @@ function TablesForm(props) {
         name: '',
         color: '#000',
         createdBy: 0,
-        updateBy: 0
+        updateBy: 0,
+        orderTypeId: 0
     });
 
     useEffect(() => {
-        const { id, name, tableGroupId, status, color } = dataToUpdate;
+        const { id, name, tableGroupId, status, color, orderTypeId } = dataToUpdate;
+
         setFormData({
             id: id || 0,
             name: name || '',
             tableGroupId: tableGroupId || 0,
             status: status || 0,
             color: color || '#000',
-            updateBy: getUserId()
+            updateBy: getUserId(),
+            orderTypeId: orderTypeId || 0
         });
         setColorPicker(color);
     }, [dataToUpdate]);
@@ -55,12 +59,32 @@ function TablesForm(props) {
             tableGroupId: 0,
             status: 0,
             color: '',
+            orderTypeId: 0
         });
     }
 
     async function loadData() {
-        const response = await tablesServices.findGroup(getUserLocation());
-        setGroupInfo(response.data);
+        try {
+            await tablesServices.findGroup(getUserLocation())
+                .then(response => {
+                    setGroupInfo(response.data);
+                })
+                .catch(err => {
+                    setGroupInfo([]);
+                    console.error(err);
+                });
+
+            await tablesServices.findAllOrderTypes()
+                .then(response => {
+                    setOrderTypes(response.data);
+                })
+                .catch(err => {
+                    setOrderTypes([]);
+                    console.error(err);
+                });
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     useEffect(() => {
@@ -85,6 +109,14 @@ function TablesForm(props) {
             tableGroupId: e
         });
     }
+    
+    
+    const selectChangeOrderType = (e) => {
+        setFormData({
+            ...formData,
+            orderTypeId: e
+        });
+    }
 
     const handleColorChange = (color) => {
         setFormData({
@@ -98,11 +130,13 @@ function TablesForm(props) {
         const validName = !isEmpty(formData.name);
         const validColor = !isEmpty(formData.color);
         const validGroup = formData.tableGroupId === 0 ? false : true;
-        if (!validName) customNot('warning', 'Verifique el nombre de la mesa', 'Dato no válido');
-        if (!validColor) customNot('warning', 'Verifique el color de la mesa', 'Color no válido');
-        if (!validGroup) customNot('warning', 'Verifique el grupo de la mesa', 'Grupo no válido');
+        const validOrderType = formData.orderTypeId === 0 ? false : true;
+        if (!validName) customNot('warning', 'Verifique el nombre de la cuenta', 'Dato no válido');
+        if (!validColor) customNot('warning', 'Verifique el color de la cuenta', 'Color no válido');
+        if (!validGroup) customNot('warning', 'Verifique el grupo de la cuenta', 'Grupo no válido');
+        if (!validOrderType) customNot('warning', 'Verifique el tipo de la cuenta', 'Tipo de cuenta no válido');
         return (
-            validId && validName && validColor && validGroup
+            validId && validName && validColor && validGroup && validOrderType
         );
     }
 
@@ -116,7 +150,9 @@ function TablesForm(props) {
                     formData.status,
                     formData.name,
                     formData.color,
-                    formData.createdBy)
+                    formData.createdBy,
+                    formData.orderTypeId
+                    )
                     .then((response) => {
                         customNot('success', 'Operación exitosa', 'Mesa añadida');
                         restoreState();
@@ -134,7 +170,8 @@ function TablesForm(props) {
                     formData.tableGroupId,
                     formData.name,
                     formData.color,
-                    formData.updateBy)
+                    formData.updateBy,
+                    formData.orderTypeId)
                     .then((response) => {
                         customNot('success', 'Operación exitosa', 'Mesa actualizada');
                         restoreState();
@@ -225,6 +262,21 @@ function TablesForm(props) {
                             onChange={selectChange} >
                             <Option key={0} value={0} disabled>Seleccione una opción</Option>
                             {groupInfo.map(area => (
+                                <Option key={area.id} value={area.id}>
+                                    {area.name}
+                                </Option>
+                            ))}
+                        </Select>
+                    </Col>
+                    <Col span={24}>
+                        <p style={{ margin: '0px 0px 0px 0px' }}>Tipo de Cuenta:</p>
+                        <Select style={{ width: 400 }}
+                            placeholder="Selecciona un tipo de cuenta"
+                            name='orderTypeId'
+                            value={formData.orderTypeId}
+                            onChange={selectChangeOrderType} >
+                            <Option key={0} value={0} disabled>Seleccione una opción</Option>
+                            {orderTypes.map(area => (
                                 <Option key={area.id} value={area.id}>
                                     {area.name}
                                 </Option>

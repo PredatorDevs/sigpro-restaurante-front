@@ -35,6 +35,7 @@ import {
   StockOutlined,
   UploadOutlined,
   UserOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import { Avatar, Badge, Breadcrumb, Button, Layout, Menu, Modal, Space } from 'antd';
 import React, { useState } from 'react';
@@ -453,6 +454,23 @@ const MainLayout = () => {
     getItem('', '100'),
   ];
 
+  function redirectToMain() {
+
+    Modal.confirm({
+      title: '¿Desea regresar a la pagina principal?',
+      centered: true,
+      icon: <WarningOutlined />,
+      content: `Confirme regreso a la pagina principal`,
+      okText: 'Confirmar',
+      okType: 'danger',
+      cancelText: 'Cancelar',
+      onOk() {
+        navigate("/main");
+      },
+      onCancel() { },
+    });
+  }
+
   function logoutAction() {
     confirm({
       title: '¿Desea salir?',
@@ -591,7 +609,10 @@ const MainLayout = () => {
                 </Badge>
               </div> */}
             </Space>
-            <Button type={'primary'} danger icon={<LogoutOutlined />} onClick={() => logoutAction()}>Cerrar sesión</Button>
+            <div style={{display: 'flex', gap: 10}}>
+              <Button type={'primary'} icon={<HomeOutlined />} onClick={() => redirectToMain()}>Pagina Principal</Button>
+              <Button type={'primary'} danger icon={<LogoutOutlined />} onClick={() => logoutAction()}>Cerrar sesión</Button>
+            </div>
           </div>
         </Header>
         <Content

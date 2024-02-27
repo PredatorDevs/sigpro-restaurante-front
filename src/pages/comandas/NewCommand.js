@@ -227,7 +227,7 @@ function NewCommand() {
 
     // #region Loads
     async function loadData() {
-        const response = await tablesServices.findAllInCommand(getUserLocation());
+        const response = await tablesServices.findAllInCommand(getUserLocation(), 1);
         setTablesAvailable(response.data[0]);
 
 
@@ -241,7 +241,7 @@ function NewCommand() {
 
     async function loadMyTables() {
         try {
-            const response = await tablesServices.findByPin(getUserLocation(), currentWaiter.userPINCode);
+            const response = await tablesServices.findByPin(getUserLocation(), currentWaiter.userPINCode, 1);
             setMyTablesAvailable(response.data[0]);
             setFetchingMyTables(false);
         } catch (error) {
@@ -355,7 +355,8 @@ function NewCommand() {
             currentWaiter.userPINCode,
             userDetails.nameOrder,
             null,
-            null
+            null,
+            1
         ).then(async (response) => {
             setFetchingMyTables(true);
             await getOrderInfo(tableOrder);
