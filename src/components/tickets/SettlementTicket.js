@@ -149,7 +149,7 @@ class SettlementTicket extends React.Component {
           />
         </TableContainer>
         {/* <p style={{ fontSize: 22, color: 'red' }}>{shiftcutId || 0}</p> */}
-        {/* <p className='header'>Todo Para Cakes</p>
+        {/* <p className='header'>Asados El Flaco</p>
         <p className="description">Ticket pedido</p>
         <p className="description">{`Cierre de turno #${ticketData.id || '-'}`}</p>
         <div className="divider" />

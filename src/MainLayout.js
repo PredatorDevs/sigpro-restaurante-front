@@ -484,6 +484,7 @@ const MainLayout = () => {
         collapsible
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
+        style={{ display: 'none' }}
       >
         <div className="logo" style={{ display: collapsed ? 'none' : 'flex' }}>
           {/* <Avatar

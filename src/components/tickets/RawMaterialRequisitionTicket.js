@@ -27,7 +27,7 @@ class RawMaterialRequisitionTicket extends React.Component {
     const { ticketData, ticketDetail } = this.props;
     return (
       <TicketWrapper>
-        <p className='header'>Todo Para Cakes</p>
+        <p className='header'>Asados El Flaco</p>
         {/* <p className="description">Ticket pedido</p> */}
         <p className="description">{`Requisición Materia Prima #${ticketData.rawMaterialRequisitionId || '-'}`}</p>
         <div className="divider" />

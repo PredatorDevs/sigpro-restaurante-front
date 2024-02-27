@@ -32,7 +32,7 @@ export default function DepartmentSelector(props) {
     defCityId,
     setResetState
   } = props;
-
+  
   useEffect(() => {
     loadData();
   }, [ entityRefreshData ]);
@@ -90,7 +90,7 @@ export default function DepartmentSelector(props) {
             <Option key={0} value={0} disabled>{'No seleccionado'}</Option>
             {
               (entityData || []).map(
-                (element) => <Option key={element.departmentId} value={element.departmentId}>{element.departmentName}</Option>
+                (element) => <Option key={element.departmentId} id={`department_${element.departmentId}`} value={element.departmentId}>{element.departmentName}</Option>
               )
             }
           </Select>
@@ -119,7 +119,7 @@ export default function DepartmentSelector(props) {
             <Option key={0} value={0} disabled>{'No seleccionado'}</Option>
             {
               (filter(subEntityData, ['departmentId', valueSelected]) || []).map(
-                (element) => <Option key={element.cityId} value={element.cityId}>{element.cityName}</Option>
+                (element) => <Option key={element.cityId} id={`city_${element.cityId}`} value={element.cityId}>{element.cityName}</Option>
               )
             }
           </Select>

@@ -35,6 +35,7 @@ customersServices.addv2 = (
   creditLimit,
   defPriceIndex,
   customerPhones,
+  customerAddresses,
   customerRelatives
 ) =>
   genRequest(
@@ -60,6 +61,7 @@ customersServices.addv2 = (
       creditLimit,
       defPriceIndex,
       customerPhones,
+      customerAddresses,
       customerRelatives
     },
     '',
@@ -135,8 +137,13 @@ customersServices.removeRelative = (customerRelativeId) =>
 customersServices.findByPhone = (phone) =>
   genRequest(`get`, `/customers/by-phone/${phone}`, {}, '', '', 'Cliente no encontrado', '');
 
-
 customersServices.findByNewId = (customerId) =>
   genRequest(`get`, `/customers/by-id/${customerId}`, {}, '', '', 'Cliente no encontrado', '');
+
+customersServices.findByIdandPhone = (customerId, phone, addressId) =>
+  genRequest(`get`, `/customers/by-id/${customerId}/phone/${phone}/address/${addressId}`, {}, '', '', 'Cliente no encontrado', '');
+
+customersServices.findByIdandPhoneId = (customerId, phoneId, addressId) =>
+  genRequest(`get`, `/customers/by-id/${customerId}/by-phoneId/${phoneId}/by-addressId/${addressId}`, {}, '', '', 'Cliente no encontrado', '');
 
 export default customersServices;

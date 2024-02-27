@@ -19,7 +19,7 @@ function KardexPDF(props) {
         fixed
       >
         <Text style={{ textAlign: 'left', fontSize: 7, color: '#8c8c8c' }}>
-          {`Todo Para Cakes`}
+          {`Asados El Flaco`}
         </Text>
       </View>
     )

@@ -353,7 +353,9 @@ function NewCommand() {
             userDetails.commentOrder,
             userDetails.commentDetail,
             currentWaiter.userPINCode,
-            userDetails.nameOrder
+            userDetails.nameOrder,
+            null,
+            null
         ).then(async (response) => {
             setFetchingMyTables(true);
             await getOrderInfo(tableOrder);

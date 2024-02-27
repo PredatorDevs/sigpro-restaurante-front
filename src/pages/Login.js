@@ -98,7 +98,7 @@ function Login() {
           <Col span={12}>
           </Col>
           <Col span={12} style={{ backgroundColor: '#FFFFFF', padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <p className='title'>Todo Para Cakes</p>
+            <p className='title'>Asados El Flaco</p>
             <p className='label'>Usuario:</p>
             <Input
               addonBefore={<UserOutlined />}

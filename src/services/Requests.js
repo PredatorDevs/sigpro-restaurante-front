@@ -14,14 +14,14 @@ export function serverUrl() {
   // FOR SOME CLIENT
   // return `http://192.168.150.11:5001/api`;
   // return `http://127.0.0.1:5001/api`;
-  // return `http://192.168.1.20:5001/api`;
-  return `http://192.168.0.8:5001/api`;
+   return ` http://192.168.0.9:5001/api`;
+  // return `http://192.168.1.19:5001/api`;
   //return `http://192.168.167.83/api`;
   // return `http://192.168.56.1:5001/api`;
   // return 'https://distribuidora-panaderia.vercel.app/api';
 }
 
-const genRequest = async function(
+const genRequest = async function (
   method,
   route,
   data = {},
@@ -34,8 +34,8 @@ const genRequest = async function(
 ) {
   try {
     let response;
-    switch(method) {
-      case 'get': 
+    switch (method) {
+      case 'get':
         // response = await axios.get(`${serverUrl()}${route}`);
         response = await axios.get(
           `${route}`,
@@ -47,7 +47,7 @@ const genRequest = async function(
           }
         );
         break;
-      case 'post': 
+      case 'post':
         // response = await axios.post(`${serverUrl()}${route}`, data);
         response = await axios.post(
           `${route}`,
@@ -60,15 +60,15 @@ const genRequest = async function(
           }
         );
         break;
-      case 'post-multipart': 
+      case 'post-multipart':
         // response = await axios.post(`${serverUrl()}${route}`, data);
-        response = await axios.post(`${route}`, data, { headers: { 'Content-Type': 'multipart/form-data' }});
+        response = await axios.post(`${route}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
         break;
-      case 'put': 
+      case 'put':
         // response = await axios.put(`${serverUrl()}${route}`, data); 
-        response = await axios.put(`${route}`, data); 
+        response = await axios.put(`${route}`, data);
         break;
-      case 'delete': 
+      case 'delete':
         // response = await axios.delete(`${serverUrl()}${route}`); 
         response = await axios.delete(`${route}`);
         break;
@@ -98,7 +98,7 @@ export function localPrinterServerUrl() {
   return `http://127.0.0.1:5005/api`;
 }
 
-const localPrinterGenRequest = async function(
+const localPrinterGenRequest = async function (
   method,
   route,
   data = {},
@@ -109,30 +109,30 @@ const localPrinterGenRequest = async function(
 ) {
   try {
     let response;
-    switch(method) {
-      case 'get': 
+    switch (method) {
+      case 'get':
         response = await axios.get(`${localPrinterServerUrl()}${route}`);
         // response = await axios.get(`${route}`);
         break;
-      case 'post': 
+      case 'post':
         response = await axios.post(`${localPrinterServerUrl()}${route}`, data);
         // response = await axios.post(`${route}`, data);
         break;
-      case 'post-multipart': 
-        response = await axios.post(`${localPrinterServerUrl()}${route}`, data, { headers: { 'Content-Type': 'multipart/form-data' }});
+      case 'post-multipart':
+        response = await axios.post(`${localPrinterServerUrl()}${route}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
         // response = await axios.post(`${route}`, data, { headers: { 'Content-Type': 'multipart/form-data' }});
         break;
-      case 'put': 
-        response = await axios.put(`${localPrinterServerUrl()}${route}`, data); 
+      case 'put':
+        response = await axios.put(`${localPrinterServerUrl()}${route}`, data);
         // response = await axios.put(`${route}`, data); 
         break;
-      case 'delete': 
-        response = await axios.delete(`${localPrinterServerUrl()}${route}`); 
+      case 'delete':
+        response = await axios.delete(`${localPrinterServerUrl()}${route}`);
         // response = await axios.delete(`${route}`);
         break;
       default:
         response = await axios.get(`${localPrinterServerUrl()}${route}`);
-        // response = await axios.get(`${route}`);
+      // response = await axios.get(`${route}`);
     }
     if (successMessage) customNot('success', successMessage, successDescription);
     return response;

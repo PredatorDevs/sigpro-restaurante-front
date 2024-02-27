@@ -27,7 +27,7 @@ class SaleTicket extends React.Component {
     const { ticketData, ticketDetail } = this.props;
     return (
       <TicketWrapper>
-        {/* <p className='header'>Todo Para Cakes</p> */}
+        {/* <p className='header'>Asados El Flaco</p> */}
         <p className="description">{`${ticketData.locationName || '-'}`}</p>
         <p className="description">{`Venta #${ticketData.docNumber || '-'}`}</p>
         {/* <p className="description">Giro: Producción y distribución agua purificada</p> */}

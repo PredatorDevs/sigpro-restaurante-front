@@ -6,7 +6,7 @@ export default class ComponentToPrint extends React.PureComponent {
   render() {
     return (
       <Wrapper>
-        <p className='header'>Todo Para Cakes</p>
+        <p className='header'>Asados El Flaco</p>
         <Row gutter={8}>
           <Col span={9}>
             <p className="legal-info-caption">{`NRC: XXXXXX-X`}</p>

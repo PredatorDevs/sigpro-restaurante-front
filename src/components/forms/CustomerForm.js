@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Col, Row, Divider, Button, Select, PageHeader, Modal, DatePicker, Drawer, Space, Tag, Checkbox, InputNumber } from 'antd';
+import { Input, Col, Row, Divider, Button, Select, PageHeader, Modal, DatePicker, Drawer, Space, Tag, Checkbox, InputNumber, Card } from 'antd';
 import { BuildOutlined, DeleteFilled, DeleteOutlined, DollarOutlined, EnvironmentOutlined, HomeOutlined, InboxOutlined, PhoneOutlined, SaveOutlined, UnorderedListOutlined, UserOutlined, WarningOutlined } from '@ant-design/icons';
 import { includes, isEmpty, toUpper } from 'lodash';
 
@@ -17,6 +17,7 @@ import CustomerRelatives from '../CustomerRelatives';
 import { validateArrayData, validateDui, validateEmail, validateNit, validateSelectedData, validateStringData } from '../../utils/ValidateData';
 import { onKeyDownFocusTo } from '../../utils/OnEvents';
 import locationsService from '../../services/LocationsServices';
+import CustomerAddresses from '../CustomerAddresses';
 
 const { Option } = Select;
 
@@ -60,6 +61,9 @@ function CustomerForm(props) {
 
   const [resetComponentStates, setResetComponentStates] = useState(0)
 
+  const [formExistingCustomerAddresses, setFormExistingCustomerAddresses] = useState([]);
+  const [formCustomerAddresses, setFormCustomerAddresses] = useState([]);
+
   const { open, updateMode, dataToUpdate, showDeleteButton, onClose } = props;
 
   useEffect(() => {
@@ -99,7 +103,7 @@ function CustomerForm(props) {
         creditLimit,
         defPriceIndex
       } = dataToUpdate[0][0];
-      
+
       setFormId(id || 0);
       setFormLocationId(locationId || null);
       setFormCode(code || 0);
@@ -122,8 +126,9 @@ function CustomerForm(props) {
       setFormDefPriceIndex(defPriceIndex);
       setFormExistingCustomerPhones(dataToUpdate[1]);
       setFormExistingCustomerRelatives(dataToUpdate[2]);
+      setFormExistingCustomerAddresses(dataToUpdate[3]);
     }
-  }, [ dataToUpdate ]);
+  }, [dataToUpdate]);
 
 
   function restoreState() {
@@ -148,15 +153,16 @@ function CustomerForm(props) {
     setFormCreditLimit(0);
     setFormDefPriceIndex(1);
     setFormCustomerPhones([]);
+    setFormCustomerAddresses([]);
     setFormCustomerRelatives([]);
     setFormExistingCustomerPhones([]);
     setFormExistingCustomerRelatives([]);
-
+    setFormExistingCustomerAddresses([]);
     setResetComponentStates(resetComponentStates + 1);
   }
 
   function renderPhoneTag(type) {
-    switch(type) {
+    switch (type) {
       case 1: return (<Tag icon={<PhoneOutlined />} color="magenta">Celular</Tag>);
       case 2: return (<Tag icon={<HomeOutlined />} color="volcano">Casa</Tag>);
       case 3: return (<Tag icon={<BuildOutlined />} color="green">Trabajo</Tag>);
@@ -194,9 +200,6 @@ function CustomerForm(props) {
       // && validateNit(formNit, 'Introduzca un número de NIT válido')
       // && (formCustomerTypeId !== 1 ? validateStringData(formNrc, 'Introduzca un número NRC válido') : true)
       // && (formCustomerTypeId !== 1 ? validateStringData(formBusinessLine, 'Introduzca el giro del cliente') : true)
-      && validateStringData(formAddress, 'Introduzca dirección del cliente')
-      && validateSelectedData(formDepartmentId, 'Seleccione un departamento')
-      && validateSelectedData(formCityId, 'Seleccione un municipio')
       // && validateSelectedData(formDeliveryRouteId, 'Seleccione una zona de cobro')
       && validateEmail(formEmail, 'Introduzca una dirección de correo electrónico válida')
       // && (!updateMode ? validateArrayData(formCustomerPhones, 1, 'Debe añadir por lo menos un número de teléfono') : true)
@@ -211,8 +214,8 @@ function CustomerForm(props) {
           const response = await customersServices.addv2(
             formCustomerTypeId,
             formLocationId,
-            formDepartmentId,
-            formCityId,
+            13,
+            241,
             formDeliveryRouteId || null,
             formFullName,
             formBusinessName || null,
@@ -229,6 +232,7 @@ function CustomerForm(props) {
             formCreditLimit || 0,
             formDefPriceIndex || 1,
             formCustomerPhones,
+            formCustomerAddresses,
             formCustomerRelatives
           );
 
@@ -238,7 +242,7 @@ function CustomerForm(props) {
             restoreState();
             onClose(true);
           }
-        } catch(error) {
+        } catch (error) {
           console.log(error);
           setFetching(false);
         }
@@ -267,9 +271,9 @@ function CustomerForm(props) {
             formDefPriceIndex || 1,
             formId
           );
-          
+
           setFetching(false);
-          
+
           if (response1.status === 200) {
             if (!isEmpty(formCustomerPhones)) {
               const customerPhonesToInsert = formCustomerPhones.map((element) => [formId, formCode, element.phoneNumber, element.phoneType]);
@@ -277,17 +281,17 @@ function CustomerForm(props) {
               await customersServices.addPhones(customerPhonesToInsert);
               setFetching(false);
             }
-  
+
             if (!isEmpty(formCustomerRelatives)) {
               const customerRelativesToInsert = formCustomerRelatives.map((element) => [formId, formCode, element.relativeFullname, element.relativeType, element.relativeAddress]);
-              setFetching(true);            
+              setFetching(true);
               await customersServices.addRelatives(customerRelativesToInsert);
               setFetching(false);
             }
             restoreState();
             onClose(true);
           }
-        } catch(error) {
+        } catch (error) {
           console.log(error);
           setFetching(false);
         }
@@ -310,7 +314,7 @@ function CustomerForm(props) {
         setFetching(false);
         setFormExistingCustomerPhones(prev => prev.filter(x => x.id !== customerPhoneId));
       },
-      onCancel() {},
+      onCancel() { },
     });
   }
 
@@ -346,17 +350,17 @@ function CustomerForm(props) {
       onOk() {
         setFetching(true);
         customersServices.remove(formId)
-        .then((response) => {
-          restoreState();
-          setFetching(false);
-          onClose(true);
-        })
-        .catch((error) => {
-          setFetching(false);
-          customNot('info', 'Algo salió mal', 'El cliente no pudo ser eliminado');
-        });
+          .then((response) => {
+            restoreState();
+            setFetching(false);
+            onClose(true);
+          })
+          .catch((error) => {
+            setFetching(false);
+            customNot('info', 'Algo salió mal', 'El cliente no pudo ser eliminado');
+          });
       },
-      onCancel() {},
+      onCancel() { },
     });
   }
 
@@ -370,7 +374,6 @@ function CustomerForm(props) {
           subTitle={`${updateMode ? `Internal Code: ${formId}` : ''}`}
           extra={!updateMode ? [] : [
             <Button
-              key="1"
               type="danger"
               size={'small'}
               icon={<DeleteOutlined />}
@@ -380,12 +383,11 @@ function CustomerForm(props) {
               Deshabilitar
             </Button>,
             <Button
-              key="1"
               type="primary"
               size={'small'}
               icon={<SaveOutlined />}
               onClick={(e) => formAction()}
-              // disabled={!showDeleteButton}
+            // disabled={!showDeleteButton}
             >
               Guardar cambios
             </Button>
@@ -405,9 +407,9 @@ function CustomerForm(props) {
         <Col span={24}>
           <p style={{ margin: '0px 0px 5px 0px' }}> {`Sucursal:`}</p>
           <Select
-            dropdownStyle={{ width: '100%' }} 
-            style={{ width: '100%' }} 
-            value={formLocationId} 
+            dropdownStyle={{ width: '100%' }}
+            style={{ width: '100%' }}
+            value={formLocationId}
             onChange={(value) => {
               setFormLocationId(value);
             }}
@@ -426,7 +428,7 @@ function CustomerForm(props) {
           </Select>
         </Col>
         <Col span={18}>
-          <p style={{ margin: '0px' }}>Nombre completo:</p>  
+          <p style={{ margin: '0px' }}>Nombre completo:</p>
           <Input
             id={'customer-form-fullname-input'}
             onChange={(e) => setFormFullName(toUpper(e.target.value))}
@@ -438,7 +440,7 @@ function CustomerForm(props) {
           />
         </Col>
         <Col span={6}>
-          <p style={{ margin: '0px' }}>Fecha nacimiento:</p>  
+          <p style={{ margin: '0px' }}>Fecha nacimiento:</p>
           <DatePicker
             id={'customer-form-birthday-picker'}
             locale={locale}
@@ -453,7 +455,7 @@ function CustomerForm(props) {
           />
         </Col>
         <Col span={24}>
-          <p style={{ margin: '0px' }}>Nombre de negocio:</p>  
+          <p style={{ margin: '0px' }}>Nombre de negocio:</p>
           <Input
             id={'customer-form-businessname-input'}
             onChange={(e) => setFormBusinessName(toUpper(e.target.value))}
@@ -464,12 +466,12 @@ function CustomerForm(props) {
           />
         </Col>
         <Col span={6}>
-          <p style={{ margin: '0px' }}>Tipo:</p>  
-          <Select 
+          <p style={{ margin: '0px' }}>Tipo:</p>
+          <Select
             id={'customer-form-customer-type-selector'}
-            dropdownStyle={{ width: '100%' }} 
-            style={{ width: '100%' }} 
-            value={formCustomerTypeId} 
+            dropdownStyle={{ width: '100%' }}
+            style={{ width: '100%' }}
+            value={formCustomerTypeId}
             onChange={(value) => {
               setFormCustomerTypeId(value);
               document.getElementById('customer-form-customer-dui-input').focus();
@@ -490,10 +492,31 @@ function CustomerForm(props) {
           </Select>
         </Col>
         <Col span={6}>
-          <p style={{ margin: '0px' }}>DUI:</p>  
+          <p style={{ margin: '0px' }}>DUI:</p>
           <Input
             id={'customer-form-customer-dui-input'}
-            onChange={(e) => setFormDui(e.target.value)}
+            onChange={(e) => {
+              let value = e.target.value;
+
+              value = value.replace(/[^\d-]/g, '');
+
+              let blockOne = value.slice(0, 8);
+              const blockThree = value.slice(9, 10);
+
+              blockOne = blockOne.replace(/-/g, '');
+
+              let formattedValue = blockOne;
+              if (blockThree) {
+                formattedValue += "-" + blockThree;
+              } else if (value.length === 8) {
+                formattedValue += "-";
+              }
+
+              setFormDui(formattedValue);
+            }}
+
+
+
             name={'formDui'}
             value={formDui}
             placeholder={'0123456-7'}
@@ -502,7 +525,7 @@ function CustomerForm(props) {
           />
         </Col>
         <Col span={6}>
-          <p style={{ margin: '0px' }}>NIT:</p>  
+          <p style={{ margin: '0px' }}>NIT:</p>
           <Input
             id={'customer-form-customer-nit-input'}
             onChange={(e) => setFormNit(e.target.value)}
@@ -514,7 +537,7 @@ function CustomerForm(props) {
           />
         </Col>
         <Col span={6}>
-          <p style={{ margin: '0px' }}>NRC:</p>  
+          <p style={{ margin: '0px' }}>NRC:</p>
           <Input
             id={'customer-form-customer-nrc-input'}
             onChange={(e) => setFormNrc(e.target.value)}
@@ -526,7 +549,7 @@ function CustomerForm(props) {
           />
         </Col>
         <Col span={12}>
-          <p style={{ margin: '0px' }}>Giro:</p>  
+          <p style={{ margin: '0px' }}>Giro:</p>
           <Input
             id={'customer-form-customer-businessline-input'}
             onChange={(e) => setFormBusinessLine(toUpper(e.target.value))}
@@ -538,7 +561,7 @@ function CustomerForm(props) {
           />
         </Col>
         <Col span={12}>
-          <p style={{ margin: '0px' }}>Ocupación:</p>  
+          <p style={{ margin: '0px' }}>Ocupación:</p>
           <Input
             id={'customer-form-customer-occupation-input'}
             onChange={(e) => setFormOccupation(toUpper(e.target.value))}
@@ -573,7 +596,7 @@ function CustomerForm(props) {
           </Checkbox>
         </Col>
         <Col span={12} style={{ display: formApplyForCredit ? 'inline' : 'none' }}>
-          <p style={{ margin: '0px' }}>Límite de crédito:</p>  
+          <p style={{ margin: '0px' }}>Límite de crédito:</p>
           <InputNumber
             size={300}
             addonBefore={<DollarOutlined />}
@@ -588,7 +611,7 @@ function CustomerForm(props) {
           />
         </Col>
         <Col span={12}>
-          <p style={{ margin: '0px' }}>Escala precio:</p>  
+          <p style={{ margin: '0px' }}>Escala precio:</p>
           <InputNumber
             size={300}
             addonBefore={<UnorderedListOutlined />}
@@ -604,35 +627,56 @@ function CustomerForm(props) {
         </Col>
         <Divider style={{ fontSize: 11, color: 'gray' }}>Contacto</Divider>
         <Col span={24}>
-          <p style={{ margin: '0px' }}>Dirección:</p>  
-          <Input
-            id={'customer-form-address-input'}
-            onChange={(e) => setFormAddress(toUpper(e.target.value))}
-            onFocus={() => document.getElementById('customer-form-address-input').select()}
-            name={'formAddress'}
-            value={formAddress}
-            placeholder={'Av. Testa Ca. Edison 101'}
-            onKeyDown={(e) => onKeyDownFocusTo(e, 'g-department-selector-select')}
-          />
-        </Col>
-        <Col span={12}>
-          <DepartmentSelector
-            onSelect={(dataSelected) => {
-              const { departmentSelected, citySelected } = dataSelected;
-              setFormDepartmentId(departmentSelected);
-              setFormCityId(citySelected);
+          {
+            updateMode ?
+              <>
+                <p style={{ margin: '0px' }}>Direcciones registradas:</p>
+                {
+                  formExistingCustomerAddresses.map((element, index) => (
+                    <Card size="small" style={{ width: '100%' }} key={element.id}>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <p style={{ margin: 0 }}><strong>Dirección:</strong> {element.FullAddress}</p>
+                        {
+                          updateMode ? [] :
+                            <Button
+                              size={'middle'}
+                              danger
+                              icon={<DeleteFilled />}
+                            //onClick={(e) => deleteDataElement(index)}
+                            />
+                        }
+                      </div>
+                      {
+                        element.reference === "" ? <></>
+                          :
+                          <p style={{ margin: 0 }}><strong>Puntos de Referencia:</strong> {element.reference}</p>
+                      }
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <p style={{ margin: 0 }}><strong>Departamento:</strong> {element.Department} </p>
+                        <p style={{ margin: 0 }}><strong>Municipio:</strong> {element.City} </p>
+                      </div>
+                    </Card>
+                  ))
+                }
+              </> :
+              <></>
+          }
+          <CustomerAddresses
+            label={updateMode ? 'Añadir Dirección:' : 'Dirección:'}
+            updateMode={updateMode}
+            onDataChange={(data) => {
+              setFormCustomerAddresses(data);
             }}
-            focusToId={'g-delivery-route-selector'}
-            defDepartmentId={updateMode ? formDepartmentId : null}
-            defCityId={updateMode ? formCityId : null}
             setResetState={resetComponentStates}
           />
         </Col>
         <Col span={12}>
         </Col>
+        <Col span={12}>
+        </Col>
         <Col span={12} style={{ display: 'none' }}>
           <DeliveryRouteSelector
-            onSelect={(value) => setFormDeliveryRouteId(value)} 
+            onSelect={(value) => setFormDeliveryRouteId(value)}
             label={'Zona de Cobro:'}
             focusToId={'g-customer-phone-input'}
             defRouteId={updateMode ? formDeliveryRouteId : null}
@@ -668,12 +712,12 @@ function CustomerForm(props) {
                         {
                           renderPhoneTag(element.phoneType)
                         }
-                        <Button 
+                        <Button
                           // type={'primary'}
                           // size={'small'}
                           size={'middle'}
                           danger
-                          icon={<DeleteFilled />} 
+                          icon={<DeleteFilled />}
                           onClick={(e) => {
                             onDeletePhone(element.id);
                           }}
@@ -683,7 +727,7 @@ function CustomerForm(props) {
                   ))
                 }
               </>
-            : <></>
+              : <></>
           }
           <CustomerPhones
             label={updateMode ? 'Añadir teléfonos:' : 'Teléfonos:'}
@@ -693,7 +737,7 @@ function CustomerForm(props) {
           />
         </Col>
         <Col span={12}>
-          <p style={{ margin: '0px' }}>Correo:</p>  
+          <p style={{ margin: '0px' }}>Correo:</p>
           <Input
             id={'customer-form-customer-email-input'}
             onChange={(e) => setFormEmail(e.target.value)}
@@ -761,24 +805,24 @@ function CustomerForm(props) {
         </Col> */}
         <Divider />
         <Col span={12}>
-          <Button 
-            type={'default'} 
+          <Button
+            type={'default'}
             onClick={(e) => {
               restoreState();
               onClose(false);
             }}
-            style={{ width: '100%' }} 
+            style={{ width: '100%' }}
           >
             Cancelar
           </Button>
         </Col>
         <Col span={12}>
-          <Button 
+          <Button
             id={'customer-form-save-button'}
-            type={'primary'} 
-            icon={<SaveOutlined />} 
-            onClick={(e) => formAction()} 
-            style={{ width: '100%' }} 
+            type={'primary'}
+            icon={<SaveOutlined />}
+            onClick={(e) => formAction()}
+            style={{ width: '100%' }}
             loading={fetching}
             disabled={fetching}
           >
@@ -786,7 +830,7 @@ function CustomerForm(props) {
           </Button>
         </Col>
       </Row>
-    </Drawer>
+    </Drawer >
   )
 }
 

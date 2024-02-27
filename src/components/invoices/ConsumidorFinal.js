@@ -30,7 +30,7 @@ class ConsumidorFinal extends React.Component {
       <ConsumidorFinalWrapper>
         <Row gutter={8}>
           <Col span={12}>
-            <p className='header'>Todo Para Cakes</p>
+            <p className='header'>Asados El Flaco</p>
           </Col>
           <Col span={12}>
             <p className="header-description">{`${ticketData.documentTypeName || '-'}`}</p>

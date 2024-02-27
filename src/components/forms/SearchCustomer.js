@@ -12,27 +12,38 @@ function SearchCustomer(props) {
 
     const [dataInput, setDataInput] = useState('');
     const [customers, setCustomers] = useState([]);
+    const [customersAddresses, setCustomersAddresses] = useState([]);
+    const [fetching, setFetching] = useState(false);
 
     function restoreState() {
         setDataInput('');
         setCustomers([]);
+        setCustomersAddresses([]);
     }
 
     async function searchCustomer() {
         if (dataInput !== "") {
+            setFetching(true);
             customersServices.findByPhone(dataInput)
                 .then((response) => {
                     const data = response.data;
-                    
-                    if (data.length > 0) {
-                        setCustomers(data);
+                    const customerInfo = data[0];
+                    const customerAddressesInfo = data[1];
+                    if (customerAddressesInfo.length > 0) {
+                        setCustomers(customerInfo);
+                        setCustomersAddresses(customerAddressesInfo);
+                        setFetching(false);
                     } else {
                         setCustomers([]);
+                        setCustomersAddresses([]);
+                        setFetching(false);
                         customNot('info', 'No se encontraron registros', `No hay registro que coincidan con: ${dataInput}`);
                     }
                 })
                 .catch((err) => {
                     setCustomers([]);
+                    setCustomersAddresses([]);
+                    setFetching(false);
                     customNot('warning', 'Ocurrio un problema inesperado', 'No se pudo completar la busqueda');
                     console.error(err);
                 });
@@ -69,6 +80,7 @@ function SearchCustomer(props) {
                     onChange={(e) => setDataInput(e.target.value)}
                     onSearch={() => searchCustomer()}
                     style={{ width: '100%', marginBottom: 5 }}
+                    loading={fetching}
                 />
             </Col>
             <div style={{
@@ -81,42 +93,66 @@ function SearchCustomer(props) {
                 {
                     customers.length === 0
                         ?
-                        <Empty description="Sin resultados..." />
+                        (<Empty description="Sin resultados..." />)
                         :
-                        <>
-                            <Space direction="vertical" style={{
+                        (
+                            <Space direction="vertical" key="customer-space" style={{
                                 height: '100%',
                                 width: '100%',
                             }}>
                                 {
                                     customers.map(customer => (
                                         <Card
+                                            size="small"
                                             key={customer.id}
-                                            title={customer.fullName}
-                                            extra={
-                                                <a
-                                                    onClick={() => {
-                                                        restoreState();
-                                                        onClose(false, customer);
+                                            title={
+                                                <div
+                                                    style={{
+                                                        width: '100%',
+                                                        display: "flex",
+                                                        justifyContent: "space-between"
                                                     }}
                                                 >
-                                                    Seleccionar
-                                                </a>
+                                                    <p style={{ margin: 0 }}>
+                                                        {customer.fullName}
+                                                    </p>
+                                                    <p style={{ margin: 0 }}>
+                                                        {customer.phoneNumber}
+                                                    </p>
+                                                </div>
                                             }
                                             style={{
                                                 width: '100%',
                                             }}
                                         >
-                                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                                <p>Email: {customer.email}</p>
-                                                <p>Telefono: {customer.phoneNumber}</p>
-                                            </div>
-                                            <p>Dirección: {customer.FullAddress}</p>
+                                            {
+                                                customersAddresses
+                                                    .filter(customeraddress => customeraddress.id === customer.id)
+                                                    .map(customeraddress => (
+                                                        <div
+                                                            style={{
+                                                                width: '100%',
+                                                                display: "flex",
+                                                                justifyContent: "space-between"
+                                                            }}
+                                                        >
+                                                            <p style={{ marginTop: 10 }}><strong>Dirección:</strong> {customeraddress.FullAddress}</p>
+                                                            <Button
+                                                                onClick={(e) => {
+                                                                    restoreState();
+                                                                    onClose(false, customeraddress);
+                                                                }}
+                                                            >
+                                                                Seleccionar
+                                                            </Button>
+                                                        </div>
+                                                    ))
+                                            }
                                         </Card>
                                     ))
                                 }
                             </Space>
-                        </>
+                        )
                 }
             </div>
             <Divider />

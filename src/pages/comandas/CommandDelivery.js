@@ -27,7 +27,7 @@ import { customNot } from "../../utils/Notifications.js";
 
 import categoriesServices from '../../services/CategoriesServices.js';
 import productsServices from "../../services/ProductsServices.js";
-import { isEmpty, forEach, find } from "lodash";
+import { isEmpty, forEach, find, set } from "lodash";
 
 import AuthorizeUserPINCode from "../../components/confirmations/AuthorizeUserPINCode.js";
 import CustomerForm from "../../components/forms/CustomerForm.js";
@@ -144,6 +144,10 @@ function NewCommandDelivery() {
     const [chargePreAccount, setChargePreAccount] = useState(false);
     const [chargeKitchen, setChargeKitchen] = useState(false);
 
+    //Fetching
+    const [fetchingClient, setFetchingClient] = useState(false);
+    const [fetchingDetails, setFetchingDetails] = useState(false);
+
     //Clients
     const [openForm, setOpenForm] = useState(false);
     const [openSearchForm, setOpenSearchForm] = useState(false);
@@ -160,6 +164,7 @@ function NewCommandDelivery() {
             if (!isEmpty(orderInformation) && parseInt(orderInformation[0].userPINCode) !== currentWaiter.userPINCode) {
                 setDetailsOrder([]);
                 setOrderInTable([]);
+                setCustomerInfo([]);
                 setTableOrder(0);
                 setFetchingMyTables(true);
                 await loadData();
@@ -168,15 +173,21 @@ function NewCommandDelivery() {
             } else {
                 setOrderInTable(orderInformation);
                 if (!isEmpty(orderInformation)) {
-                    const clientInfo = await customersServices.findByNewId(orderInformation[0].customerId);
+                    const clientInfo = await customersServices.findByIdandPhoneId(orderInformation[0].customerId, orderInformation[0].customerphoneId, orderInformation[0].customeraddressId);
                     setCustomerUpdateMode(true);
                     setCustomerInfo(clientInfo.data[0]);
+                } else {
+                    setDetailsOrder([]);
+                    setCustomerInfo([]);
+                    setCustomerUpdateMode(false);
                 }
             }
         } catch (error) {
             console.error("Error fetching order info:", error);
         } finally {
             setFetchingTables(false);
+            setFetchingClient(false);
+            setFetchingDetails(false);
         }
     }
 
@@ -297,17 +308,6 @@ function NewCommandDelivery() {
         }
     }
 
-    const changeTable = (value) => {
-
-        if (value !== tableOrder) {
-            setDetailsOrder([]);
-            setOrderInTable([]);
-            setFetchingTables(true);
-            setShowButtons(false);
-            setTableOrder(value);
-        }
-    }
-
     async function selectedProduct(product) {
         if (tableOrder !== 0) {
 
@@ -353,7 +353,6 @@ function NewCommandDelivery() {
 
     async function createNewComanda(data, userDetails) {
 
-
         if (isEmpty(customerInfo)) {
             customNot('warning', 'No se ha seleccionado un cliente', 'Para crear una comanda debe de seleccionar un cliente');
         } else {
@@ -372,12 +371,14 @@ function NewCommandDelivery() {
                 userDetails.commentOrder,
                 userDetails.commentDetail,
                 currentWaiter.userPINCode,
-                userDetails.nameOrder
+                userDetails.nameOrder,
+                customerInfo.AddressIdentifier,
+                customerInfo.PhoneIdentifier
             ).then(async (response) => {
                 setFetchingMyTables(true);
                 await getOrderInfo(tableOrder);
                 await updateTableStatus(1, response.data[0].NewOrderID, tableOrder, true);
-                customNot('success', 'Operación exitosa', 'Su orden fue añadida');
+                customNot('success', 'Operación exitosa', 'La orden fue añadida');
             }).catch(async (error) => {
                 setDetailsOrder([]);
                 setOrderInTable([]);
@@ -385,7 +386,7 @@ function NewCommandDelivery() {
                 setFetchingMyTables(true);
                 await loadData();
                 await loadMyTables();
-                customNot('error', 'Algo salió mal', 'Su order no fue añadida, verifique que la cuenta este libre');
+                customNot('error', 'Algo salió mal', 'La order no fue añadida, verifique que la cuenta este libre');
             });
         }
     }
@@ -404,9 +405,9 @@ function NewCommandDelivery() {
                 userDetails.commentDetail
             ).then(async (response) => {
                 await getOrderInfo(tableOrder);
-                customNot('success', 'Operación exitosa', 'Su orden fue actualizada');
+                customNot('success', 'Operación exitosa', 'La orden fue actualizada');
             }).catch((error) => {
-                customNot('error', 'Algo salió mal', 'Su order no fue actualizada');
+                customNot('error', 'Algo salió mal', 'La orden no fue actualizada');
             });
         }
     }
@@ -556,10 +557,22 @@ function NewCommandDelivery() {
         setCustomerInfo({});
         setDetailsOrder([]);
         setOrderInTable([]);
+        setDetailsOrder([]);
         setTableOrder(0);
         setFetchingMyTables(true);
         await loadData();
         await loadMyTables();
+    }
+
+    const changeTable = (value) => {
+
+        if (value !== tableOrder) {
+            setFetchingDetails(true);
+            setFetchingClient(true);
+            setFetchingTables(true);
+            setShowButtons(false);
+            setTableOrder(value);
+        }
     }
 
     return (
@@ -589,7 +602,7 @@ function NewCommandDelivery() {
                             <p style={{ margin: '0px', fontSize: 12 }}>{'Opciones:'}</p>
                             <Space wrap>
                                 <Button
-                                    disabled={customerUpdateMode}
+                                    disabled={customerUpdateMode || fetchingClient}
                                     onClick={() => setOpenSearchForm(true)}
                                 >
                                     <Space>
@@ -598,7 +611,7 @@ function NewCommandDelivery() {
                                     </Space>
                                 </Button>
                                 <Button
-                                    disabled={customerUpdateMode}
+                                    disabled={customerUpdateMode || fetchingClient}
                                     onClick={() => setOpenForm(true)}
                                 >
                                     <Space>
@@ -607,7 +620,7 @@ function NewCommandDelivery() {
                                     </Space>
                                 </Button>
                                 <Button
-                                    disabled={!customerUpdateMode}
+                                    disabled={!customerUpdateMode || fetchingClient}
                                     onClick={async () => {
                                         const response = await customersServices.findById(customerInfo.id);
                                         setCustomerToUpdate(response.data);
@@ -621,20 +634,20 @@ function NewCommandDelivery() {
                                     </Space>
                                 </Button>
                                 <Button
-                                    disabled={!customerUpdateMode}
+                                    disabled={!customerUpdateMode || fetchingClient}
                                     onClick={() => {
                                         restoreClient();
                                     }}
                                 >
                                     <Space>
                                         <GClearIcon width={'16px'} />
-                                        {'Limpiar Cliente'}
+                                        {'Limpiar Cuenta'}
                                     </Space>
                                 </Button>
                             </Space>
                             {
                                 isEmpty(customerInfo) ? <></> :
-                                    <>
+                                    <Spin spinning={fetchingClient} key={customerInfo.id}>
                                         <Card
                                             title={customerInfo.fullName}
                                             style={{
@@ -644,12 +657,17 @@ function NewCommandDelivery() {
                                             }}
                                         >
                                             <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                                <p>Email: {customerInfo.email}</p>
-                                                <p>Telefono: {customerInfo.phoneNumber}</p>
+                                                <p><strong>Email:</strong> {customerInfo.email}</p>
+                                                <p><strong>Telefono:</strong> {customerInfo.phoneNumber}</p>
                                             </div>
-                                            <p>Dirección: {customerInfo.FullAddress}</p>
+                                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                                <p><strong>DUI:</strong> {customerInfo.dui}</p>
+                                                <p><strong>NIT:</strong> {customerInfo.nit}</p>
+                                                <p><strong>RNC:</strong> {customerInfo.nrc}</p>
+                                            </div>
+                                            <p><strong>Dirección:</strong> {customerInfo.FullAddress}</p>
                                         </Card>
-                                    </>
+                                    </Spin>
                             }
                         </Col>
 
@@ -669,7 +687,7 @@ function NewCommandDelivery() {
                                             <>
                                                 <Empty description="Cuenta sin ordenes" style={{}} />
                                             </> :
-                                            <>
+                                            <Spin spinning={fetchingDetails}>
                                                 <Table
                                                     columns={columns}
                                                     rowKey={'id'}
@@ -677,9 +695,10 @@ function NewCommandDelivery() {
                                                     pagination={false}
                                                     dataSource={detailsOrder || []}
                                                 />
-                                            </>
+                                            </Spin>
                                     }
-                                </>}
+                                </>
+                            }
                             <div style={styleSheet.tableFooter.footerCotainer}>
                                 <div style={styleSheet.tableFooter.detailContainerLetters}>
                                     <p style={styleSheet.tableFooter.detailLabels.normal}>{`SON:`}</p>
@@ -847,10 +866,18 @@ function NewCommandDelivery() {
                     showDeleteButton={false}
                     updateMode={customerUpdateMode}
                     dataToUpdate={customerToUpdate}
-                    onClose={(refresh) => {
+                    onClose={async (refresh) => {
                         setOpenForm(false);
-                        setCustomerUpdateMode(false);
-                        setCustomerToUpdate({});
+
+                        if (!customerUpdateMode && !refresh) {
+                            setCustomerUpdateMode(false);
+                            setCustomerToUpdate({});
+                        } else {
+                            if (!isEmpty(customerInfo)) {
+                                const clientInfo = await customersServices.findByIdandPhone(customerInfo.id, customerInfo.phoneNumber, customerInfo.AddressIdentifier);
+                                setCustomerInfo(clientInfo.data[0]);
+                            }
+                        }
                     }}
                 />
 
