@@ -35,6 +35,7 @@ import SearchCustomer from "../../components/forms/SearchCustomer.js";
 import download from "downloadjs";
 import reportsServices from "../../services/ReportsServices.js";
 import customersServices from "../../services/CustomersServices.js";
+import { printerServices } from "../../services/PrintersServices.js";
 
 const styleSheet = {
     tableFooter: {
@@ -133,7 +134,7 @@ function NewCommandDelivery() {
     const [tableOrder, setTableOrder] = useState(0);
     const [openProductInfo, setOpenProductInfo] = useState(false);
     const [selectedProductData, setSelectedProductData] = useState([]);
-    const [orderInTable, setOrderInTable] = useState([]);
+    const [orderInTable, setOrderInTable] = useState({});
     const [currentShiftcut, setCurrentShiftcutId] = useState(0);
     const [detailsOrder, setDetailsOrder] = useState([]);
 
@@ -155,15 +156,18 @@ function NewCommandDelivery() {
     const [customerToUpdate, setCustomerToUpdate] = useState({});
     const [customerInfo, setCustomerInfo] = useState({});
 
+    //Timers
+    const [currentTime, setCurrentTime] = useState('');
+
     // #region Order Details
     async function getOrderInfo(tableId) {
         try {
             const response = await orderSalesServices.findByTableId(tableId);
             const orderInformation = response.data[0];
-            
+
             if (!isEmpty(orderInformation) && parseInt(orderInformation[0].userPINCode) !== currentWaiter.userPINCode) {
                 setDetailsOrder([]);
-                setOrderInTable([]);
+                setOrderInTable({});
                 setCustomerInfo([]);
                 setTableOrder(0);
                 setFetchingMyTables(true);
@@ -171,7 +175,7 @@ function NewCommandDelivery() {
                 await loadMyTables();
                 customNot('warning', 'Cuenta No disponible', 'La cuenta seleccionada ya fue ocupada.');
             } else {
-                setOrderInTable(orderInformation);
+                setOrderInTable(orderInformation[0]);
                 if (!isEmpty(orderInformation)) {
                     const clientInfo = await customersServices.findByIdandPhoneId(orderInformation[0].customerId, orderInformation[0].customerphoneId, orderInformation[0].customeraddressId);
                     setCustomerUpdateMode(true);
@@ -195,7 +199,7 @@ function NewCommandDelivery() {
         if (tableOrder) {
             getOrderInfo(tableOrder);
         } else {
-            setOrderInTable([]);
+            setOrderInTable({});
         }
     }, [tableOrder]);
 
@@ -215,8 +219,8 @@ function NewCommandDelivery() {
     }
 
     useEffect(() => {
-        if (orderInTable.length > 0) {
-            getOrderDetails(orderInTable[0].id);
+        if (!isEmpty(orderInTable)) {
+            getOrderDetails(orderInTable.id);
         } else {
             setShowButtons(false);
         }
@@ -312,10 +316,10 @@ function NewCommandDelivery() {
 
             const response = await orderSalesServices.findByTableId(tableOrder);
             const orderInformation = response.data[0];
-            
+
             if (!isEmpty(orderInformation) && parseInt(orderInformation[0].userPINCode) !== currentWaiter.userPINCode) {
                 setDetailsOrder([]);
-                setOrderInTable([]);
+                setOrderInTable({});
                 setTableOrder(0);
                 setFetchingMyTables(true);
                 await loadData();
@@ -381,7 +385,7 @@ function NewCommandDelivery() {
                 customNot('success', 'Operación exitosa', 'La orden fue añadida');
             }).catch(async (error) => {
                 setDetailsOrder([]);
-                setOrderInTable([]);
+                setOrderInTable({});
                 setTableOrder(0);
                 setFetchingMyTables(true);
                 await loadData();
@@ -392,9 +396,8 @@ function NewCommandDelivery() {
     }
 
     async function updateOrderCommand(data) {
-
         const { saleDetailToPush, orderInfo, userDetails } = data;
-        if (orderInfo === orderInTable[0]) {
+        if (orderInfo === orderInTable) {
             const unitPrice = parseFloat(saleDetailToPush.detailUnitPrice).toFixed(2);
 
             orderSalesServices.details.addByCommand(
@@ -438,7 +441,7 @@ function NewCommandDelivery() {
 
     async function sendToKitchen() {
         try {
-            const orderId = orderInTable[0].id;
+            const orderId = orderInTable.id;
 
             const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
             if (detailActives.length >= 1) {
@@ -540,7 +543,7 @@ function NewCommandDelivery() {
         setCustomerToUpdate({});
         setCustomerInfo({});
         setDetailsOrder([]);
-        setOrderInTable([]);
+        setOrderInTable({});
         setDetailsOrder([]);
         setTableOrder(0);
         setFetchingMyTables(true);
@@ -556,6 +559,71 @@ function NewCommandDelivery() {
             setFetchingTables(true);
             setShowButtons(false);
             setTableOrder(value);
+        }
+    }
+
+    const getFormattedDate = () => {
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const yyyy = today.getFullYear();
+        return dd + '/' + mm + '/' + yyyy;
+    };
+
+    const handleOpenModal = () => {
+        const currentTime = new Date();
+        const hours = currentTime.getHours();
+        const minutes = currentTime.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const formattedTime = hours % 12 + ':' + (minutes < 10 ? '0' + minutes : minutes) + ' ' + ampm;
+        const formattedDate = getFormattedDate();
+        setCurrentTime(formattedDate + ' - ' + formattedTime);
+    };
+
+    async function packOffCommand() {
+        const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
+        if (detailActives.length >= 1) {
+            customNot('info', 'No se puede despachar', 'Hay detalles que aun no se encuentran en cocina');
+        } else {
+
+            handleOpenModal();
+
+            console.log(
+                {
+                    orderSaleId: orderInTable.id,
+                    customerId: orderInTable.customerId,
+                    phoneIdentifier: orderInTable.customerphoneId,
+                    addressIdentifier: orderInTable.customeraddressId
+                }
+            );
+
+            Modal.confirm({
+                title: '¿Desea despachar el pedido?',
+                centered: true,
+                icon: <WarningOutlined />,
+                content: `Despacho realizado: ${currentTime}`,
+                okText: 'Confirmar',
+                okType: 'info',
+                cancelText: 'Cancelar',
+                async onOk() {
+                    await reportsServices.getPackOffTicket(
+                        orderInTable.id,
+                        orderInTable.customerId,
+                        orderInTable.customerphoneId,
+                        orderInTable.customeraddressId,
+                        1
+                    )
+                        .then(async response => {
+                            const ticketName = `TicketEntrega_${orderInTable.id}.pdf`;
+                            download(response.data, ticketName);
+                            await loadMyTables();
+                        })
+                        .catch(error => {
+                            console.error(error);
+                        })
+                },
+                onCancel() { },
+            });
         }
     }
 
@@ -784,7 +852,7 @@ function NewCommandDelivery() {
                                                 loading={chargePreAccount}
                                                 disabled={!showButtons}
                                                 style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                                //onClick={() => createPreCuenta()}
+                                                onClick={() => packOffCommand()}
                                             >
                                                 Despachar
                                             </Button>

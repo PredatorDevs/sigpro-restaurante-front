@@ -67,7 +67,7 @@ function AddProduct(props) {
     useEffect(() => {
         if (!isEmpty(orderDetails)) {
             setUpdateMode(true);
-            setOrderInfo(orderDetails[0]);
+            setOrderInfo(orderDetails);
         } else {
             setUpdateMode(false);
             setOrderInfo([]);

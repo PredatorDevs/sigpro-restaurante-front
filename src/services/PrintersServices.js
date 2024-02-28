@@ -3,7 +3,7 @@ import { localPrinterGenRequest } from "./Requests";
 const printerServices = {};
 
 printerServices.testPrinterConnection = () => 
-  localPrinterGenRequest(`post`, `/printer/test`, {}, 'Se ha comprobado la conexión con la impresora', 'Acción terminada', 'No se pudo establecer conexión con la impresora', 'Error desconocido');
+  localPrinterGenRequest(`get`, `/printer/test-network`, {}, 'Se ha comprobado la conexión con la impresora', 'Acción terminada', 'No se pudo establecer conexión con la impresora', 'Error desconocido');
 
 printerServices.printTestPage = () => 
   localPrinterGenRequest(`post`, `/printer/testpage`, {}, 'Se ha realizado el envío Test Page a la impresora', 'Acción terminada', 'No se pudo establecer conexión con la impresora', 'Error desconocido');
