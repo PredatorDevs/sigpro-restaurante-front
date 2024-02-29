@@ -73,4 +73,8 @@ orderSalesServices.details.sendToKitchen = (ordersaleId, bulkData) =>
 orderSalesServices.updateComment = (orderSaleId, commentOrder, total, updateBy, locationId, status) =>
   genRequest('put', `/ordersales/update-by-command`, { orderSaleId, commentOrder, total, updateBy, locationId, status }, '', '', 'La información de las ordenes no pudo ser obtenida', 'Error desconocido');
 
+orderSalesServices.getKitchenTicket = (orderId, bulkData) =>
+  genRequest(`post`, `/ordersales/kitchen/ticket/${orderId}`, { bulkData }, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido');
+
+
 export default orderSalesServices;

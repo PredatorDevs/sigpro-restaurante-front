@@ -312,10 +312,15 @@ function NewCommandDelivery() {
     }
 
     async function selectedProduct(product) {
-        if (tableOrder !== 0) {
 
+        if (tableOrder !== 0) {
             const response = await orderSalesServices.findByTableId(tableOrder);
             const orderInformation = response.data[0];
+
+            if (!isEmpty(orderInformation) && orderInformation[0].packoff === 1) {
+                customNot('warning', 'La cuenta ya no esta disponible', 'La cuenta se encuentra en entrega');
+                return;
+            }
 
             if (!isEmpty(orderInformation) && parseInt(orderInformation[0].userPINCode) !== currentWaiter.userPINCode) {
                 setDetailsOrder([]);
@@ -430,9 +435,18 @@ function NewCommandDelivery() {
 
     async function kitchenTicket(orderId, details) {
         try {
-            const response = await reportsServices.getKitchenTicket(orderId, details);
-            const ticketName = `TicketCocina_${orderId}.pdf`;
-            download(response.data, ticketName);
+            const response = await orderSalesServices.getKitchenTicket(orderId, details);
+            const data = response.data;
+            if (!isEmpty(data)) {
+                const ticketBody = {
+                    orderDetails: data[0],
+                    orderInfo: data[1],
+                    ticketName: `TicketCocina_${orderId}`,
+                    date: getFormattedDate(),
+                    time: getFormattedTime(),
+                }
+                await printerServices.printTicketKitchen(ticketBody);
+            }
         } catch (error) {
             console.error(error);
             customNot('info', 'No es posible crear el ticket', 'No fue posible generar el PDF');
@@ -570,60 +584,62 @@ function NewCommandDelivery() {
         return dd + '/' + mm + '/' + yyyy;
     };
 
-    const handleOpenModal = () => {
+    const getFormattedTime = () => {
         const currentTime = new Date();
         const hours = currentTime.getHours();
         const minutes = currentTime.getMinutes();
         const ampm = hours >= 12 ? 'PM' : 'AM';
         const formattedTime = hours % 12 + ':' + (minutes < 10 ? '0' + minutes : minutes) + ' ' + ampm;
-        const formattedDate = getFormattedDate();
-        setCurrentTime(formattedDate + ' - ' + formattedTime);
+        return formattedTime;
     };
 
+    const getFormattedTimeAndDate = () => {
+        const date = getFormattedDate();
+        const time = getFormattedTime();
+        return (date + ' - ' + time)
+    }
+
     async function packOffCommand() {
+        const currentTimer = getFormattedTimeAndDate();
+
         const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
         if (detailActives.length >= 1) {
             customNot('info', 'No se puede despachar', 'Hay detalles que aun no se encuentran en cocina');
         } else {
+            
+            if (orderInTable.packoff === 1) {
+                customNot('info', 'La orden ya fue despachada', 'La orden ya se encuentra en camino');
+            } else {
 
-            handleOpenModal();
+                Modal.confirm({
+                    title: '¿Desea despachar el pedido?',
+                    centered: true,
+                    icon: <WarningOutlined />,
+                    content: `Despacho realizado: ${currentTimer}`,
+                    okText: 'Confirmar',
+                    okType: 'info',
+                    cancelText: 'Cancelar',
+                    async onOk() {
+                        await reportsServices.getPackOffTicket(
+                            orderInTable.id,
+                            orderInTable.customerId,
+                            orderInTable.customerphoneId,
+                            orderInTable.customeraddressId,
+                            1
+                        )
+                            .then(async response => {
 
-            console.log(
-                {
-                    orderSaleId: orderInTable.id,
-                    customerId: orderInTable.customerId,
-                    phoneIdentifier: orderInTable.customerphoneId,
-                    addressIdentifier: orderInTable.customeraddressId
-                }
-            );
-
-            Modal.confirm({
-                title: '¿Desea despachar el pedido?',
-                centered: true,
-                icon: <WarningOutlined />,
-                content: `Despacho realizado: ${currentTime}`,
-                okText: 'Confirmar',
-                okType: 'info',
-                cancelText: 'Cancelar',
-                async onOk() {
-                    await reportsServices.getPackOffTicket(
-                        orderInTable.id,
-                        orderInTable.customerId,
-                        orderInTable.customerphoneId,
-                        orderInTable.customeraddressId,
-                        1
-                    )
-                        .then(async response => {
-                            const ticketName = `TicketEntrega_${orderInTable.id}.pdf`;
-                            download(response.data, ticketName);
-                            await loadMyTables();
-                        })
-                        .catch(error => {
-                            console.error(error);
-                        })
-                },
-                onCancel() { },
-            });
+                                const ticketName = `TicketEntrega_${orderInTable.id}.pdf`;
+                                download(response.data, ticketName);
+                                await loadMyTables();
+                            })
+                            .catch(error => {
+                                console.error(error);
+                            })
+                    },
+                    onCancel() { },
+                });
+            }
         }
     }
 
