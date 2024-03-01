@@ -39,8 +39,8 @@ reportsServices.getKitchenTicket = (orderId, bulkData) =>
 reportsServices.getPreAccountTicket = (orderId) =>
   genRequest(`get`, `/reports/preaccount/ticket/${orderId}`, {}, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido', 'application/json', 'blob');
 
-reportsServices.getPackOffTicket = (orderId, customerId, phoneIdentifier, addressIdentifier, packoffStatus) =>
-  genRequest(`post`, `/reports/packoff/ticket/${orderId}`, { customerId, phoneIdentifier, addressIdentifier, packoffStatus }, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido', 'application/json', 'blob');
+reportsServices.getPackOffTicket = (orderId, customerId, phoneIdentifier, addressIdentifier, packoffStatus, currentWaiter, currentTimer) =>
+  genRequest(`post`, `/reports/packoff/ticket/${orderId}`, { customerId, phoneIdentifier, addressIdentifier, packoffStatus, currentWaiter, currentTimer}, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido', 'application/json', 'blob');
 
 
 export default reportsServices;

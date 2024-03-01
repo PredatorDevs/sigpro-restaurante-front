@@ -157,7 +157,7 @@ function NewCommandDelivery() {
     const [customerInfo, setCustomerInfo] = useState({});
 
     //Timers
-    const [currentTime, setCurrentTime] = useState('');
+    const [currentTime, setCurrentTime] = useState(null);
 
     // #region Order Details
     async function getOrderInfo(tableId) {
@@ -176,10 +176,17 @@ function NewCommandDelivery() {
                 customNot('warning', 'Cuenta No disponible', 'La cuenta seleccionada ya fue ocupada.');
             } else {
                 setOrderInTable(orderInformation[0]);
+
                 if (!isEmpty(orderInformation)) {
                     const clientInfo = await customersServices.findByIdandPhoneId(orderInformation[0].customerId, orderInformation[0].customerphoneId, orderInformation[0].customeraddressId);
                     setCustomerUpdateMode(true);
                     setCustomerInfo(clientInfo.data[0]);
+
+                    if (orderInformation[0].packoff === 1) {
+                        setCurrentTime(orderInformation[0].dispatchedAt);
+                    } else {
+                        setCurrentTime(null);
+                    }
                 } else {
                     setDetailsOrder([]);
                     setCustomerInfo([]);
@@ -445,7 +452,8 @@ function NewCommandDelivery() {
                     date: getFormattedDate(),
                     time: getFormattedTime(),
                 }
-                await printerServices.printTicketKitchen(ticketBody);
+
+                //await printerServices.printTicketKitchen(ticketBody);
             }
         } catch (error) {
             console.error(error);
@@ -596,7 +604,7 @@ function NewCommandDelivery() {
     const getFormattedTimeAndDate = () => {
         const date = getFormattedDate();
         const time = getFormattedTime();
-        return (date + ' - ' + time)
+        return { timeComplete: `Fecha: ${date} Hora: ${time}`, timeDB: `${date} - ${time}` }
     }
 
     async function packOffCommand() {
@@ -606,16 +614,18 @@ function NewCommandDelivery() {
         if (detailActives.length >= 1) {
             customNot('info', 'No se puede despachar', 'Hay detalles que aun no se encuentran en cocina');
         } else {
-            
+
             if (orderInTable.packoff === 1) {
                 customNot('info', 'La orden ya fue despachada', 'La orden ya se encuentra en camino');
             } else {
+
+
 
                 Modal.confirm({
                     title: '¿Desea despachar el pedido?',
                     centered: true,
                     icon: <WarningOutlined />,
-                    content: `Despacho realizado: ${currentTimer}`,
+                    content: `${currentTimer.timeComplete}`,
                     okText: 'Confirmar',
                     okType: 'info',
                     cancelText: 'Cancelar',
@@ -625,17 +635,21 @@ function NewCommandDelivery() {
                             orderInTable.customerId,
                             orderInTable.customerphoneId,
                             orderInTable.customeraddressId,
-                            1
+                            1,
+                            currentWaiter.userId,
+                            currentTimer.timeDB
                         )
                             .then(async response => {
 
                                 const ticketName = `TicketEntrega_${orderInTable.id}.pdf`;
                                 download(response.data, ticketName);
+                                customNot('success', 'Cuenta despachada con exito', `${currentTimer.timeComplete}`)
                                 await loadMyTables();
                             })
                             .catch(error => {
                                 console.error(error);
-                            })
+                                customNot('danger', 'La cuenta no fue despachada con exito', `${currentTimer.timeComplete}`)
+                            });
                     },
                     onCancel() { },
                 });
@@ -734,6 +748,13 @@ function NewCommandDelivery() {
                                                 <p><strong>RNC:</strong> {customerInfo.nrc}</p>
                                             </div>
                                             <p><strong>Dirección:</strong> {customerInfo.FullAddress}</p>
+                                            {
+                                                currentTime != null ?
+                                                    <p><strong>Fecha de salida:</strong> {currentTime}</p>
+                                                    :
+                                                    <></>
+
+                                            }
                                         </Card>
                                     </Spin>
                             }

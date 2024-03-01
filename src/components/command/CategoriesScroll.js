@@ -14,7 +14,7 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
 
     const buttonStyle = {
         width: 166,
-        height: 83,
+        height: 87,
         borderRadius: '5px',
         border: '2px solid #1677FF',
         display: "flex",
