@@ -569,6 +569,7 @@ function NewCommandDelivery() {
         setDetailsOrder([]);
         setTableOrder(0);
         setFetchingMyTables(true);
+        setCurrentTime(null);
         await loadData();
         await loadMyTables();
     }
@@ -619,8 +620,6 @@ function NewCommandDelivery() {
                 customNot('info', 'La orden ya fue despachada', 'La orden ya se encuentra en camino');
             } else {
 
-
-
                 Modal.confirm({
                     title: '¿Desea despachar el pedido?',
                     centered: true,
@@ -630,6 +629,7 @@ function NewCommandDelivery() {
                     okType: 'info',
                     cancelText: 'Cancelar',
                     async onOk() {
+                        setChargePreAccount(true);
                         await reportsServices.getPackOffTicket(
                             orderInTable.id,
                             orderInTable.customerId,
@@ -649,6 +649,9 @@ function NewCommandDelivery() {
                             .catch(error => {
                                 console.error(error);
                                 customNot('danger', 'La cuenta no fue despachada con exito', `${currentTimer.timeComplete}`)
+                            })
+                            .finally(() => {
+                                setChargePreAccount(false);
                             });
                     },
                     onCancel() { },

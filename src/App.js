@@ -49,6 +49,7 @@ import TablesRecord from './pages/tables/TablesRecord';
 import NewCommand from './pages/comandas/NewCommand';
 import ControlCommand from './pages/comandas/ControlCommand';
 import NewCommandDelivery from './pages/comandas/CommandDelivery';
+import NewCommandToGo from './pages/comandas/CommandToGo';
 
 const App = () => {
   const isLoggedIn = getUserIsLoggedIn();
@@ -141,6 +142,7 @@ const App = () => {
         {renderProtectedRoute('command/new', [1, 2, 5], <NewCommand />)}
         {renderProtectedRoute('command/control', [1, 2, 5], <ControlCommand />)}
         {renderProtectedRoute('command/new/delivery', [1, 2, 5], <NewCommandDelivery />)}
+        {renderProtectedRoute('command/new/togo', [1, 2, 5], <NewCommandToGo />)}
         <Route path='*' element={<Page404 />} />
       </Route>
       <Route path="/noauth" element={<Page403 />}></Route>

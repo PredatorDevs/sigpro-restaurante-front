@@ -78,7 +78,7 @@ function Main() {
             [
               { title: 'Comandas', image: <GCashierIcon width='calc(50%)' />, action: () => navigate('/main/command/new') }, // 1
               { title: 'Delivery', image: <GTrackIcon width='calc(50%)' />, action: () => navigate('/main/command/new/delivery') }, // 1
-              { title: 'Para Llevar', image: <GShippingIcon width='calc(50%)' />, action: () => navigate('/main/command/new/delivery') }, // 1
+              { title: 'Para Llevar', image: <GShippingIcon width='calc(50%)' />, action: () => navigate('/main/command/new/togo') }, // 1
               { title: 'Cuentas', image: <GBooksIcon width='calc(50%)' />, action: () => navigate('/main/administration/tables') }, // 1
               { title: 'Salir', image: <GLogoutIcon width='calc(50%)' />, action: () => logoutAction() }, // 9
             ].map((element, index) => (

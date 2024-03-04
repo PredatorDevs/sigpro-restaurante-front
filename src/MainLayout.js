@@ -276,6 +276,9 @@ const MainLayout = () => {
       case "/main/command/new/delivery": return (<>
         <Breadcrumb.Item className='details-command'>Comandas</Breadcrumb.Item>
       </>);
+      case "/main/command/new/togo": return (<>
+        <Breadcrumb.Item className='details-command'>Comandas</Breadcrumb.Item>
+      </>);
       case "/main/command/control": return (<>
         <Breadcrumb.Item>Comandas</Breadcrumb.Item>
         <Breadcrumb.Item>Control de Comandas</Breadcrumb.Item>
@@ -372,6 +375,7 @@ const MainLayout = () => {
       case "/main/command/new": return "37";
       case "/main/command/control": return "38";
       case "/main/command/new/delivery": return "39";
+      case "/main/command/new/togo": return "40";
       default: return "1";
     }
   }
@@ -573,6 +577,7 @@ const MainLayout = () => {
               case '37': navigate('/main/command/new'); break;
               case '38': navigate('/main/command/control'); break;
               case '39': navigate('/main/command/new/delivery'); break;
+              case '40': navigate('/main/command/new/togo'); break;
               default: navigate('/main'); break;
             }
             setSelectedMenuKey(a.key);
