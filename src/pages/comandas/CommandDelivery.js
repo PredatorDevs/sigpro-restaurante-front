@@ -453,7 +453,7 @@ function NewCommandDelivery() {
                     time: getFormattedTime(),
                 }
 
-                //await printerServices.printTicketKitchen(ticketBody);
+                await printerServices.printTicketKitchen(ticketBody);
             }
         } catch (error) {
             console.error(error);

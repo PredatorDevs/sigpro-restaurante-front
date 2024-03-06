@@ -76,5 +76,8 @@ orderSalesServices.updateComment = (orderSaleId, commentOrder, total, updateBy, 
 orderSalesServices.getKitchenTicket = (orderId, bulkData) =>
   genRequest(`post`, `/ordersales/kitchen/ticket/${orderId}`, { bulkData }, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido');
 
+orderSalesServices.getPreAccountTicket = (orderId) =>
+  genRequest(`get`, `/ordersales/preacccount/ticket/${orderId}`, { }, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido');
+
 
 export default orderSalesServices;
