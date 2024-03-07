@@ -34,7 +34,7 @@ import AuthorizeUserPINCode from "../../components/confirmations/AuthorizeUserPI
 import download from "downloadjs";
 import reportsServices from "../../services/ReportsServices.js";
 import AddClientModal from "../../components/command/ClientToGoModal.js";
-
+import { printerServices } from "../../services/PrintersServices.js";
 const styleSheet = {
     tableFooter: {
         footerCotainer: {
@@ -419,6 +419,29 @@ function NewCommandToGo() {
     }
     // #endregion
 
+    const getFormattedDate = () => {
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const yyyy = today.getFullYear();
+        return dd + '/' + mm + '/' + yyyy;
+    };
+
+    const getFormattedTime = () => {
+        const currentTime = new Date();
+        const hours = currentTime.getHours();
+        const minutes = currentTime.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const formattedTime = hours % 12 + ':' + (minutes < 10 ? '0' + minutes : minutes) + ' ' + ampm;
+        return formattedTime;
+    };
+
+    const getFormattedTimeAndDate = () => {
+        const date = getFormattedDate();
+        const time = getFormattedTime();
+        return { timeComplete: `Fecha: ${date} Hora: ${time}`, timeDB: `${date} - ${time}` }
+    }
+
     async function deleteProductDetails(productId) {
 
         orderSalesServices.details.removeByOrderDetailId(productId)
@@ -433,9 +456,19 @@ function NewCommandToGo() {
 
     async function kitchenTicket(orderId, details) {
         try {
-            const response = await reportsServices.getKitchenTicket(orderId, details);
-            const ticketName = `TicketCocina_${orderId}.pdf`;
-            download(response.data, ticketName);
+            const response = await orderSalesServices.getKitchenTicket(orderId, details);
+            const data = response.data;
+            if (!isEmpty(data)) {
+                const ticketBody = {
+                    orderDetails: data[0],
+                    orderInfo: data[1],
+                    ticketName: `TicketCocina_${orderId}`,
+                    date: getFormattedDate(),
+                    time: getFormattedTime(),
+                }
+
+                await printerServices.printTicketKitchen(ticketBody);
+            }
         } catch (error) {
             console.error(error);
             customNot('info', 'No es posible crear el ticket', 'No fue posible generar el PDF');
@@ -545,9 +578,20 @@ function NewCommandToGo() {
         const orderId = orderInTable.id;
         setChargePreAccount(true);
         try {
-            const response = await reportsServices.getPreAccountTicket(orderId);
-            const ticketName = `TicketPrecuenta_${orderId}.pdf`;
-            download(response.data, ticketName);
+            const response = await orderSalesServices.getPreAccountTicket(orderId);
+            const data = response.data;
+            if (!isEmpty(data)) {
+                const ticketBody = {
+                    orderDetails: data[0],
+                    orderInfo: data[1][0],
+                    ticketName: `TicketPrecuenta_${orderId}`,
+                    date: getFormattedDate(),
+                    time: getFormattedTime(),
+                }
+
+                await printerServices.printTicketPreAccount(ticketBody);
+            }
+
         } catch (error) {
             console.error(error);
             customNot('info', 'No es posible crear el ticket', 'No fue posible generar el PDF');

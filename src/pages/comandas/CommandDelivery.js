@@ -276,6 +276,7 @@ function NewCommandDelivery() {
 
     async function loadMyTables() {
         try {
+            setFetchingMyTables(true);
             const response = await tablesServices.findByPin(getUserLocation(), currentWaiter.userPINCode, 2);
             setMyTablesAvailable(response.data[0]);
             setFetchingMyTables(false);
@@ -610,12 +611,10 @@ function NewCommandDelivery() {
 
     async function packOffCommand() {
         const currentTimer = getFormattedTimeAndDate();
-
         const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
         if (detailActives.length >= 1) {
             customNot('info', 'No se puede despachar', 'Hay detalles que aun no se encuentran en cocina');
         } else {
-
             if (orderInTable.packoff === 1) {
                 customNot('info', 'La orden ya fue despachada', 'La orden ya se encuentra en camino');
             } else {
@@ -629,36 +628,67 @@ function NewCommandDelivery() {
                     okType: 'info',
                     cancelText: 'Cancelar',
                     async onOk() {
-                        setChargePreAccount(true);
-                        await reportsServices.getPackOffTicket(
-                            orderInTable.id,
-                            orderInTable.customerId,
-                            orderInTable.customerphoneId,
-                            orderInTable.customeraddressId,
-                            1,
-                            currentWaiter.userId,
-                            currentTimer.timeDB
-                        )
-                            .then(async response => {
-
-                                const ticketName = `TicketEntrega_${orderInTable.id}.pdf`;
-                                download(response.data, ticketName);
-                                customNot('success', 'Cuenta despachada con exito', `${currentTimer.timeComplete}`)
-                                await loadMyTables();
-                            })
-                            .catch(error => {
-                                console.error(error);
-                                customNot('danger', 'La cuenta no fue despachada con exito', `${currentTimer.timeComplete}`)
-                            })
-                            .finally(() => {
-                                setChargePreAccount(false);
-                            });
+                        await packOffActions();
                     },
                     onCancel() { },
                 });
             }
         }
     }
+
+    async function packOffActions() {
+        setChargePreAccount(true);
+        const currentTimer = getFormattedTimeAndDate();
+        await orderSalesServices.getPackOffTicket(
+            orderInTable.id,
+            orderInTable.customerId,
+            orderInTable.customerphoneId,
+            orderInTable.customeraddressId,
+        )
+            .then(async response => {
+                const data = response.data;
+                if (!isEmpty(data)) {
+                    const ticketBody = {
+                        orderDetails: data[0],
+                        orderInfo: data[1][0],
+                        clientInfo: data[3][0],
+                        ticketName: `TicketCocina_${orderInTable.id}`,
+                        date: getFormattedDate(),
+                        time: getFormattedTime(),
+                    }
+
+                    const printerResult = await printerServices.printPackOff(ticketBody);
+                    if (printerResult.status === 200) {
+                        await updatePackOffStatus();
+                    } else {
+                        customNot('danger', 'Ticket No Impreso', `El ticket del pedido no pudo ser envidado`);
+                    }
+                }
+            })
+            .catch(error => {
+                customNot('danger', 'La cuenta no fue despachada con exito', `${currentTimer.timeComplete}`)
+            })
+            .finally(() => {
+                setChargePreAccount(false);
+            });
+    }
+
+    async function updatePackOffStatus() {
+        try {
+            const currentTimer = getFormattedTimeAndDate();
+            await orderSalesServices.updatePackOffTicket(
+                orderInTable.id,
+                1,
+                currentWaiter.userId,
+                currentTimer.timeDB
+            );
+            restoreClient();
+            customNot('success', 'Pedido Actualizado', `El pedido fue actualizado con éxito`);
+        } catch (error) {
+            customNot('danger', 'Error al actualizar', `Ocurrió un error al actualizar el estado del ticket`);
+        }
+    }
+
 
     return (
         !ableToProcess ?

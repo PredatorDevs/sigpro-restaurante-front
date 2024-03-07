@@ -77,7 +77,13 @@ orderSalesServices.getKitchenTicket = (orderId, bulkData) =>
   genRequest(`post`, `/ordersales/kitchen/ticket/${orderId}`, { bulkData }, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido');
 
 orderSalesServices.getPreAccountTicket = (orderId) =>
-  genRequest(`get`, `/ordersales/preacccount/ticket/${orderId}`, { }, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido');
+  genRequest(`get`, `/ordersales/preacccount/ticket/${orderId}`, {}, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido');
+
+orderSalesServices.getPackOffTicket = (orderId, customerId, phoneIdentifier, addressIdentifier) =>
+  genRequest(`post`, `/ordersales/packoff/ticket/${orderId}`, { customerId, phoneIdentifier, addressIdentifier }, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido');
+
+  orderSalesServices.updatePackOffTicket = (orderId, packoffStatus, currentWaiter, currentTimer) =>
+  genRequest(`post`, `/ordersales/update-packoff/ticket/${orderId}`, { packoffStatus, currentWaiter, currentTimer }, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido');
 
 
 export default orderSalesServices;
