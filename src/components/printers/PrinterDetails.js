@@ -4,10 +4,10 @@ import { AppstoreAddOutlined, CloseOutlined } from '@ant-design/icons';
 import { isEmpty } from 'lodash';
 import 'moment/locale/es-mx';
 
-function TablesGroupDetails(props) {
+function PrinterDetails(props) {
 
     const { open, entryType, details, onClose } = props;
-    console.log(details);
+
     return (
         <Modal
             centered
@@ -24,20 +24,16 @@ function TablesGroupDetails(props) {
                     </> :
                     <>
                         <p style={{ fontSize: 14, margin: 0, fontWeight: 600 }}>{details.name}</p>
-                        <p style={{ fontSize: 11 }}>{`Codigo Interno: ${details.id}`}</p>
+                        <p style={{ fontSize: 11 }}>{`Codigo Interno: ${details.printerid}`}</p>
                         <Descriptions bordered style={{ width: '100%' }} size={'small'}>
-                            <Descriptions.Item label="Grupo de Cuentas" span={3}>{details.GroupName}</Descriptions.Item>
-                            <Descriptions.Item label="Tipo de cuenta" span={3}>{details.OrderType}</Descriptions.Item>
+                            <Descriptions.Item label="Dirección IP" span={3}>{details.ip}</Descriptions.Item>
+                            <Descriptions.Item label="Puerto" span={3}>{details.port}</Descriptions.Item>
                             <Descriptions.Item label="Color" span={3}>
-                                <Tag color={details.color} style={{
+                                <Tag color={'blue'} style={{
                                     display: 'block',
-                                    width: '100%',
-                                    height: '20px',
                                 }}>
+                                    {details.printerdirection}
                                 </Tag>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Estado" span={2}>
-                                {details.status === 0 ? <Tag color={'green'}>Libre</Tag> : <Tag color={'red'}>Ocupada</Tag>}
                             </Descriptions.Item>
                         </Descriptions>
                     </>
@@ -46,4 +42,4 @@ function TablesGroupDetails(props) {
     );
 }
 
-export default TablesGroupDetails;
+export default PrinterDetails;

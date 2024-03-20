@@ -283,6 +283,9 @@ const MainLayout = () => {
         <Breadcrumb.Item>Comandas</Breadcrumb.Item>
         <Breadcrumb.Item>Control de Comandas</Breadcrumb.Item>
       </>);
+      case "/main/administration/printers": return (<>
+        <Breadcrumb.Item>Impresoras</Breadcrumb.Item>
+      </>);
       default: return (<></>);
     }
   }
@@ -376,6 +379,7 @@ const MainLayout = () => {
       case "/main/command/control": return "38";
       case "/main/command/new/delivery": return "39";
       case "/main/command/new/togo": return "40";
+      case "/main/administration/printers": return "41";
       default: return "1";
     }
   }
@@ -578,6 +582,7 @@ const MainLayout = () => {
               case '38': navigate('/main/command/control'); break;
               case '39': navigate('/main/command/new/delivery'); break;
               case '40': navigate('/main/command/new/togo'); break;
+              case '41': navigate('/main/administration/printers'); break;
               default: navigate('/main'); break;
             }
             setSelectedMenuKey(a.key);

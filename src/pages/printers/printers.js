@@ -1,87 +1,76 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Col, Input, Row, Space, Table, Tag } from 'antd';
-import { AppstoreAddOutlined, SyncOutlined } from '@ant-design/icons';
+import { useState, useEffect } from "react";
+import { Wrapper } from "../../styled-components/Wrapper";
+import { Row, Col, Input, Space, Button, Table, Tag } from "antd";
 import { find } from 'lodash';
 
-import TablesForm from '../../components/tables/TablesForm';
-import tablesServices from '../../services/TablesServices';
-
-import TablesGroupDetails from '../../components/previews/TablePreview';
-
-import { Wrapper } from '../../styled-components/Wrapper';
-
-import { filterData } from '../../utils/Filters';
-import { columnActionsDef, columnDef } from '../../utils/ColumnsDefinitions';
+import { AppstoreAddOutlined, SyncOutlined } from "@ant-design/icons";
 
 import { getUserLocation } from '../../utils/LocalData';
+import { printerServices } from "../../services/PrinterServices";
+import { columnActionsDef, columnDef } from '../../utils/ColumnsDefinitions';
+
+import { filterData } from '../../utils/Filters';
+import PrinterFrom from "../../components/printers/PrinterFrom";
+import PrinterDetails from "../../components/printers/PrinterDetails";
 
 const { Search } = Input;
 
-function Tables() {
+function Printers() {
 
-    const [fetching, setFetching] = useState(false);
     const [filter, setFilter] = useState('');
-
+    const [fetching, setFetching] = useState(false);
     const [openForm, setOpenForm] = useState(false);
     const [formUpdateMode, setFormUpdateMode] = useState(false);
 
     const [entityData, setEntityData] = useState([]);
-    const [entityRefreshData, setEntityRefreshData] = useState(0);
     const [entityToUpdate, setEntityToUpdate] = useState({});
-
     const [openDetails, setOpenDetails] = useState(false);
 
     async function loadData() {
         setFetching(true);
-        const response = await tablesServices.findTables(getUserLocation());
+        const response = await printerServices.findByLocationId(getUserLocation());
         setEntityData(response.data);
         setFetching(false);
     }
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
     const columns = [
-        columnDef({ title: 'Id', dataKey: 'id' }),
-        columnDef({ title: 'Nombres', dataKey: 'name' }),
-        columnDef({ title: 'Grupo', dataKey: 'GroupName' }),
+        columnDef({ title: 'Codigo Interno', dataKey: 'printerid' }),
+        columnDef({ title: 'Nombre', dataKey: 'name' }),
+        columnDef({ title: 'Dirección IP', dataKey: 'ip' }),
+        columnDef({ title: 'Puerto', dataKey: 'port' }),
         columnDef({
-            title: 'Color', dataKey: 'color', customRender: color => (
-                <Tag color={color} style={{
+            title: 'Dirección Completa',
+            dataKey: 'printerdirection',
+            customRender: printerdirection => (
+                <Tag color={'blue'} style={{
                     display: 'block',
-                    width: '100%',
-                    height: '20px',
+                    cursor: 'copy'
                 }}>
-
+                    {printerdirection}
                 </Tag>
             )
         }),
-        columnDef({
-            title: 'Estado', dataKey: 'status', customRender: status => (
-                <Tag color={status === 0 ? 'green' : 'red'}>
-                    {status === 0 ? 'Libre' : 'Ocupada'}
-                </Tag>
-            )
-        }),
-        columnDef({ title: 'Tipo de Cuenta', dataKey: 'OrderType' }),
         columnActionsDef(
             {
                 title: 'Acciones',
-                dataKey: 'id',
+                dataKey: 'printerid',
                 detailAction: (value) => {
                     setOpenDetails(true);
                     setFormUpdateMode(true);
-                    setEntityToUpdate(find(entityData, ['id', value]));
+                    setEntityToUpdate(find(entityData, ['printerid', value]));
                 },
                 editAction: (value) => {
                     setOpenForm(true);
                     setFormUpdateMode(true);
-                    setEntityToUpdate(find(entityData, ['id', value]));
+                    setEntityToUpdate(find(entityData, ['printerid', value]));
                 },
             }
-        ),
+        )
     ];
+
+    useEffect(() => {
+        loadData();
+    }, []);
 
     return (
         <Wrapper>
@@ -90,7 +79,7 @@ function Tables() {
                     <Search
                         name={'filter'}
                         value={filter}
-                        placeholder="CUENTA"
+                        placeholder="IMPRESORA"
                         allowClear
                         style={{ width: 300 }}
                         onChange={(e) => setFilter(e.target.value)}
@@ -104,11 +93,13 @@ function Tables() {
                             onClick={() => {
                                 setEntityToUpdate({});
                                 setOpenForm(true);
+                                setFormUpdateMode(false);
                             }}
                         >
-                            Nueva Mesa
+                            Nueva Impresora
                         </Button>
                         <Button
+                            loading={fetching}
                             size='large'
                             icon={<SyncOutlined />}
                             onClick={() => {
@@ -121,6 +112,7 @@ function Tables() {
                 </Col>
                 <Col span={24}>
                     <Table
+                        loading={fetching}
                         size='small'
                         style={{ width: '100%' }}
                         rowKey={'id'}
@@ -129,7 +121,8 @@ function Tables() {
                     />
                 </Col>
             </Row>
-            <TablesForm
+
+            <PrinterFrom
                 open={openForm}
                 updateMode={formUpdateMode}
                 dataToUpdate={entityToUpdate}
@@ -141,7 +134,7 @@ function Tables() {
                     }
                 }}
             />
-            <TablesGroupDetails
+            <PrinterDetails
                 open={openDetails}
                 entryType={formUpdateMode}
                 details={entityToUpdate}
@@ -154,4 +147,4 @@ function Tables() {
     );
 }
 
-export default Tables;
+export default Printers;
