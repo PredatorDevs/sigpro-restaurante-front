@@ -50,7 +50,7 @@ function Products() {
     try {
       const response = await productsServices.findByLocationStockData(locationId);
       setEntityData(response.data);
-    } catch(error) {
+    } catch (error) {
       console.log(error);
     }
     setFetching(false);
@@ -66,7 +66,7 @@ function Products() {
       setLocationsData(locRes.data);
       setCategoriesData(catRes.data);
       setBrandsData(brandRes.data);
-    } catch(error) {
+    } catch (error) {
       console.log(error);
     }
     setFetching(false);
@@ -87,7 +87,7 @@ function Products() {
       window.open(blobURL);
       */
       download(res.data, `ProductosPorCategoria.pdf`);
-    } catch(error) {
+    } catch (error) {
       console.log(error);
     }
     setFetching(false);
@@ -103,7 +103,7 @@ function Products() {
       window.open(blobURL);
       */
       download(res.data, `ProductosPorMarca.pdf`);
-    } catch(error) {
+    } catch (error) {
       console.log(error);
     }
     setFetching(false);
@@ -127,51 +127,20 @@ function Products() {
       window.open(blobURL);
       */
       download(res.data, `ProductosPorFiltroPersonalizado.pdf`);
-    } catch(error) {
+    } catch (error) {
       console.log(error);
     }
     setFetching(false);
   }
 
   const columns = [
-    columnDef({title: 'Id', dataKey: 'productId'}),
-    columnIfValueEqualsTo({title: '', dataKey: 'productIsService', text: 'Servicio', valueToCompare: 1, color: 'blue' }),
-    columnDef({title: 'Nombre', dataKey: 'productName'}),
-    columnDef({title: 'Existencias', dataKey: 'currentLocationStock'}),
-    columnDef({title: 'Contenido', dataKey: 'packageContent'}),
-    {
-      title: <p style={{ margin: '0px', fontSize: 12, fontWeight: 600 }}>{'Existencia General'}</p>,
-      dataIndex: 'productId',
-      key: 'productId',
-      align: 'left',
-      render: (text, record, index) => {
-        return (
-          <p style={{ margin: '0px', fontSize: 12 }}>
-            {Number(+record.currentLocationStock / +record.packageContent).toFixed(2)}
-          </p>
-        )
-      }
-    },
-    columnDef({title: 'Categoria', dataKey: 'productCategoryName'}),
-    columnDef({title: 'Marca', dataKey: 'productBrandName'}),
-    columnDef({title: 'Ud. Min. Medida', dataKey: 'productMeasurementUnitName'}),
-    columnMoneyDef({title: 'Costo', dataKey: 'productCost'}),
-    {
-      title: <p style={{ margin: '0px', fontSize: 12, fontWeight: 600 }}>{''}</p>,
-      dataIndex: 'productId',
-      key: 'productId',
-      align: 'right',
-      render: (text, record, index) => {
-        return (
-          <Tooltip placement="left" title={`Producto con existencias bajas`}>
-            <WarningTwoTone
-              twoToneColor={'red'}
-              style={{ display: record.currentLocationStock <= record.currentLocationMinStockAlert ? 'inline' : 'none' }}
-            />
-          </Tooltip>
-        )
-      }
-    },
+    columnDef({ title: 'Id', dataKey: 'productId' }),
+    columnIfValueEqualsTo({ title: '', dataKey: 'productIsService', text: 'Servicio', valueToCompare: 1, color: 'blue' }),
+    columnDef({ title: 'Nombre', dataKey: 'productName' }),
+    columnDef({ title: 'Categoria', dataKey: 'productCategoryName' }),
+    columnDef({ title: 'Marca', dataKey: 'productBrandName' }),
+    columnDef({ title: 'Impresora', dataKey: 'productPrinterName' }),
+    columnMoneyDef({ title: 'Costo', dataKey: 'productCost' }),
     {
       title: <p style={{ margin: '0px', fontSize: 12, fontWeight: 600 }}>{'Acciones'}</p>,
       dataIndex: 'productId',
@@ -183,7 +152,7 @@ function Products() {
             <Tooltip placement="left" title={`Editar`}>
               <Button
                 onClick={(e) => {
-                  
+
                 }}
                 size='small'
                 icon={<EditTwoTone />}
@@ -234,9 +203,9 @@ function Products() {
       <Row gutter={[8, 8]} style={{ width: '100%' }}>
         <Col span={24}>
           <Space>
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />} 
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
               onClick={() => {
                 setEntityToUpdate({});
                 setOpenForm(true);
@@ -244,19 +213,19 @@ function Products() {
             >
               Nuevo producto
             </Button>
-            <Button 
-              icon={<ClearOutlined />} 
+            <Button
+              icon={<ClearOutlined />}
               onClick={(e) => {
                 setFilter('');
                 setCategorySelectedId(0);
                 setBrandSelectedId(0);
-              }} 
+              }}
             >
               Limpiar filtros
             </Button>
-            <Button 
-              icon={<SyncOutlined />} 
-              onClick={(e) => loadData(locationSelectedId)} 
+            <Button
+              icon={<SyncOutlined />}
+              onClick={(e) => loadData(locationSelectedId)}
             >
               Actualizar
             </Button>
@@ -265,29 +234,29 @@ function Products() {
         <Col span={24}>
           <p style={{ margin: 0 }}>Generar reportes:</p>
           <Space wrap>
-            <Button 
-              icon={<FilePdfTwoTone twoToneColor={'green'} />} 
-              onClick={(e) => {}}
+            <Button
+              icon={<FilePdfTwoTone twoToneColor={'green'} />}
+              onClick={(e) => { }}
               loading={fetching}
             >
               General
             </Button>
-            <Button 
+            <Button
               icon={<FilePdfTwoTone twoToneColor={'red'} />}
               onClick={() => fetchReportByCategories()}
               loading={fetching}
             >
               Por categoria
             </Button>
-            <Button 
-              icon={<FilePdfTwoTone twoToneColor={'blue'} />} 
+            <Button
+              icon={<FilePdfTwoTone twoToneColor={'blue'} />}
               onClick={() => fetchReportByBrands()}
               loading={fetching}
             >
               Por marca
             </Button>
-            <Button 
-              icon={<FilePdfTwoTone twoToneColor={'purple'} />} 
+            <Button
+              icon={<FilePdfTwoTone twoToneColor={'purple'} />}
               onClick={() => fetchReportByFilteredData()}
               loading={fetching}
             >
@@ -295,13 +264,13 @@ function Products() {
             </Button>
           </Space>
         </Col>
-        
+
         <Col span={6}>
           <p style={{ margin: 0 }}>Sucursal:</p>
           <Select
-            dropdownStyle={{ width: '100%' }} 
-            style={{ width: '100%' }} 
-            value={locationSelectedId} 
+            dropdownStyle={{ width: '100%' }}
+            style={{ width: '100%' }}
+            value={locationSelectedId}
             onChange={(value) => {
               setLocationSelectedId(value);
               loadData(value);
@@ -323,10 +292,10 @@ function Products() {
         <Col span={6}>
           <p style={{ margin: 0 }}>Nombre:</p>
           <Search
-            name={'filter'} 
-            value={filter} 
-            placeholder="Producto 1" 
-            allowClear 
+            name={'filter'}
+            value={filter}
+            placeholder="Producto 1"
+            allowClear
             style={{ width: 300 }}
             onChange={(e) => setFilter(e.target.value)}
           />
@@ -334,9 +303,9 @@ function Products() {
         <Col span={6}>
           <p style={{ margin: 0 }}>Categoría:</p>
           <Select
-            dropdownStyle={{ width: '100%' }} 
-            style={{ width: '100%' }} 
-            value={categorySelectedId} 
+            dropdownStyle={{ width: '100%' }}
+            style={{ width: '100%' }}
+            value={categorySelectedId}
             onChange={(value) => setCategorySelectedId(value)}
             optionFilterProp='children'
             showSearch
@@ -355,9 +324,9 @@ function Products() {
         <Col span={6}>
           <p style={{ margin: 0 }}>Marca:</p>
           <Select
-            dropdownStyle={{ width: '100%' }} 
-            style={{ width: '100%' }} 
-            value={brandSelectedId} 
+            dropdownStyle={{ width: '100%' }}
+            style={{ width: '100%' }}
+            value={brandSelectedId}
             onChange={(value) => setBrandSelectedId(value)}
             optionFilterProp='children'
             showSearch
@@ -384,7 +353,7 @@ function Products() {
           />
         </Col>
         <Col span={24}>
-          <Table 
+          <Table
             size='small'
             style={{ width: '100%' }}
             rowKey={'productId'}
@@ -417,14 +386,14 @@ function Products() {
         </Col>
       </Row>
       <ProductForm
-        open={openForm} 
-        updateMode={formUpdateMode} 
-        dataToUpdate={entityToUpdate} 
-        onClose={(refresh) => { 
+        open={openForm}
+        updateMode={formUpdateMode}
+        dataToUpdate={entityToUpdate}
+        onClose={(refresh) => {
           setOpenForm(false);
           setFormUpdateMode(false);
           setEntityToUpdate({});
-          if (refresh) { 
+          if (refresh) {
             loadData(locationSelectedId);
           }
         }}
