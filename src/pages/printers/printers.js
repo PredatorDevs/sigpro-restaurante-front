@@ -115,7 +115,7 @@ function Printers() {
                         loading={fetching}
                         size='small'
                         style={{ width: '100%' }}
-                        rowKey={'id'}
+                        rowKey={'printerid'}
                         dataSource={filterData(entityData, filter, ['name']) || []}
                         columns={columns}
                     />

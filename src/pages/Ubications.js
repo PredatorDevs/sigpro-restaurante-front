@@ -42,6 +42,7 @@ function Ubications() {
   const columns = [
     columnDef({title: 'Id', dataKey: 'id'}),
     columnDef({title: 'Nombres', dataKey: 'name'}),
+    columnDef({title: 'Impresora Desiganada', dataKey: 'printername'}),
     columnActionsDef(
       {
         title: 'Acciones',

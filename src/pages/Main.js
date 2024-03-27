@@ -8,7 +8,7 @@ import sigproLogo from '../img/logos/sigpro-logo.png';
 
 import { LogoutOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import { GAddProductIcon, GAdministrationIcon, GBooksIcon, GCashierIcon, GCashierThreeIcon, GContractIcon, GCustomersIcon, GDispatchIcon, GExpensesIcon, GGoBackIcon, GInventoryIcon, GKardexIcon, GLogoutIcon, GOrdersIcon, GPendingSalesIcon, GPolicyIcon, GPrinterIcon, GProductionIcon, GPurchasesIcon, GReportsIcon, GRequisitionIcon, GSalesAgentIcon, GShippingIcon, GSupplierIcon, GTicketIcon, GTrackIcon, GTruckIcon } from '../utils/IconImageProvider';
+import { GAddProductIcon, GAdministrationIcon, GBooksIcon, GCashierIcon, GCashierThreeIcon, GContractIcon, GCustomersIcon, GDispatchIcon, GExpensesIcon, GGoBackIcon, GInventoryIcon, GKardexIcon, GLogoutIcon, GOrdersIcon, GPendingSalesIcon, GPlacesIcon, GPolicyIcon, GPrinterIcon, GProductionIcon, GPurchasesIcon, GReportsIcon, GRequisitionIcon, GSaleReportIcon, GSalesAgentIcon, GShippingIcon, GSupplierIcon, GTicketIcon, GTrackIcon, GTruckIcon } from '../utils/IconImageProvider';
 import { DeveloperInformation } from '../styled-components/DeveloperInformation';
 import { getUserLocation, getUserLocationAddress, getUserLocationName } from '../utils/LocalData';
 import { MainMenuCard } from '../styled-components/MainMenuCard';
@@ -81,6 +81,8 @@ function Main() {
               { title: 'Para Llevar', image: <GShippingIcon width='calc(50%)' />, action: () => navigate('/main/command/new/togo') }, // 1
               { title: 'Cuentas', image: <GBooksIcon width='calc(50%)' />, action: () => navigate('/main/administration/tables') }, // 1
               { title: 'Impresoras', image: <GPrinterIcon width='calc(50%)' />, action: () => navigate('/main/administration/printers') }, // 1
+              { title: 'Productos', image: <GInventoryIcon width='calc(50%)' />, action: () => navigate('/main/inventory/products') }, // 1
+              { title: 'Ubicaciones', image: <GSaleReportIcon width='calc(50%)' />, action: () => navigate('/main/administration/ubications') }, // 1
               { title: 'Salir', image: <GLogoutIcon width='calc(50%)' />, action: () => logoutAction() }, // 9
             ].map((element, index) => (
               <Col

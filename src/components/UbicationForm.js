@@ -1,37 +1,62 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Col, Row, Divider, Button, PageHeader, Modal } from 'antd';
-import { DeleteOutlined,  EnvironmentOutlined,  SaveOutlined, WarningOutlined } from '@ant-design/icons';
+import { Input, Col, Row, Divider, Button, PageHeader, Modal, Select } from 'antd';
+import { DeleteOutlined, EnvironmentOutlined, SaveOutlined, WarningOutlined } from '@ant-design/icons';
 import { isEmpty } from 'lodash';
 
 import { customNot } from '../utils/Notifications.js';
 
 import ubicationsServices from '../services/UbicationsServices.js';
+import { printerServices } from '../services/PrinterServices.js';
+import { getUserLocation } from '../utils/LocalData.js';
+
+const { Option } = Select;
 
 function UbicationForm(props) {
   const [fetching, setFetching] = useState(false);
 
   const [formId, setId] = useState(0);
   const [formName, setFormName] = useState('');
+  const [formPrinterId, setFormPrinterId] = useState(0);
+  const [printersData, setPrintersData] = useState([]);
 
   const { open, updateMode, dataToUpdate, onClose } = props;
 
+  async function loadData() {
+    try {
+      const printersResponse = await printerServices.findByLocationId(getUserLocation());
+      setPrintersData(printersResponse.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   useEffect(() => {
-    const { id, name } = dataToUpdate;
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    const { id, name, printerid } = dataToUpdate;
     setId(id || 0);
     setFormName(name || '');
-  }, [ dataToUpdate ]);
+    setFormPrinterId(printerid || 0);
+  }, [dataToUpdate]);
 
   function restoreState() {
     setId(0);
     setFormName('');
+    setFormPrinterId(0);
   }
 
   function validateData() {
     const validId = updateMode ? formId !== 0 : true;
     const validFullName = !isEmpty(formName);
+    const validPrinter = formPrinterId === 0 || formPrinterId === undefined;
+    
     if (!validFullName) customNot('warning', 'Verifique nombre', 'Dato no válido');
+    if (validPrinter) customNot('warning', 'Varifique la impresora', 'Dato no válido');
+
     return (
-      validId && validFullName
+      validId && validFullName && !validPrinter
     );
   }
 
@@ -40,33 +65,36 @@ function UbicationForm(props) {
       if (!updateMode) {
         setFetching(true);
         ubicationsServices.add(
-          formName
+          formName,
+          formPrinterId
         )
-        .then((response) => {
-          customNot('success', 'Operación exitosa', 'Ubicación añadido');
-          restoreState();
-          setFetching(false);
-          onClose(true);
-        })
-        .catch((error) => {
-          setFetching(false);
-          customNot('error', 'Algo salió mal', 'Ubicación no añadido');
-        })
+          .then((response) => {
+            customNot('success', 'Operación exitosa', 'Ubicación añadido');
+            restoreState();
+            setFetching(false);
+            onClose(true);
+          })
+          .catch((error) => {
+            setFetching(false);
+            customNot('error', 'Algo salió mal', 'Ubicación no añadido');
+          })
       } else {
         setFetching(true);
         ubicationsServices.update(
-          formName, formId
+          formName,
+          formPrinterId,
+          formId
         )
-        .then((response) => {
-          customNot('success', 'Operación exitosa', 'Ubicación actualizado');
-          restoreState();
-          setFetching(false);
-          onClose(true);
-        })
-        .catch((error) => {
-          setFetching(false);
-          customNot('error', 'Algo salió mal', 'Ubicación no actualizado');
-        })
+          .then((response) => {
+            customNot('success', 'Operación exitosa', 'Ubicación actualizado');
+            restoreState();
+            setFetching(false);
+            onClose(true);
+          })
+          .catch((error) => {
+            setFetching(false);
+            customNot('error', 'Algo salió mal', 'Ubicación no actualizado');
+          })
       }
     }
   }
@@ -84,17 +112,17 @@ function UbicationForm(props) {
       onOk() {
         setFetching(true);
         ubicationsServices.remove(formId)
-        .then((response) => {
-          restoreState();
-          setFetching(false);
-          onClose(true);
-        })
-        .catch((error) => {
-          setFetching(false);
-          customNot('info', 'Algo salió mal', 'El Ubicación no pudo ser eliminado');
-        });
+          .then((response) => {
+            restoreState();
+            setFetching(false);
+            onClose(true);
+          })
+          .catch((error) => {
+            setFetching(false);
+            customNot('info', 'Algo salió mal', 'El Ubicación no pudo ser eliminado');
+          });
       },
-      onCancel() {},
+      onCancel() { },
     });
   }
 
@@ -118,19 +146,40 @@ function UbicationForm(props) {
       maskClosable={false}
       visible={open}
       footer={null}
-    >      
+    >
       <Row gutter={8}>
         <Col span={24}>
-          <p style={{ margin: '0px 0px 0px 0px' }}>Nombre:</p>  
+          <p style={{ margin: '0px 0px 0px 0px' }}>Nombre:</p>
           <Input onChange={(e) => setFormName(e.target.value)} name={'formName'} value={formName} placeholder={'Estanterías'} />
+        </Col>
+        <Col span={24}>
+          <p style={{ margin: '0px 0px 0px 0px' }}>Impresora:</p>
+          <Select
+            dropdownStyle={{ width: '100%' }}
+            style={{ width: '100%' }}
+            value={formPrinterId}
+            onChange={(value) => setFormPrinterId(value)}
+            optionFilterProp='children'
+            showSearch
+            filterOption={(input, option) =>
+              (option.children).toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            <Option key={0} value={0} disabled>{'No seleccionada'}</Option>
+            {
+              (printersData || []).map(
+                (element) => <Option key={element.printerid} value={element.printerid}>{element.name}</Option>
+              )
+            }
+          </Select>
         </Col>
         <Divider />
         <Col span={24}>
-          <Button 
-            type={'primary'} 
-            icon={<SaveOutlined />} 
-            onClick={(e) => formAction()} 
-            style={{ width: '100%', marginTop: 20 }} 
+          <Button
+            type={'primary'}
+            icon={<SaveOutlined />}
+            onClick={(e) => formAction()}
+            style={{ width: '100%', marginTop: 20 }}
             loading={fetching}
             disabled={fetching}
           >
@@ -138,13 +187,13 @@ function UbicationForm(props) {
           </Button>
         </Col>
         <Col span={24}>
-          <Button 
-            type={'default'} 
+          <Button
+            type={'default'}
             onClick={(e) => {
               if (!updateMode) restoreState();
               onClose(false)
             }}
-            style={{ width: '100%', marginTop: 10 }} 
+            style={{ width: '100%', marginTop: 10 }}
           >
             Cancelar
           </Button>
