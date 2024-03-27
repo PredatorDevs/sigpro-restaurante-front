@@ -14,8 +14,7 @@ import ubicationsServices from '../../services/UbicationsServices.js';
 import measurementUnitsServices from '../../services/MeasurementUnitsServices.js';
 import { columnActionsDef, columnDef } from '../../utils/ColumnsDefinitions.js';
 import generalsServices from '../../services/GeneralsServices.js';
-import { printerServices } from '../../services/PrinterServices.js';
-import { getUserLocation } from '../../utils/LocalData.js';
+
 const { Option } = Select;
 const { confirm } = Modal;
 
@@ -41,6 +40,7 @@ function ProductForm(props) {
   const [ubicationsData, setUbicationsData] = useState([]);
   const [printersData, setPrintersData] = useState([]);
   const [packageTypesData, setPackageTypesData] = useState([]);
+  const [printerSelect, setPrinterSelect] = useState("");
 
   // FIRST STAGE FORM VALUES
   const [formId, setId] = useState(0);
@@ -49,7 +49,6 @@ function ProductForm(props) {
   const [formBrandId, setFormBrandId] = useState(0);
   const [formCategoryId, setFormCategoryId] = useState(0);
   const [formUbicationId, setFormUbicationId] = useState(0);
-  const [formPrinterId, setFormPrinterId] = useState(0);
   const [formBarcode, setFormBarcode] = useState('');
   const [formCost, setFormCost] = useState(0);
   const [formUnitMeasurementId, setFormUnitMeasurementId] = useState(0);
@@ -73,7 +72,7 @@ function ProductForm(props) {
   const [formPriceIndexSelected, setFormPriceIndexSelected] = useState(null);
 
   const { open, updateMode, dataToUpdate, onClose } = props;
-  
+
   async function loadData() {
     setFetching(true);
     try {
@@ -82,12 +81,10 @@ function ProductForm(props) {
       const ubicationsResponse = await ubicationsServices.find();
       const mesUnitRes = await measurementUnitsServices.find();
       const packTypeUnitRes = await generalsServices.findPackageTypes();
-      const printersResponse = await printerServices.findByLocationId(getUserLocation());
 
       setBrandsData(brandsResponse.data);
       setCategoriesData(categoriesResponse.data);
       setUbicationsData(ubicationsResponse.data);
-      setPrintersData(printersResponse.data);
       setUnitMesData(mesUnitRes.data);
       setPackageTypesData(packTypeUnitRes.data);
     } catch (err) {
@@ -129,8 +126,7 @@ function ProductForm(props) {
         productIsService,
         productEnabledForProduction,
         isTaxable,
-        packageContent,
-        productPrinterId
+        packageContent
       } = dataToUpdate;
 
       setId(productId || 0);
@@ -139,7 +135,6 @@ function ProductForm(props) {
       setFormBrandId(productBrandId || 0);
       setFormCategoryId(productCategoryId || 0);
       setFormUbicationId(productUbicationId || 0);
-      setFormPrinterId(productPrinterId || 0);
       setFormUnitMeasurementId(productMeasurementUnitId || 0);
       setFormBarcode(productBarcode || '');
       setFormCost(productCost || 0);
@@ -184,6 +179,11 @@ function ProductForm(props) {
         setFormPrices([[null, null, null, null]]);
         setFormPriceIndexSelected(null);
       }
+
+      if (!isEmpty(ubicationsData)) {
+        const selectUbication = ubicationsData.find(ubication => ubication.id === productUbicationId);
+        setPrinterSelect(selectUbication.printername);
+      }
     }
   }
 
@@ -192,6 +192,7 @@ function ProductForm(props) {
   }, [dataToUpdate]);
 
   function restoreState() {
+    setPrinterSelect("");
     setActiveTab('1');
     setId(0);
     setFormName('');
@@ -199,7 +200,6 @@ function ProductForm(props) {
     setFormBrandId(0);
     setFormCategoryId(0);
     setFormUbicationId(0);
-    setFormPrinterId(0);
     setFormUnitMeasurementId(0);
     setFormBarcode('');
     setFormCost(0);
@@ -219,7 +219,6 @@ function ProductForm(props) {
       !validateSelectedData(formCategoryId, 'Seleccione una categoría')
       || !validateSelectedData(formBrandId, 'Seleccione una marca')
       || !validateSelectedData(formUbicationId, 'Seleccione una ubicación')
-      || !validateSelectedData(formPrinterId, 'Seleccione una impresora')
       || !validateStringData(formName, 'Ingrese un nombre para el producto')
       // || (!validateStringData(formBarcode, `${formIsService ? '' : 'Ingrese un código de barras'}`) && !formIsService)
       // || !validateSelectedData(formUnitMeasurementId, 'Seleccione una unidad de medida')
@@ -234,7 +233,6 @@ function ProductForm(props) {
         formBrandId,
         formCategoryId,
         formUbicationId || null,
-        formPrinterId || null,
         formUnitMeasurementId || 3,
         formBarcode || null,
         formCost,
@@ -340,7 +338,6 @@ function ProductForm(props) {
         && validateSelectedData(formBrandId, 'Seleccione una marca')
         && validateSelectedData(formCategoryId, 'Seleccione una categoria')
         && validateSelectedData(formUbicationId, 'Seleccione una ubicación')
-        && validateSelectedData(formPrinterId, 'Seleccione una impresora')
         && updateMode ? true : !(formPrices[formPrices.length - 1][1] === null)
     );
   }
@@ -356,7 +353,6 @@ function ProductForm(props) {
           formBrandId,
           formCategoryId,
           formUbicationId || null,
-          formPrinterId || null,
           formUnitMeasurementId || 3,
           formBarcode || null,
           formCost,
@@ -566,33 +562,18 @@ function ProductForm(props) {
               />
             </Col>
             <Col span={12}>
-              <p style={styleSheet.labelStyle}>Impresora:</p>
-              <Select
-                dropdownStyle={{ width: '100%' }}
-                style={{ width: '100%' }}
-                value={formPrinterId}
-                onChange={(value) => setFormPrinterId(value)}
-                optionFilterProp='children'
-                showSearch
-                filterOption={(input, option) =>
-                  (option.children).toLowerCase().includes(input.toLowerCase())
-                }
-              >
-                <Option key={0} value={0} disabled>{'No seleccionada'}</Option>
-                {
-                  (printersData || []).map(
-                    (element) => <Option key={element.printerid} value={element.printerid}>{element.name}</Option>
-                  )
-                }
-              </Select>
-            </Col>
-            <Col span={12}>
               <p style={styleSheet.labelStyle}>Ubicación:</p>
               <Select
                 dropdownStyle={{ width: '100%' }}
                 style={{ width: '100%' }}
                 value={formUbicationId}
-                onChange={(value) => setFormUbicationId(value)}
+                onChange={(value) => {
+                  setFormUbicationId(value);
+                  if (!isEmpty(ubicationsData)) {
+                    const selectUbication = ubicationsData.find(ubication => ubication.id === value);
+                    setPrinterSelect(selectUbication.printername);
+                  }
+                }}
                 optionFilterProp='children'
                 showSearch
                 filterOption={(input, option) =>
@@ -606,6 +587,10 @@ function ProductForm(props) {
                   )
                 }
               </Select>
+            </Col>
+            <Col span={12}>
+              <p style={styleSheet.labelStyle}>Impresora:</p>
+              <strong>{printerSelect}</strong>
             </Col>
             <Col span={12}>
               <p style={styleSheet.labelStyle}>Costo:</p>
@@ -1124,7 +1109,7 @@ function ProductForm(props) {
           </Button>
         </Col>
       </Row>
-    </Modal>
+    </Modal >
   )
 }
 
