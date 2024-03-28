@@ -29,6 +29,8 @@ import bottlesIcon from '../img/icons/inventory/bottles.png';
 import materialsIcon from '../img/icons/inventory/materials.png';
 
 // MAIN
+import togoIcon from '../img/icons/main/togo.png';
+import delivertyIcon from '../img/icons/main/delivery.png';
 import administrationIcon from '../img/icons/main/administration.png';
 import administratorIcon from '../img/icons/main/administrator.png';
 import cashierThreeIcon from '../img/icons/main/cashier-three.png';
@@ -140,6 +142,8 @@ export const GBottlesIcon = ({ width = '100px', addBackground = false, colorBack
 export const GMaterialsIcon = ({ width = '100px', addBackground = false, colorBackground = 'transparent' }) => (<ImageProvider fileRoute={materialsIcon} width={width} addBackground={addBackground} colorBackground={colorBackground} />);
 
 // MAIN
+export const GToGoIcon = ({ width = '100px', addBackground = false, colorBackground = 'transparent' }) => (<ImageProvider fileRoute={togoIcon} width={width} addBackground={addBackground} colorBackground={colorBackground} />);
+export const GDeliberyIcon = ({ width = '100px', addBackground = false, colorBackground = 'transparent' }) => (<ImageProvider fileRoute={delivertyIcon} width={width} addBackground={addBackground} colorBackground={colorBackground} />);
 export const GAdministrationIcon = ({ width = '100px', addBackground = false, colorBackground = 'transparent' }) => (<ImageProvider fileRoute={administrationIcon} width={width} addBackground={addBackground} colorBackground={colorBackground} />);
 export const GAdministratorIcon = ({ width = '100px', addBackground = false, colorBackground = 'transparent' }) => (<ImageProvider fileRoute={administratorIcon} width={width} addBackground={addBackground} colorBackground={colorBackground} />);
 export const GCashierThreeIcon = ({ width = '100px', addBackground = false, colorBackground = 'transparent' }) => (<ImageProvider fileRoute={cashierThreeIcon} width={width} addBackground={addBackground} colorBackground={colorBackground} />);

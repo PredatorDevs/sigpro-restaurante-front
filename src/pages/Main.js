@@ -8,7 +8,7 @@ import sigproLogo from '../img/logos/sigpro-logo.png';
 
 import { LogoutOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import { GAddProductIcon, GAdministrationIcon, GBooksIcon, GCashierIcon, GCashierThreeIcon, GContractIcon, GCustomersIcon, GDispatchIcon, GExpensesIcon, GGoBackIcon, GInventoryIcon, GKardexIcon, GLogoutIcon, GOrdersIcon, GPendingSalesIcon, GPlacesIcon, GPolicyIcon, GPrinterIcon, GProductionIcon, GPurchasesIcon, GReportsIcon, GRequisitionIcon, GSaleReportIcon, GSalesAgentIcon, GShippingIcon, GSupplierIcon, GTicketIcon, GTrackIcon, GTruckIcon } from '../utils/IconImageProvider';
+import { GAddProductIcon, GAdministrationIcon, GBooksIcon, GCashierIcon, GCashierThreeIcon, GContractIcon, GCustomersIcon, GDeliberyIcon, GDispatchIcon, GExpensesIcon, GGoBackIcon, GInventoryIcon, GKardexIcon, GLogoutIcon, GOrdersIcon, GPendingSalesIcon, GPlacesIcon, GPolicyIcon, GPrinterIcon, GProductionIcon, GPurchasesIcon, GReportsIcon, GRequisitionIcon, GSaleReportIcon, GSalesAgentIcon, GShippingIcon, GSupplierIcon, GTicketIcon, GToGoIcon, GTrackIcon, GTruckIcon } from '../utils/IconImageProvider';
 import { DeveloperInformation } from '../styled-components/DeveloperInformation';
 import { getUserLocation, getUserLocationAddress, getUserLocationName } from '../utils/LocalData';
 import { MainMenuCard } from '../styled-components/MainMenuCard';
@@ -77,8 +77,8 @@ function Main() {
           {
             [
               { title: 'Comandas', image: <GCashierIcon width='calc(50%)' />, action: () => navigate('/main/command/new') }, // 1
-              { title: 'Delivery', image: <GTrackIcon width='calc(50%)' />, action: () => navigate('/main/command/new/delivery') }, // 1
-              { title: 'Para Llevar', image: <GShippingIcon width='calc(50%)' />, action: () => navigate('/main/command/new/togo') }, // 1
+              { title: 'Delivery', image: <GDeliberyIcon width='calc(50%)' />, action: () => navigate('/main/command/new/delivery') }, // 1
+              { title: 'Para Llevar', image: <GToGoIcon width='calc(50%)' />, action: () => navigate('/main/command/new/togo') }, // 1
               { title: 'Cuentas', image: <GBooksIcon width='calc(50%)' />, action: () => navigate('/main/administration/tables') }, // 1
               { title: 'Impresoras', image: <GPrinterIcon width='calc(50%)' />, action: () => navigate('/main/administration/printers') }, // 1
               { title: 'Productos', image: <GInventoryIcon width='calc(50%)' />, action: () => navigate('/main/inventory/products') }, // 1

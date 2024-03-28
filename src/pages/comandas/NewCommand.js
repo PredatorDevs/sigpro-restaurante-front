@@ -556,8 +556,7 @@ function NewCommand() {
         try {
             const response = await orderSalesServices.getPreAccountTicket(orderId);
             const data = response.data;
-            if(!isEmpty(data))
-            {
+            if (!isEmpty(data)) {
                 const ticketBody = {
                     orderDetails: data[0],
                     orderInfo: data[1][0],
@@ -565,10 +564,10 @@ function NewCommand() {
                     date: getFormattedDate(),
                     time: getFormattedTime(),
                 }
-                
+
                 await printerServices.printTicketPreAccount(ticketBody);
             }
-            
+
         } catch (error) {
             console.error(error);
             customNot('info', 'No es posible crear el ticket', 'No fue posible generar el PDF');
@@ -591,6 +590,42 @@ function NewCommand() {
                 <Row style={{ width: '100%', maxWidth: '100%', maxHeight: '100%' }}>
 
                     <Col span={12} style={{ paddingRight: 5 }}>
+                        <div style={{ width: '100%' }}>
+                            <Button
+                                loading={chargeKitchen}
+                                type={'primary'}
+                                icon={<SendOutlined />}
+                                disabled={!showButtons}
+                                style={{ margin: 5, width: 'calc(100% - 10px)' }}
+                                onClick={() => sendToKitchen()}
+                            // disabled={fetching}
+                            >
+
+                                ENVIAR A COCINA
+                            </Button>
+                            <div style={{ display: "flex", width: '100%', justifyContent: "space-between" }}>
+                                <Button
+                                    hidden
+                                    type={'danger'}
+                                    icon={<CloseOutlined />}
+                                    style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
+                                    onClick={() => redirectToMain()}
+                                // onClick={() => formAction()}
+                                // disabled={fetching}
+                                >
+                                    Salir
+                                </Button>
+                                <Button
+                                    loading={chargePreAccount}
+                                    icon={<CopyOutlined />}
+                                    disabled={!showButtons}
+                                    style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
+                                    onClick={() => createPreCuenta()}
+                                >
+                                    Pre-Cuenta
+                                </Button>
+                            </div>
+                        </div>
                         <div style={{
                             display: "flex",
                             gap: 15,
@@ -688,42 +723,6 @@ function NewCommand() {
                                                 onChangeTable={changeTable}
                                             />
                                         ))}
-                                    </div>
-
-                                    <div style={{ width: '100%' }}>
-                                        <Button
-                                            loading={chargeKitchen}
-                                            type={'primary'}
-                                            icon={<SendOutlined />}
-                                            disabled={!showButtons}
-                                            style={{ margin: 5, width: 'calc(100% - 10px)' }}
-                                            onClick={() => sendToKitchen()}
-                                        // disabled={fetching}
-                                        >
-
-                                            ENVIAR A COCINA
-                                        </Button>
-                                        <div style={{ display: "flex", width: '100%', justifyContent: "space-between" }}>
-                                            <Button
-                                                type={'danger'}
-                                                icon={<CloseOutlined />}
-                                                style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                                onClick={() => redirectToMain()}
-                                            // onClick={() => formAction()}
-                                            // disabled={fetching}
-                                            >
-                                                Salir
-                                            </Button>
-                                            <Button
-                                                loading={chargePreAccount}
-                                                icon={<CopyOutlined />}
-                                                disabled={!showButtons}
-                                                style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                                onClick={() => createPreCuenta()}
-                                            >
-                                                Pre-Cuenta
-                                            </Button>
-                                        </div>
                                     </div>
                                 </div>
                             </Spin>
