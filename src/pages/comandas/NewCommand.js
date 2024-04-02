@@ -64,7 +64,7 @@ const styleSheet = {
             marginBottom: '5px',
             padding: 5,
             width: '70%',
-            height: 25
+            height: '10%'
         },
         detailLabels: {
             normal: {
@@ -589,42 +589,28 @@ function NewCommand() {
             <Wrapper>
                 <Row style={{ width: '100%', maxWidth: '100%', maxHeight: '100%' }}>
 
-                    <Col span={12} style={{ paddingRight: 5 }}>
-                        <div style={{ width: '100%' }}>
+                    <Col className="command-size">
+                        <div style={{ width: '100%', display: 'flex' }}>
                             <Button
                                 loading={chargeKitchen}
                                 type={'primary'}
                                 icon={<SendOutlined />}
                                 disabled={!showButtons}
-                                style={{ margin: 5, width: 'calc(100% - 10px)' }}
+                                style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
                                 onClick={() => sendToKitchen()}
                             // disabled={fetching}
                             >
-
                                 ENVIAR A COCINA
                             </Button>
-                            <div style={{ display: "flex", width: '100%', justifyContent: "space-between" }}>
-                                <Button
-                                    hidden
-                                    type={'danger'}
-                                    icon={<CloseOutlined />}
-                                    style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                    onClick={() => redirectToMain()}
-                                // onClick={() => formAction()}
-                                // disabled={fetching}
-                                >
-                                    Salir
-                                </Button>
-                                <Button
-                                    loading={chargePreAccount}
-                                    icon={<CopyOutlined />}
-                                    disabled={!showButtons}
-                                    style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                    onClick={() => createPreCuenta()}
-                                >
-                                    Pre-Cuenta
-                                </Button>
-                            </div>
+                            <Button
+                                loading={chargePreAccount}
+                                icon={<CopyOutlined />}
+                                disabled={!showButtons}
+                                style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
+                                onClick={() => createPreCuenta()}
+                            >
+                                Pre-Cuenta
+                            </Button>
                         </div>
                         <div style={{
                             display: "flex",
@@ -653,11 +639,11 @@ function NewCommand() {
                                     }
                                 </>}
                             <div style={styleSheet.tableFooter.footerCotainer}>
-                                <div style={styleSheet.tableFooter.detailContainerLetters}>
+                                <div className="letters-total" style={styleSheet.tableFooter.detailContainerLetters}>
                                     <p style={styleSheet.tableFooter.detailLabels.normal}>{`SON:`}</p>
                                     <p style={styleSheet.tableFooter.detailLabels.normal}>{`${numberToLetters(getTotalCommand())}`}</p>
                                 </div>
-                                <div style={{ width: '30%' }}>
+                                <div className="other-totals" style={{ width: '30%' }}>
                                     <div style={styleSheet.tableFooter.detailContainer}>
                                         <p style={styleSheet.tableFooter.detailLabels.normal}>{`GRAVADO:`}</p>
                                         <p style={styleSheet.tableFooter.detailLabels.normal}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
@@ -729,9 +715,9 @@ function NewCommand() {
                         </div>
                     </Col>
 
-                    <Col span={12} style={{ position: "relative" }}>
+                    <Col className="products-size" style={{ position: "relative" }}>
                         <CategoriesScroll categories={categories} selectedCategory={selectedCategory} onClick={selectcategory} />
-                        <div style={{ overflowX: "auto", position: "absolute", height: '100%', maxHeight: 'calc(100% - 120px)', width: '100%' }}>
+                        <div className="product-cont">
                             <ProductsCard products={availableProducts} loading={loading} selectedProduct={selectedProduct} />
                         </div>
                     </Col>

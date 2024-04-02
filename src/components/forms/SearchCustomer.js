@@ -61,7 +61,7 @@ function SearchCustomer(props) {
                     title={`Buscar Cliente`}
                 />
             }
-            width={800}
+            className="search-customer-form"
             placement="right"
             onClose={(e) => {
                 restoreState();

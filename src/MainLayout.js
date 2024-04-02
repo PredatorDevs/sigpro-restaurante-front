@@ -598,14 +598,9 @@ const MainLayout = () => {
           }}
         >
           <div
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}
+            className='site-layout-navbar'
           >
-            <Space size={'small'}>
+            <Space size={'small'} className='site-layout-space'>
               <Avatar size={32} style={{ backgroundColor: '#2f54eb' }} icon={<UserOutlined />} />
               <p style={{ margin: 0 }}>{`${getUserName()}`}</p>
               <p style={{ margin: 0, fontSize: 11, color: 'gray' }}>{`${getUserIsAdmin() ? 'Administrativo' : 'Operativo'}`}</p>
@@ -618,10 +613,14 @@ const MainLayout = () => {
                   <BellTwoTone style={{ fontSize: '20px' }} />
                 </Badge>
               </div> */}
+              <div className='site-layout-buttons-space'>
+                <Button type={'primary'} className='site-layout-redirect' icon={<HomeOutlined />} onClick={() => redirectToMain()}></Button>
+                <Button type={'primary'} className='site-layout-close' danger icon={<LogoutOutlined />} onClick={() => logoutAction()}></Button>
+              </div>
             </Space>
-            <div style={{display: 'flex', gap: 10}}>
-              <Button type={'primary'} icon={<HomeOutlined />} onClick={() => redirectToMain()}>Pagina Principal</Button>
-              <Button type={'primary'} danger icon={<LogoutOutlined />} onClick={() => logoutAction()}>Cerrar sesión</Button>
+            <div className='site-layout-buttons'>
+              <Button type={'primary'} className='site-layout-redirect' icon={<HomeOutlined />} onClick={() => redirectToMain()}>Pagina Principal</Button>
+              <Button type={'primary'} className='site-layout-close' danger icon={<LogoutOutlined />} onClick={() => logoutAction()}>Cerrar sesión</Button>
             </div>
           </div>
         </Header>

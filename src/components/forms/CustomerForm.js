@@ -394,7 +394,7 @@ function CustomerForm(props) {
           ]}
         />
       }
-      width={800}
+      className="search-customer-form"
       placement="right"
       onClose={(e) => {
         restoreState();

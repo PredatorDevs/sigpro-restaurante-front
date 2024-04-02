@@ -77,11 +77,10 @@ function AddProduct(props) {
 
     useEffect(() => {
         loadProductData(productSelected.productName);
-        if(provitionalClient !== "")
-        {
+        if (provitionalClient !== "") {
             setNameOrder(provitionalClient);
         }
-        
+
     }, [productSelected, open])
 
     function restoreState() {
@@ -158,8 +157,8 @@ function AddProduct(props) {
             // bodyStyle={{ backgroundColor: '#353941', border: '1px solid #787B80' }}
             footer={null}
         >
-            <div style={{ display: 'flex', justifyContent: "space-between" }}>
-                <Row gutter={[12, 12]} style={{ width: '50%' }}>
+            <div className="add-modal">
+                <Row className="command-size" gutter={[12, 12]} style={{justifyContent: "center"}}>
                     <Col span={24} style={{ display: 'flex', flexDirection: 'column' }}>
                         <Space>
                             <p
@@ -198,7 +197,7 @@ function AddProduct(props) {
                         <Numpad onKeyPress={handleKeyPress} onDelete={handleDelete} valueNumpad={inputNumpad} validCero={true} />
                     </Col>
                 </Row>
-                <Row gutter={[12, 12]} style={{ width: '50%' }}>
+                <Row className="products-size" gutter={[12, 12]} style={{justifyContent: "center"}}>
                     {!updateMode ?
                         <Col
                             style={{ display: 'flex', flexDirection: 'column' }}>
@@ -252,6 +251,7 @@ function AddProduct(props) {
                 <Col span={12}>
                     <Button
                         danger
+                        className="cancel-button-add"
                         type={'primary'}
                         size={'large'}
                         icon={<CloseOutlined />}
@@ -305,7 +305,7 @@ function AddProduct(props) {
                         }}
                         style={{ width: '100%' }}
                     >
-                        {!updateMode ? "Crear Order" : "Añadir Producto"}
+                        {!updateMode ? "Crear Orden" : "Añadir Producto"}
                     </Button>
                 </Col>
             </Row>

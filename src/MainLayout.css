@@ -25,9 +25,11 @@
   width: 3px;
   height: 3px;
 }
+
 .site-sider::-webkit-scrollbar-track {
   border-radius: 3px;
 }
+
 .site-sider::-webkit-scrollbar-thumb {
   background: #221D47;
   width: 3px;
@@ -43,16 +45,152 @@
   background: #fff;
 }
 
+.site-layout .site-layout-background .site-layout-navbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .site-layout-content::-webkit-scrollbar {
   width: 3px;
   height: 3px;
 }
+
 .site-layout-content::-webkit-scrollbar-track {
   border-radius: 3px;
 }
+
 .site-layout-content::-webkit-scrollbar-thumb {
   background: #e6f4ff;
   width: 3px;
   height: 3px;
   border-radius: 3px;
+}
+
+
+.site-layout .site-layout-background .site-layout-navbar .site-layout-space .site-layout-buttons-space {
+  display: none;
+}
+
+.site-layout .site-layout-background .site-layout-navbar .site-layout-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.command-size,
+.products-size {
+  display: block;
+  flex: 0 0 50%;
+  max-width: 50% !important;
+  padding-right: 5px;
+}
+
+.product-cont {
+  overflow-x: auto;
+  position: absolute;
+  height: 100%;
+  max-height: calc(100% - 120px);
+  width: 100%;
+}
+
+.products-ind {
+  display: grid;
+  gap: 15px;
+  grid-template-rows: auto auto auto;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+.card-product {
+  width: 250;
+  height: 80;
+  border-radius: 5;
+  cursor: pointer;
+}
+
+.add-modal {
+  display: flex;
+  justify-content: space-between;
+}
+
+.search-customer-form {
+  width: 800px;
+}
+
+@media only screen and (max-width: 805px) {
+
+  .site-layout-content {
+    margin: 0 !important;
+  }
+
+  .site-layout .site-layout-background {
+    padding: 0 !important;
+  }
+
+  .site-layout .site-layout-background .site-layout-navbar {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .site-layout .site-layout-background .site-layout-navbar .site-layout-space {
+    width: 100%;
+    padding: 0 5px;
+  }
+
+  .site-layout .site-layout-background .site-layout-navbar .site-layout-space .site-layout-buttons-space {
+    display: flex;
+    gap: 10px;
+    position: absolute;
+    right: 5px;
+    top: 15px;
+  }
+
+  .site-layout .site-layout-background .site-layout-navbar .site-layout-buttons {
+    display: none;
+  }
+
+  .command-size,
+  .products-size {
+    display: block;
+    flex: 0 0 100%;
+    max-width: 100% !important;
+    padding-right: 0 !important;
+  }
+
+  .products-size {
+    padding-top: 5px !important;
+  }
+
+  .command-size .letters-total,
+  .command-size .other-totals {
+    width: 50% !important;
+  }
+
+  .product-cont {
+    overflow-x: auto;
+    position: relative;
+  }
+
+  .products-ind {
+    padding: 5px;
+    width: 100%;
+    display: grid;
+    gap: 15px;
+    max-height: 280px;
+    overflow-x: auto;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .add-modal {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cancel-button-add, #new-sale-add-detail-button {
+    font-size: 0.8rem;
+  }
+
+  .search-customer-form {
+    width: 100%;
+  }
 }
