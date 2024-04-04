@@ -653,7 +653,7 @@ function NewCommand() {
                                         <p style={styleSheet.tableFooter.detailLabels.normal}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
                                     </div>
                                     <div style={styleSheet.tableFooter.detailContainer}>
-                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`EXENTO:`}</p>
+                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`PROPINA:`}</p>
                                         <p style={styleSheet.tableFooter.detailLabels.normal}>{`$0.00`}</p>
                                     </div>
                                     <div style={styleSheet.tableFooter.detailContainer}>

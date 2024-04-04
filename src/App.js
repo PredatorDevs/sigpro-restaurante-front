@@ -51,6 +51,7 @@ import ControlCommand from './pages/comandas/ControlCommand';
 import NewCommandDelivery from './pages/comandas/CommandDelivery';
 import NewCommandToGo from './pages/comandas/CommandToGo';
 import Printers from './pages/printers/printers';
+import Taxes from './pages/taxes/Taxes';
 
 const App = () => {
   const isLoggedIn = getUserIsLoggedIn();
@@ -145,6 +146,7 @@ const App = () => {
         {renderProtectedRoute('command/new/delivery', [1, 2, 5], <NewCommandDelivery />)}
         {renderProtectedRoute('command/new/togo', [1, 2, 5], <NewCommandToGo />)}
         {renderProtectedRoute('administration/printers', [1, 2, 5], <Printers />)}
+        {renderProtectedRoute('administration/taxes', [1, 2, 5], <Taxes />)}
         <Route path='*' element={<Page404 />} />
       </Route>
       <Route path="/noauth" element={<Page403 />}></Route>

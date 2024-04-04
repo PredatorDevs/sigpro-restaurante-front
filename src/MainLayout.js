@@ -221,6 +221,10 @@ const MainLayout = () => {
         <Breadcrumb.Item>Administracion</Breadcrumb.Item>
         <Breadcrumb.Item>Ubicaciones</Breadcrumb.Item>
       </>);
+      case "/main/administration/taxes": return (<>
+        <Breadcrumb.Item>Administracion</Breadcrumb.Item>
+        <Breadcrumb.Item>Adicionales</Breadcrumb.Item>
+      </>);
       case "/main/administration/delivery-routes": return (<>
         <Breadcrumb.Item>Principal</Breadcrumb.Item>
         <Breadcrumb.Item>Administracion</Breadcrumb.Item>
@@ -317,6 +321,7 @@ const MainLayout = () => {
       case "/main/administration/categories": return ["sub8"];
       case "/main/administration/brands": return ["sub8"];
       case "/main/administration/ubications": return ["sub8"];
+      case "/main/administration/taxes": return ["sub8"];
       case "/main/administration/delivery-routes": return ["sub8"];
       case "/main/administration/general-data": return ["sub8"];
       case "/main/administration/tables": return ["sub8"];
@@ -380,6 +385,7 @@ const MainLayout = () => {
       case "/main/command/new/delivery": return "39";
       case "/main/command/new/togo": return "40";
       case "/main/administration/printers": return "41";
+      case "/main/administration/taxes": return "42";
       default: return "1";
     }
   }
@@ -583,6 +589,7 @@ const MainLayout = () => {
               case '39': navigate('/main/command/new/delivery'); break;
               case '40': navigate('/main/command/new/togo'); break;
               case '41': navigate('/main/administration/printers'); break;
+              case '42': navigate('/main/administration/taxes'); break;
               default: navigate('/main'); break;
             }
             setSelectedMenuKey(a.key);
