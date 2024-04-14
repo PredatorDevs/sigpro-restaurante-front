@@ -16,7 +16,8 @@ function ProductsCard({ products, selectedProduct, loading }) {
                     <div className="products-ind">
 
                         {products.map(product => (
-                            <Card key={product.productId}
+                            <Card
+                                key={product.productId}
                                 className="card-product"
                                 style={{
                                     backgroundColor: '#E4FDF9',

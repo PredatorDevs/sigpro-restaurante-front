@@ -6,7 +6,7 @@ import { isEmpty } from 'lodash';
 
 import ColorPicker from '../pickers/ColorPicker.js';
 
-import { printerServices } from '../../services/PrinterServices.js';
+import { printersServices } from '../../services/PrinterServices.js';
 
 import { customNot } from '../../utils/Notifications.js';
 import { getUserLocation, getUserId } from '../../utils/LocalData';
@@ -33,7 +33,7 @@ function PrinterFrom(props) {
         if (validData()) {
             if (!updateMode) {
                 setFetching(true);
-                printerServices.addPrinter(
+                printersServices.addPrinter(
                     name,
                     ip,
                     port,
@@ -52,7 +52,7 @@ function PrinterFrom(props) {
                     });
             } else {
                 setFetching(true);
-                printerServices.updatePrinter(
+                printersServices.updatePrinter(
                     name,
                     ip,
                     port,
@@ -108,7 +108,7 @@ function PrinterFrom(props) {
             cancelText: 'Cancelar',
             onOk() {
                 setFetching(true);
-                printerServices.deletePrinter(
+                printersServices.deletePrinter(
                     printerid,
                     getUserId()
                 )

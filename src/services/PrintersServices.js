@@ -29,6 +29,9 @@ printerServices.printTicketPreAccount = (ticketBody) =>
 printerServices.printPackOff = (ticketBody) =>
   localPrinterGenRequest(`post`, `/printer/printPackOff`, { ticketBody }, 'Se ha realizado el envío CF a la impresora', 'Acción terminada', 'No se pudo establecer conexión con la impresora', 'Error desconocido');
 
+printerServices.validateConnection = (ip, port) =>
+  localPrinterGenRequest(`post`, `/printer/validate-connection`, {ip, port}, '', '', '', '');
+
 export {
   printerServices
 }

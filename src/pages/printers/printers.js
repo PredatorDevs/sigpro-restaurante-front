@@ -6,7 +6,7 @@ import { find } from 'lodash';
 import { AppstoreAddOutlined, SyncOutlined } from "@ant-design/icons";
 
 import { getUserLocation } from '../../utils/LocalData';
-import { printerServices } from "../../services/PrinterServices";
+import { printersServices } from "../../services/PrinterServices";
 import { columnActionsDef, columnDef } from '../../utils/ColumnsDefinitions';
 
 import { filterData } from '../../utils/Filters';
@@ -28,7 +28,7 @@ function Printers() {
 
     async function loadData() {
         setFetching(true);
-        const response = await printerServices.findByLocationId(getUserLocation());
+        const response = await printersServices.findByLocationId(getUserLocation());
         setEntityData(response.data);
         setFetching(false);
     }

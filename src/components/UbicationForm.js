@@ -6,7 +6,7 @@ import { isEmpty } from 'lodash';
 import { customNot } from '../utils/Notifications.js';
 
 import ubicationsServices from '../services/UbicationsServices.js';
-import { printerServices } from '../services/PrinterServices.js';
+import { printersServices } from '../services/PrinterServices.js';
 import { getUserLocation } from '../utils/LocalData.js';
 
 const { Option } = Select;
@@ -23,7 +23,7 @@ function UbicationForm(props) {
 
   async function loadData() {
     try {
-      const printersResponse = await printerServices.findByLocationId(getUserLocation());
+      const printersResponse = await printersServices.findByLocationId(getUserLocation());
       setPrintersData(printersResponse.data);
     } catch (error) {
       console.log(error);

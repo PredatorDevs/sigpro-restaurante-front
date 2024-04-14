@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Row, Col, Empty, Result, Button, Modal, Table, Card, Spin } from "antd";
+import { Row, Col, Empty, Result, Button, Modal, Table, Card, Spin, Tag } from "antd";
 import { SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined, CloseOutlined } from "@ant-design/icons";
 
 import { columnActionsDef, columnDef, columnMoneyDef } from '../../utils/ColumnsDefinitions';
@@ -30,9 +30,8 @@ import { isEmpty, forEach, find } from "lodash";
 
 import AuthorizeUserPINCode from "../../components/confirmations/AuthorizeUserPINCode.js";
 
-import download from "downloadjs";
-import reportsServices from "../../services/ReportsServices.js";
 import { printerServices } from "../../services/PrintersServices.js";
+import { printersServices } from "../../services/PrinterServices.js";
 
 const styleSheet = {
     tableFooter: {
@@ -142,6 +141,8 @@ function NewCommand() {
     const [chargePreAccount, setChargePreAccount] = useState(false);
     const [chargeKitchen, setChargeKitchen] = useState(false);
 
+    const [printers, setPrinters] = useState({});
+
     // #region Order Details
     async function getOrderInfo(tableId) {
         try {
@@ -230,13 +231,48 @@ function NewCommand() {
         const response = await tablesServices.findAllInCommand(getUserLocation(), 1);
         setTablesAvailable(response.data[0]);
 
-
         const responseCategories = await categoriesServices.find();
         setCategories(responseCategories.data);
+
+        const responsePrinters = await printersServices.findByLocationId(getUserLocation());
+        setPrinters(responsePrinters.data);
 
         if (responseCategories.data.length > 0) {
             setSelectedCategory(responseCategories.data[0]);
         }
+    }
+
+    async function validateStateOfPrinters() {
+
+        if (isEmpty(printers) || printers.length === 0) {
+            console.log('There are no printers to validate');
+            customNot('warning', `No hay impresoras disponibles`, 'Verificar disponibilidad');
+            return false;
+        }
+
+        let responsesSuccess = true;
+
+        if (!isEmpty(printers)) {
+            for (const element of printers) {
+                try {
+                    const response = await printerServices.validateConnection(element.ip, element.port);
+                    if (response.status !== 200) {
+                        console.log(`Impresora en ${element.ip}:${element.port} no esta conectada correctamente.`);
+                        customNot('warning', `La impresora ${element.name} no se encuentra disponible`, 'Verificar disponibilidad');
+                        responsesSuccess = false;
+                        break;
+                    } else {
+                        console.log(`Impresora en ${element.ip}:${element.port} conectada correctamente.`);
+                    }
+                } catch (error) {
+                    console.error(`Error al conectar con la impresora en ${element.ip}:${element.port}:`, error);
+                    responsesSuccess = false;
+                    break;
+                }
+            }
+        }
+
+        return responsesSuccess;
     }
 
     async function loadMyTables() {
@@ -442,7 +478,7 @@ function NewCommand() {
                     date: getFormattedDate(),
                     time: getFormattedTime(),
                 }
-
+            
                 await printerServices.printTicketKitchen(ticketBody);
             }
         } catch (error) {
@@ -453,10 +489,19 @@ function NewCommand() {
 
     async function sendToKitchen() {
         try {
+            setChargeKitchen(true);
             const orderId = orderInTable.id;
 
             const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
             if (detailActives.length >= 1) {
+
+                const validationOfPrinters = await validateStateOfPrinters();
+                if (!validationOfPrinters) {
+                    setChargeKitchen(false);
+                    customNot('warning', 'Impresora/s no disponible/s', 'No es posible enviar a cocina');
+                    return;
+                }
+
                 const activeIds = detailActives.map(obj => obj.id);
 
                 Modal.confirm({
@@ -486,9 +531,11 @@ function NewCommand() {
                 });
 
             } else {
+                setChargeKitchen(false);
                 customNot('info', 'Todos los detalles en cocina', 'Todos los detalles ya se encuentran en cocina');
             }
         } catch (error) {
+            setChargeKitchen(false);
             console.log(error);
             customNot('info', 'Algo salió mal', 'No se pudo enviar a cocina');
         }
@@ -516,36 +563,68 @@ function NewCommand() {
         columnDef({ title: 'Detalle', dataKey: 'ProductName' }),
         columnMoneyDef({ title: 'Precio Unitario', dataKey: 'unitPrice' }),
         columnMoneyDef({ title: 'Gravado', dataKey: 'TotalDetail' }),
-        columnActionsDef(
+        columnDef(
             {
                 title: 'Acciones',
                 dataKey: 'id',
-                detail: false,
-                edit: false,
-                del: true,
-                delAction: async (value) => {
-                    const lengthProducts = detailsOrder.length;
-                    const productCheck = find(detailsOrder, ['id', value]);
+                customRender: (value, record) => (
+                    <div style={{ display: "flex", justifyContent: 'center' }}>
+                        {
+                            record.isActive === 0 ? (
+                                <Tag
+                                    color={'blue'}
+                                    style={{
+                                        display: 'block',
+                                        width: 30,
+                                        cursor: "pointer"
+                                    }}
+                                    onClick={() => {
+                                        customNot('info', 'No se puede eliminar el detalle', 'El detalle ya se encuentra en cocina');
+                                    }}
+                                >
+                                    <DeleteOutlined />
+                                </Tag >
+                            ) : (
 
-                    if (lengthProducts === 1) {
-                        customNot('warning', 'No se puede eliminar el detalle', 'La cuenta no puede quedar sin detalles');
-                    } else if (productCheck.isActive === 0) {
-                        customNot('info', 'No se puede eliminar el detalle', 'El detalle ya se encuentra en cocina');
-                    } else {
-                        confirm({
-                            centered: true,
-                            title: '¿Desea eliminar este detalle?',
-                            icon: <DeleteOutlined />,
-                            content: 'Acción irreversible',
-                            okType: 'danger',
-                            okText: 'Eliminar',
-                            async onOk() {
-                                await deleteProductDetails(value);
-                            },
-                            onCancel() { },
-                        });
-                    }
-                },
+                                <Tag
+                                    color={'red'}
+                                    style={{
+                                        display: 'block',
+                                        width: 30,
+                                        cursor: "pointer"
+                                    }}
+                                    onClick={() => {
+                                        const lengthProducts = detailsOrder.length;
+                                        const productCheck = find(detailsOrder, ['id', value]);
+
+                                        if (lengthProducts === 1) {
+                                            customNot('warning', 'No se puede eliminar el detalle', 'La cuenta no puede quedar sin detalles');
+                                        } else if (productCheck.isActive === 0) {
+                                            customNot('info', 'No se puede eliminar el detalle', 'El detalle ya se encuentra en cocina');
+                                        } else {
+                                            confirm({
+                                                centered: true,
+                                                title: '¿Desea eliminar este detalle?',
+                                                icon: <DeleteOutlined />,
+                                                content: 'Acción irreversible',
+                                                okType: 'danger',
+                                                okText: 'Eliminar',
+                                                async onOk() {
+                                                    await deleteProductDetails(value);
+                                                },
+                                                onCancel() { },
+                                            });
+                                        }
+                                    }}
+                                >
+                                    <DeleteOutlined />
+                                </Tag >
+                            )
+                        }
+                    </div>
+
+                )
+
             }
         ),
     ];
