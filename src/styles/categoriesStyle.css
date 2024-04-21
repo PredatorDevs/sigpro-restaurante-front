@@ -11,3 +11,21 @@
 .scrollCategories::-webkit-scrollbar {
     display: none;
 }
+
+.icon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.icon-grid img {
+    width: 100%;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.icon-grid img.selected {
+    background-color: #59c0ff;
+    border-radius: 5px;
+    transition: 0.2s ease-in;
+}

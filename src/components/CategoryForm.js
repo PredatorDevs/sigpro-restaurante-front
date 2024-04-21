@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Input, Col, Row, Divider, Button, PageHeader, Modal } from 'antd';
 import { AppstoreAddOutlined, DeleteOutlined, SaveOutlined, WarningOutlined } from '@ant-design/icons';
 import { isEmpty } from 'lodash';
+import IconCategoriesProvider from '../utils/IconCategoriesProvider.js';
 
 import { customNot } from '../utils/Notifications.js';
 
@@ -12,26 +13,33 @@ function CategoryForm(props) {
 
   const [formId, setId] = useState(0);
   const [formName, setFormName] = useState('');
+  const [formIcon, setFormIcon] = useState(null);
 
   const { open, updateMode, dataToUpdate, onClose } = props;
 
   useEffect(() => {
-    const { id, name } = dataToUpdate;
+    const { id, name, icon } = dataToUpdate;
     setId(id || 0);
     setFormName(name || '');
+    setFormIcon(icon || 0);
   }, [dataToUpdate]);
 
   function restoreState() {
     setId(0);
     setFormName('');
+    setFormIcon(null);
   }
 
   function validateData() {
     const validId = updateMode ? formId !== 0 : true;
     const validFullName = !isEmpty(formName);
+    const validIcon = formIcon !== null;
+
     if (!validFullName) customNot('warning', 'Verifique nombre', 'Dato no válido');
+    if (!validIcon) customNot('warning', 'Verifique El Icono', 'Dato no válido');
+
     return (
-      validId && validFullName
+      validId && validFullName && validIcon
     );
   }
 
@@ -40,7 +48,7 @@ function CategoryForm(props) {
       if (!updateMode) {
         setFetching(true);
         categoriesServices.add(
-          formName
+          formName, formIcon
         )
           .then((response) => {
             customNot('success', 'Operación exitosa', 'Categoria añadido');
@@ -55,7 +63,7 @@ function CategoryForm(props) {
       } else {
         setFetching(true);
         categoriesServices.update(
-          formName, formId
+          formName, formId, formIcon
         )
           .then((response) => {
             customNot('success', 'Operación exitosa', 'Categoria actualizado');
@@ -98,6 +106,10 @@ function CategoryForm(props) {
     });
   }
 
+  const changeIcon = (iconId) => {
+    setFormIcon(iconId);
+  }
+
   return (
     <Modal
       title={
@@ -123,6 +135,10 @@ function CategoryForm(props) {
         <Col span={24}>
           <p style={{ margin: '0px 0px 0px 0px' }}>Nombre:</p>
           <Input onChange={(e) => setFormName(e.target.value)} name={'formName'} value={formName} placeholder={'Embotellados'} />
+        </Col>
+        <Col span={24}>
+          <p style={{ margin: '0px 0px 0px 0px' }}>Icono:</p>
+          <IconCategoriesProvider display={false} iconSelect={formIcon} onClick={changeIcon}/>
         </Col>
         <Divider />
         <Col span={24}>

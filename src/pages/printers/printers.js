@@ -13,6 +13,8 @@ import { filterData } from '../../utils/Filters';
 import PrinterFrom from "../../components/printers/PrinterFrom";
 import PrinterDetails from "../../components/printers/PrinterDetails";
 
+import { printerServices } from "../../services/PrintersServices.js";
+
 const { Search } = Input;
 
 function Printers() {

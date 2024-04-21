@@ -1,15 +1,14 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "antd";
 import { CaretLeftOutlined, CaretRightFilled } from "@ant-design/icons";
+import IconCategoriesProvider from "../../utils/IconCategoriesProvider";
 
 import '../../styles/categoriesStyle.css';
-
-import menuLogo from '../../img/logos/logo.png'
 
 import { isEmpty } from "lodash";
 
 function CategoriesScroll({ categories, selectedCategory, onClick }) {
-
+    
     const categoriesContainer = useRef(null);
 
     const buttonStyle = {
@@ -76,13 +75,8 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
                                 onClick={() => onClick(category)}
                             >
                                 <div style={{ width: '100%' }}>
-                                    <img
-                                        width={55}
-                                        height={55}
-                                        src={menuLogo}
-                                        style={{ objectFit: 'cover' }}
-                                        alt={category.name}
-                                    />
+                                    <IconCategoriesProvider display={true} iconSelect={category.icon}/>
+                                    
                                     <p style={pStyle}>{category.name}</p>
                                 </div>
                             </Button>
