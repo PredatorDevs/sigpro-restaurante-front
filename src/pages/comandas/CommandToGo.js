@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Row, Col, Empty, Result, Button, Modal, Table, Card, Spin, Tag, Space } from "antd";
-import { SendOutlined, WarningOutlined, DeleteOutlined, CopyOutlined, CloseOutlined } from "@ant-design/icons";
+import { Row, Col, Result, Button, Modal, Card, Spin, Space } from "antd";
+import { SendOutlined, WarningOutlined, CopyOutlined } from "@ant-design/icons";
 import { GAddUserIcon, GClearIcon, GEditUserIcon } from "../../utils/IconImageProvider.js";
-
-import { columnActionsDef, columnDef, columnMoneyDef } from '../../utils/ColumnsDefinitions';
 
 import { Wrapper } from '../../styled-components/Wrapper';
 
@@ -13,8 +11,6 @@ import cashiersServices from "../../services/CashiersServices.js";
 import orderSalesServices from "../../services/OrderSalesServices.js";
 
 import CategoriesScroll from "../../components/command/CategoriesScroll";
-
-import { numberToLetters } from "../../utils/NumberToLetters.js";
 
 import ProductsCard from "../../components/command/ProductsCards.js"
 import AddProduct from "../../components/command/AddProduct.js";
@@ -27,16 +23,16 @@ import { customNot } from "../../utils/Notifications.js";
 
 import categoriesServices from '../../services/CategoriesServices.js';
 import productsServices from "../../services/ProductsServices.js";
-import { isEmpty, forEach, find, set } from "lodash";
+import { isEmpty, forEach } from "lodash";
 
 import AuthorizeUserPINCode from "../../components/confirmations/AuthorizeUserPINCode.js";
 
-import download from "downloadjs";
-import reportsServices from "../../services/ReportsServices.js";
 import AddClientModal from "../../components/command/ClientToGoModal.js";
 
 import { printerServices } from "../../services/PrintersServices.js";
 import { printersServices } from "../../services/PrinterServices.js";
+
+import DetailsCommand from "../../components/command/DetailsCommad.js";
 
 const styleSheet = {
     tableFooter: {
@@ -111,9 +107,6 @@ const styleSheet = {
         }
     }
 };
-
-const { confirm } = Modal;
-
 
 function NewCommandToGo() {
 
@@ -565,92 +558,6 @@ function NewCommandToGo() {
         }
     }
 
-    function redirectToMain() {
-
-        Modal.confirm({
-            title: '¿Desea salir del modulo de comandas?',
-            centered: true,
-            icon: <WarningOutlined />,
-            content: `Los detalles no se guardaran`,
-            okText: 'Confirmar',
-            okType: 'danger',
-            cancelText: 'Cancelar',
-            onOk() {
-                navigate("/main");
-            },
-            onCancel() { },
-        });
-    }
-
-    const columns = [
-        columnDef({ title: 'Cantidad', dataKey: 'quantity', customRender: quantity => (parseInt(quantity)) }),
-        columnDef({ title: 'Detalle', dataKey: 'ProductName' }),
-        columnMoneyDef({ title: 'Precio Unitario', dataKey: 'unitPrice' }),
-        columnMoneyDef({ title: 'Gravado', dataKey: 'TotalDetail' }),
-        columnDef(
-            {
-                title: 'Acciones',
-                dataKey: 'id',
-                customRender: (value, record) => (
-                    <div style={{ display: "flex", justifyContent: 'center' }}>
-                        {
-                            record.isActive === 0 ? (
-                                <Tag
-                                    color={'blue'}
-                                    style={{
-                                        display: 'block',
-                                        width: 30
-                                    }}
-                                    onClick={() => {
-                                        customNot('info', 'No se puede eliminar el detalle', 'El detalle ya se encuentra en cocina');
-                                    }}
-                                >
-                                    <DeleteOutlined />
-                                </Tag >
-                            ) : (
-
-                                <Tag
-                                    color={'red'}
-                                    style={{
-                                        display: 'block',
-                                        width: 30
-                                    }}
-                                    onClick={() => {
-                                        const lengthProducts = detailsOrder.length;
-                                        const productCheck = find(detailsOrder, ['id', value]);
-
-                                        if (lengthProducts === 1) {
-                                            customNot('warning', 'No se puede eliminar el detalle', 'La cuenta no puede quedar sin detalles');
-                                        } else if (productCheck.isActive === 0) {
-                                            customNot('info', 'No se puede eliminar el detalle', 'El detalle ya se encuentra en cocina');
-                                        } else {
-                                            confirm({
-                                                centered: true,
-                                                title: '¿Desea eliminar este detalle?',
-                                                icon: <DeleteOutlined />,
-                                                content: 'Acción irreversible',
-                                                okType: 'danger',
-                                                okText: 'Eliminar',
-                                                async onOk() {
-                                                    await deleteProductDetails(value);
-                                                },
-                                                onCancel() { },
-                                            });
-                                        }
-                                    }}
-                                >
-                                    <DeleteOutlined />
-                                </Tag >
-                            )
-                        }
-                    </div>
-
-                )
-
-            }
-        ),
-    ];
-
     async function createPreCuenta() {
         const orderId = orderInTable.id;
         setChargePreAccount(true);
@@ -792,57 +699,14 @@ function NewCommandToGo() {
                             }
                         </Col>
 
-                        <div style={{
-                            display: "flex",
-                            gap: 15,
-                            flexDirection: 'column',
-                            width: "100%"
-                        }}>
-                            {!tableOrder ?
-                                <Empty description="Seleccione una Cuenta..." />
-                                :
-                                <>
-                                    {
-                                        isEmpty(orderInTable) ?
-                                            <>
-                                                <Empty description="Cuenta sin ordenes" style={{}} />
-                                            </> :
-                                            <Spin spinning={fetchingDetails}>
-                                                <Table
-                                                    columns={columns}
-                                                    rowKey={'id'}
-                                                    size={'small'}
-                                                    pagination={false}
-                                                    dataSource={detailsOrder || []}
-                                                />
-                                            </Spin>
-                                    }
-                                </>}
-                            <div style={styleSheet.tableFooter.footerCotainer}>
-                                <div className="letters-total" style={styleSheet.tableFooter.detailContainerLetters}>
-                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`SON:`}</p>
-                                    <p style={styleSheet.tableFooter.detailLabels.normal}>{`${numberToLetters(getTotalCommand())}`}</p>
-                                </div>
-                                <div className="other-totals" style={{ width: '30%' }}>
-                                    <div style={styleSheet.tableFooter.detailContainer}>
-                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`GRAVADO:`}</p>
-                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
-                                    </div>
-                                    <div style={styleSheet.tableFooter.detailContainer}>
-                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`SUBTOTAL:`}</p>
-                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
-                                    </div>
-                                    <div style={styleSheet.tableFooter.detailContainer}>
-                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`EXENTO:`}</p>
-                                        <p style={styleSheet.tableFooter.detailLabels.normal}>{`$0.00`}</p>
-                                    </div>
-                                    <div style={styleSheet.tableFooter.detailContainer}>
-                                        <p style={styleSheet.tableFooter.detailLabels.emphatized}>{`VENTA TOTAL`}</p>
-                                        <p style={styleSheet.tableFooter.detailLabels.emphatized}>{`$${parseFloat(getTotalCommand()).toFixed(2)}`}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <DetailsCommand
+                            tableOrder={tableOrder}
+                            orderInTable={orderInTable}
+                            detailsOrder={detailsOrder}
+                            fetchingDetails={fetchingDetails}
+                            onClickDelete={deleteProductDetails}
+                        />
+
                         <div style={{ paddingTop: 10 }}>
                             <Spin spinning={fetchingMyTables}>
                                 <div style={{
