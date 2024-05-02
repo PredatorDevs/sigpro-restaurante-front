@@ -16,6 +16,8 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
+    max-height: 190px;
+    overflow-x: auto;
 }
 
 .icon-grid img {

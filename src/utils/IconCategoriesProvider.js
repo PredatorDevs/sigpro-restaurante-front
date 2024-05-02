@@ -6,6 +6,7 @@ import mexicana from '../img/categories/mexicana.png';
 import naturalDrinks from '../img/categories/natural_drink.png';
 import packagedDrink from '../img/categories/packaged_drink.png';
 import beers from '../img/categories/beers.png';
+import meatTwo from '../img/categories/meat_two.png';
 import '../styles/categoriesStyle.css';
 import menuLogo from '../img/logos/logo.png';
 
@@ -21,7 +22,8 @@ function IconCategoriesProvider(params) {
         { id: 4, icon: mexicana, alt: "Mexicana" },
         { id: 5, icon: naturalDrinks, alt: "Natural Drinks" },
         { id: 6, icon: packagedDrink, alt: "Packaged Drink" },
-        { id: 7, icon: beers, alt: "Cervezas" }
+        { id: 7, icon: beers, alt: "Cervezas" },
+        { id: 8, icon: meatTwo, alt: "Carnes" }
     ]
 
     function getIconImg()
