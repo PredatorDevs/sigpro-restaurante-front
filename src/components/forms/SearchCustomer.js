@@ -61,7 +61,6 @@ function SearchCustomer(props) {
                     title={`Buscar Cliente`}
                 />
             }
-            className="search-customer-form"
             placement="right"
             onClose={(e) => {
                 restoreState();
@@ -72,7 +71,7 @@ function SearchCustomer(props) {
         >
             <Col span={24} style={{ display: 'inline' }}>
                 <Search
-                    id={'newsale-product-search-input'}
+                    id={'newcustomer-search-input'}
                     name={'filter'}
                     placeholder="Parametro de busqueda"
                     allowClear
@@ -83,13 +82,7 @@ function SearchCustomer(props) {
                     loading={fetching}
                 />
             </Col>
-            <div style={{
-                height: 'calc(100% - 120px)',
-                width: '100%',
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center"
-            }}>
+            <div className="search-customer-body">
                 {
                     customers.length === 0
                         ?
@@ -113,10 +106,10 @@ function SearchCustomer(props) {
                                                         justifyContent: "space-between"
                                                     }}
                                                 >
-                                                    <p style={{ margin: 0 }}>
+                                                    <p style={{ margin: 0, maxWidth: '70%', overflow: "hidden" }}>
                                                         {customer.fullName}
                                                     </p>
-                                                    <p style={{ margin: 0 }}>
+                                                    <p style={{ margin: 0, maxWidth: '25%' }}>
                                                         {customer.phoneNumber}
                                                     </p>
                                                 </div>
@@ -142,6 +135,7 @@ function SearchCustomer(props) {
                                                                     restoreState();
                                                                     onClose(false, customeraddress);
                                                                 }}
+                                                                type="primary"
                                                             >
                                                                 Seleccionar
                                                             </Button>
@@ -158,12 +152,13 @@ function SearchCustomer(props) {
             <Divider />
             <Col span={24}>
                 <Button
-                    type={'default'}
                     onClick={(e) => {
                         restoreState();
                         onClose(false, {});
                     }}
                     style={{ width: '100%' }}
+                    type="primary"
+                    danger
                 >
                     Cancelar
                 </Button>

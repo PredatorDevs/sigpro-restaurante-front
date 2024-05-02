@@ -29,3 +29,9 @@
     border-radius: 5px;
     transition: 0.2s ease-in;
 }
+
+.icon-grid img.no-selected:hover {
+    background-color: #b8e2ff;
+    border-radius: 5px;
+    transition: 0.2s ease-in;
+}

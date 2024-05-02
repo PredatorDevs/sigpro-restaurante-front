@@ -889,10 +889,18 @@ function NewCommandDelivery() {
 
                     }}
                     onUpdate={(saleDetailToPush, executePut, orderInfo, userDetails) => {
+
                         setOpenProductInfo(false);
 
-                        if (executePut) {
-                            updateOrderCommand({ saleDetailToPush, orderInfo, userDetails });
+                        const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
+
+                        if (detailActives.length >= 1) {
+                            if (executePut) {
+                                updateOrderCommand({ saleDetailToPush, orderInfo, userDetails });
+                            }
+                        }
+                        else {
+                            customNot('info', 'Todos los detalles en cocina', 'La orden no se puede modificar');
                         }
                     }}
                 />

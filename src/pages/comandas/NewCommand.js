@@ -201,36 +201,51 @@ function NewCommand() {
 
     // #region Check ShiftCut
     async function checkIfAbleToProcess() {
-        setFetching(true);
+        try {
+            setFetching(true);
 
-        const response = await cashiersServices.checkIfAbleToProcess(getUserMyCashier());
+            const response = await cashiersServices.checkIfAbleToProcess(getUserMyCashier());
+            const { isOpen, currentShiftcutId } = response.data[0];
 
-        const { isOpen, currentShiftcutId } = response.data[0];
-
-        if (isOpen === 1 && currentShiftcutId !== null) {
-            setAbleToProcess(true);
-            setCurrentShiftcutId(currentShiftcutId);
+            if (isOpen === 1 && currentShiftcutId !== null) {
+                setAbleToProcess(true);
+                setCurrentShiftcutId(currentShiftcutId);
+            } else {
+                setAbleToProcess(false);
+                setCurrentShiftcutId(null);
+            }
+        } catch (error) {
+            console.error("Error checking ability to process:", error);
+        } finally {
+            setFetching(false);
         }
-
-        setFetching(false);
     }
+
     // #endregion Check ShiftCut
 
     // #region Loads
     async function loadData() {
-        const response = await tablesServices.findAllInCommand(getUserLocation(), 1);
-        setTablesAvailable(response.data[0]);
+        try {
+            const userLocation = getUserLocation();
 
-        const responseCategories = await categoriesServices.find();
-        setCategories(responseCategories.data);
+            const [tablesResponse, categoriesResponse, printersResponse] = await Promise.all([
+                tablesServices.findAllInCommand(userLocation, 1),
+                categoriesServices.find(),
+                printersServices.findByLocationId(userLocation)
+            ]);
 
-        const responsePrinters = await printersServices.findByLocationId(getUserLocation());
-        setPrinters(responsePrinters.data);
+            setTablesAvailable(tablesResponse.data[0]);
+            setCategories(categoriesResponse.data);
+            setPrinters(printersResponse.data);
 
-        if (responseCategories.data.length > 0) {
-            setSelectedCategory(responseCategories.data[0]);
+            if (categoriesResponse.data.length > 0) {
+                setSelectedCategory(categoriesResponse.data[0]);
+            }
+        } catch (error) {
+            console.error("Error al cargar los datos:", error);
         }
     }
+
 
     async function validateStateOfPrinters() {
 
@@ -251,8 +266,6 @@ function NewCommand() {
                         customNot('warning', `La impresora ${element.name} no se encuentra disponible`, 'Verificar disponibilidad');
                         responsesSuccess = false;
                         break;
-                    } else {
-                        console.log(`Impresora en ${element.ip}:${element.port} conectada correctamente.`);
                     }
                 } catch (error) {
                     console.error(`Error al conectar con la impresora en ${element.ip}:${element.port}:`, error);

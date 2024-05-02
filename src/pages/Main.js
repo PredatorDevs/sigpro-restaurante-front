@@ -84,6 +84,7 @@ function Main() {
               { title: 'Productos', image: <GInventoryIcon width='calc(50%)' />, action: () => navigate('/main/inventory/products') }, // 1
               { title: 'Ubicaciones', image: <GSaleReportIcon width='calc(50%)' />, action: () => navigate('/main/administration/ubications') }, // 1
               { title: 'Adicionales', image: <GInvoiceTax2Icon width='calc(50%)' />, action: () => navigate('/main/administration/taxes') }, // 1
+              { title: 'Categorias', image: <GInvoiceTax2Icon width='calc(50%)' />, action: () => navigate('/main/administration/categories') }, // 1
               { title: 'Salir', image: <GLogoutIcon width='calc(50%)' />, action: () => logoutAction() }, // 9
             ].map((element, index) => (
               <Col

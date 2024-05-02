@@ -113,8 +113,17 @@
   justify-content: space-between;
 }
 
-.search-customer-form {
-  width: 800px;
+.ant-drawer-content-wrapper {
+  width: 800px !important;
+}
+
+.search-customer-body {
+  height: calc(100% - 120px);
+  overflow-x: auto;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 @media only screen and (max-width: 805px) {
@@ -186,11 +195,12 @@
     gap: 10px;
   }
 
-  .cancel-button-add, #new-sale-add-detail-button {
+  .cancel-button-add,
+  #new-sale-add-detail-button {
     font-size: 0.8rem;
   }
 
-  .search-customer-form {
-    width: 100%;
+  .ant-drawer-content-wrapper {
+    width: 100% !important;
   }
 }

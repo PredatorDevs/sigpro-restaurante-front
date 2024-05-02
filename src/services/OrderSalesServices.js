@@ -73,6 +73,9 @@ orderSalesServices.details.sendToKitchen = (ordersaleId, bulkData) =>
 orderSalesServices.updateComment = (orderSaleId, commentOrder, total, updateBy, locationId, status) =>
   genRequest('put', `/ordersales/update-by-command`, { orderSaleId, commentOrder, total, updateBy, locationId, status }, '', '', 'La información de las ordenes no pudo ser obtenida', 'Error desconocido');
 
+orderSalesServices.updateOrderIdentifier = (orderId, identifier) =>
+  genRequest('put', `/ordersales/update-identifier/${orderId}`, { identifier }, '', '', 'La información de las ordenes no pudo ser obtenida', 'Error desconocido');
+
 orderSalesServices.getKitchenTicket = (orderId, bulkData) =>
   genRequest(`post`, `/ordersales/kitchen/ticket/${orderId}`, { bulkData }, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido');
 
@@ -82,7 +85,7 @@ orderSalesServices.getPreAccountTicket = (orderId) =>
 orderSalesServices.getPackOffTicket = (orderId, customerId, phoneIdentifier, addressIdentifier) =>
   genRequest(`post`, `/ordersales/packoff/ticket/${orderId}`, { customerId, phoneIdentifier, addressIdentifier }, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido');
 
-  orderSalesServices.updatePackOffTicket = (orderId, packoffStatus, currentWaiter, currentTimer) =>
+orderSalesServices.updatePackOffTicket = (orderId, packoffStatus, currentWaiter, currentTimer) =>
   genRequest(`post`, `/ordersales/update-packoff/ticket/${orderId}`, { packoffStatus, currentWaiter, currentTimer }, '', '', 'No se ha podido descargar la hoja de traslados', 'Error desconocido');
 
 

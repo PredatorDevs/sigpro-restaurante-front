@@ -5,12 +5,14 @@ import { customNot } from "../../utils/Notifications";
 
 
 function AddClientModal(props) {
-    const { open, onClose, updateMode } = props;
+    const { open, updateMode, clientName, onClose } = props;
 
     const [client, setClient] = useState('');
 
     function restoreState() {
-        setClient('');
+        if (!updateMode) {
+            setClient('');
+        }
     }
 
     function isValid() {
@@ -28,7 +30,6 @@ function AddClientModal(props) {
             closable={false}
             maskClosable={false}
             open={open}
-            // bodyStyle={{ backgroundColor: '#353941', border: '1px solid #787B80' }}
             footer={null}
         >
             <div style={{ display: "flex", gap: 15, alignItems: "center" }}>
@@ -36,7 +37,7 @@ function AddClientModal(props) {
                 <Input
                     value={client}
                     maxLength={30}
-                    placeholder="Identificador para el cliente"
+                    placeholder={updateMode ? clientName : "Identificador para el cliente"}
                     onChange={(e) => {
                         setClient(e.target.value);
                     }}
@@ -68,12 +69,12 @@ function AddClientModal(props) {
                         onClick={() => {
                             if (isValid()) {
                                 restoreState();
-                                onClose(client, false);
+                                onClose(client, false, updateMode);
                             }
                         }}
                         style={{ width: '100%' }}
                     >
-                        {!updateMode ? "Crear Order" : "Añadir Producto"}
+                        {!updateMode ? "Añadir Cliente" : "Actualizar Cliente"}
                     </Button>
                 </Col>
             </Row>

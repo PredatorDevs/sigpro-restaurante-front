@@ -143,6 +143,7 @@ function NewCommandToGo() {
     //Clients
     const [customerInfo, setCustomerInfo] = useState('');
     const [clientModal, setClientModal] = useState(false);
+    const [clientUpdateModal, setClientUpdateModal] = useState(false);
     const [updateCLienMode, setUpdateClientMode] = useState(false);
     const [fetchingClient, setFetchingClient] = useState(false);
     const [fetchingDetails, setFetchingDetails] = useState(false);
@@ -589,8 +590,15 @@ function NewCommandToGo() {
         setClientModal(true);
     }
 
-    function restoreClient() {
+    async function restoreClient() {
         setCustomerInfo('');
+        setDetailsOrder([]);
+        setOrderInTable({});
+        setDetailsOrder([]);
+        setTableOrder(0);
+        setFetchingMyTables(true);
+        await loadData();
+        await loadMyTables();
     }
 
     useEffect(() => {
@@ -600,6 +608,20 @@ function NewCommandToGo() {
             setUpdateClientMode(false);
         }
     }, [customerInfo]);
+
+    async function updateOrderIdentifierToGO(name) {
+        try {
+            if (!isEmpty(orderInTable)) {
+                await orderSalesServices.updateOrderIdentifier(orderInTable.id, name);
+                customNot('success', 'Orden actualizada', 'Se actualizó el identificador de la orden');
+            } else {
+                customNot('warning', 'Orden no válida', 'Debe seleccionar una orden para actualizar');
+            }
+        } catch (error) {
+            console.error('Error al actualizar la orden:', error);
+            customNot('error', 'Error al actualizar la orden', 'Ocurrió un error al intentar actualizar la orden');
+        }
+    }
 
     return (
         !ableToProcess ?
@@ -652,7 +674,10 @@ function NewCommandToGo() {
                             <Space wrap>
                                 <Button
                                     disabled={updateCLienMode || fetchingClient}
-                                    onClick={() => toGoClient()}
+                                    onClick={() => {
+                                        toGoClient();
+                                        setClientUpdateModal(false);
+                                    }}
                                 >
                                     <Space>
                                         <GAddUserIcon width={'16px'} />
@@ -661,7 +686,10 @@ function NewCommandToGo() {
                                 </Button>
                                 <Button
                                     disabled={!updateCLienMode || fetchingClient}
-                                    onClick={() => toGoClient()}
+                                    onClick={() => {
+                                        toGoClient();
+                                        setClientUpdateModal(true);
+                                    }}
                                 >
                                     <Space>
                                         <GEditUserIcon width={'16px'} />
@@ -792,10 +820,20 @@ function NewCommandToGo() {
 
                 <AddClientModal
                     open={clientModal}
-                    onClose={(clientName, close) => {
-
+                    updateMode={clientUpdateModal}
+                    clientName={customerInfo}
+                    onClose={async (clientName, close, isUpdate) => {
+                      
                         if (clientName) {
-                            setCustomerInfo(clientName);
+                            if (!isUpdate) {
+                                setCustomerInfo(clientName);
+                            } else {
+                                if (!isEmpty(orderInTable) && isUpdate) {
+                                    await updateOrderIdentifierToGO(clientName)
+                                }
+
+                                setCustomerInfo(clientName);
+                            }
                         }
 
                         setClientModal(close);

@@ -51,7 +51,7 @@ function IconCategoriesProvider(params) {
                             key={icon.id}
                             src={icon.icon}
                             alt={icon.alt}
-                            className={iconSelect === icon.id ? 'selected' : ''}
+                            className={iconSelect === icon.id ? 'selected' : 'no-selected'}
                             onClick={() => onClick(icon.id)}
                         />
                     ))}
