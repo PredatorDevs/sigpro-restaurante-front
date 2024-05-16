@@ -1,0 +1,89 @@
+.containerLogin {
+    align-items: center;
+    background-image: url('../img/backgrounds/landscape.jpg');
+    /* background-image: url(${bg}); */
+    background-size: cover;
+    background-position: left center;
+    background-repeat: no-repeat;
+    /* border: 1px solid #D1DCF0; */
+    border-radius: 10px;
+    box-shadow: 3px 3px 5px 0px #d9d9d9;
+    -webkit-box-shadow: 3px 3px 5px 0px #d9d9d9;
+    -moz-box-shadow: 3px 3px 5px 0px #d9d9d9;
+    /* display: flex; */
+    /* flex-direction: column; */
+    /* padding: 20px; */
+    width: 700px;
+    overflow: hidden;
+}
+
+p {
+    color: #000;
+    margin: 0px;
+    text-align: center;
+}
+
+.title {
+    color: #000;
+    font-size: 20px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.label {
+    font-size: 14px;
+    margin: 10px 0px;
+    width: 100%;
+    text-align: left;
+    text-align: center;
+}
+
+.copyright {
+    font-size: 10px;
+    margin: 20px 0px 0px 0px;
+}
+
+.spaceImg {
+    display: block;
+}
+
+.loginForm {
+    background-color: #fff;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+
+.loginContainer {
+    background-image: none;
+}
+
+@media only screen and (max-width: 710px) {
+
+    .loginContainer {
+        background-image: url('../img/backgrounds/landscape.jpg');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+    }
+
+    .containerLogin {
+        width: 95%;
+        background-image: none;
+        box-shadow: none;
+        -webkit-box-shadow: none;
+        -moz-box-shadow: none;
+    }
+
+    .spaceImg {
+        display: none !important;
+    }
+
+    .loginForm {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+}
