@@ -8,9 +8,9 @@ import '../../styles/categoriesStyle.css';
 import { isEmpty } from "lodash";
 
 function CategoriesScroll({ categories, selectedCategory, onClick }) {
-    
-    const categoriesContainer = useRef(null);
 
+    const categoriesContainer = useRef(null);
+    
     const buttonStyle = {
         width: 166,
         height: 87,
@@ -75,8 +75,14 @@ function CategoriesScroll({ categories, selectedCategory, onClick }) {
                                 onClick={() => onClick(category)}
                             >
                                 <div style={{ width: '100%' }}>
-                                    <IconCategoriesProvider display={true} iconSelect={category.icon}/>
-                                    
+                                    <img
+                                        width={55}
+                                        height={55}
+                                        src={category.url}
+                                        style={{ objectFit: 'cover' }}
+                                        alt={category.alt}
+                                    />
+
                                     <p style={pStyle}>{category.name}</p>
                                 </div>
                             </Button>

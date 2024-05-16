@@ -5,6 +5,7 @@ import { find } from 'lodash';
 import { useNavigate } from 'react-router-dom';
 
 import categoriesServices from '../services/CategoriesServices.js';
+import resourcesServices from '../services/ResourcesServices.js';
 
 import { Wrapper } from '../styled-components/Wrapper';
 import { TableContainer } from '../styled-components/TableContainer';
@@ -13,7 +14,6 @@ import { customNot } from '../utils/Notifications';
 import { filterData } from '../utils/Filters';
 import { columnActionsDef, columnDef } from '../utils/ColumnsDefinitions';
 import CategoryForm from '../components/CategoryForm.js';
-
 const { Search } = Input;
 
 function Categories() {
@@ -26,13 +26,18 @@ function Categories() {
   const [entityData, setEntityData] = useState([]);
   const [entityRefreshData, setEntityRefreshData] = useState(0);
   const [entityToUpdate, setEntityToUpdate] = useState({});
-
+  const [resources, setResources] = useState({});
   const navigate = useNavigate();
 
   async function loadData() {
     setFetching(true);
+
     const response = await categoriesServices.find();
     setEntityData(response.data);
+
+    const responseResources = await resourcesServices.find(1, 4);
+    setResources(responseResources.data);
+
     setFetching(false);
   }
 
@@ -106,7 +111,8 @@ function Categories() {
       <CategoryForm 
         open={openForm} 
         updateMode={formUpdateMode} 
-        dataToUpdate={entityToUpdate} 
+        dataToUpdate={entityToUpdate}
+        resourcesData={resources}
         onClose={(refresh) => { 
           setOpenForm(false);
           setFormUpdateMode(false);
