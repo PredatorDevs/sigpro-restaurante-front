@@ -66,7 +66,8 @@ productsServices.add = (
   isService,
   isTaxable,
   enabledForProduction,
-  packageContent
+  packageContent,
+  resourceId
 ) =>
   genRequest(
     `post`,
@@ -83,7 +84,8 @@ productsServices.add = (
       isService,
       isTaxable,
       enabledForProduction,
-      packageContent
+      packageContent,
+      resourceId
     },
     'Información general del producto guardada',
     '',
@@ -104,7 +106,8 @@ productsServices.update = (
   isTaxable,
   enabledForProduction,
   packageContent,
-  productId
+  productId,
+  resourceId
 ) =>
   genRequest(
     `put`,
@@ -122,7 +125,8 @@ productsServices.update = (
       isTaxable,
       enabledForProduction,
       packageContent,
-      productId
+      productId,
+      resourceId
     }
   );
 

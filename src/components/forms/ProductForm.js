@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Col, Row, Button, Modal, InputNumber, Space, Tabs, Divider, Select, Checkbox, Switch, Tag, Table } from 'antd';
+import { Input, Col, Row, Button, Modal, InputNumber, Space, Tabs, Divider, Select, Checkbox, Switch, Tag, Image } from 'antd';
 import { ArrowRightOutlined, CloseOutlined, DeleteOutlined, DollarOutlined, EditOutlined, ExclamationCircleOutlined, PercentageOutlined, PlusOutlined, SaveOutlined, WarningOutlined } from '@ant-design/icons';
 import { forEach, isEmpty } from 'lodash';
 
@@ -14,6 +14,10 @@ import ubicationsServices from '../../services/UbicationsServices.js';
 import measurementUnitsServices from '../../services/MeasurementUnitsServices.js';
 import { columnActionsDef, columnDef } from '../../utils/ColumnsDefinitions.js';
 import generalsServices from '../../services/GeneralsServices.js';
+import '../../styles/imgStyle.css';
+
+import axios from 'axios';
+import resourcesServices from '../../services/ResourcesServices.js';
 
 const { Option } = Select;
 const { confirm } = Modal;
@@ -31,6 +35,7 @@ const styleSheet = {
 };
 
 function ProductForm(props) {
+
   const [fetching, setFetching] = useState(false);
   const [activeTab, setActiveTab] = useState('1');
 
@@ -70,6 +75,13 @@ function ProductForm(props) {
   // [productId, price, profitRate, profitRateFixed]
   const [formPrices, setFormPrices] = useState([[null, null, null, null]]);
   const [formPriceIndexSelected, setFormPriceIndexSelected] = useState(null);
+
+  //IMG
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileName, setFileName] = useState('Seleccione un archivo');
+  const [imageUrl, setImageUrl] = useState('');
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [resourceIdToSave, setResourceIdToSave] = useState(0);
 
   const { open, updateMode, dataToUpdate, onClose } = props;
 
@@ -126,9 +138,16 @@ function ProductForm(props) {
         productIsService,
         productEnabledForProduction,
         isTaxable,
-        packageContent
+        packageContent,
+        productAlt,
+        productUrl,
+        productResourceId
       } = dataToUpdate;
 
+      setResourceIdToSave(productResourceId);
+      setImageUrl(productAlt);
+      setFileName(productAlt ? productAlt : 'Archivo no valido');
+      setPreviewUrl(productUrl ? productUrl : '');
       setId(productId || 0);
       setFormName(productName || '');
       setFormDescription(productDescription || '');
@@ -192,6 +211,8 @@ function ProductForm(props) {
   }, [dataToUpdate]);
 
   function restoreState() {
+    setResourceIdToSave(0);
+    setImageUrl('');
     setPrinterSelect("");
     setActiveTab('1');
     setId(0);
@@ -212,6 +233,9 @@ function ProductForm(props) {
     // [productId, price, profitRate, profitRateFixed, productPriceId]
     setFormPrices([[null, null, null, null, null]]);
     setFormPriceIndexSelected(null);
+    setSelectedFile(null);
+    setFileName('Seleccione un archivo');
+    setPreviewUrl('');
   }
 
   async function firstStageAction() {
@@ -227,6 +251,18 @@ function ProductForm(props) {
     setFetching(true);
 
     try {
+      if (!selectedFile) {
+        customNot('error', "Dato no valido", 'Por favor, seleccione una imagen');
+        return;
+      }
+
+      const title = fileName;
+      const baseImage = await readFileAsDataURL(selectedFile);
+      const response = await resourcesServices.uploadandSaveImage(title, baseImage.split(',')[1], 1, 1);
+      if (response.status === 200) customNot('success', "Imagen agregada", 'Imagen guardada con éxito');
+
+      const resourceId = response.data.newRecordId;
+
       const productAddResponse = await productsServices.add(
         formName,
         formDescription,
@@ -239,7 +275,8 @@ function ProductForm(props) {
         formIsService,
         formIsTaxable,
         formEnabledForProduction,
-        formPackageContent
+        formPackageContent,
+        resourceId
       );
 
       const { insertId } = productAddResponse.data;
@@ -344,9 +381,25 @@ function ProductForm(props) {
 
   async function updateAction() {
     if (validateData()) {
-      setFetching(true);
-
+      
       try {
+        if (!selectedFile && fileName !== imageUrl) {
+          customNot('error', "Dato no valido", 'Por favor, seleccione una imagen');
+          return;
+        }
+        
+        setFetching(true);
+        let newResourceId = resourceIdToSave;
+        if (fileName !== imageUrl) {
+          const title = fileName;
+          const baseImage = await readFileAsDataURL(selectedFile);
+          const response = await resourcesServices.uploadandSaveImage(title, baseImage.split(',')[1], 1, 1);
+          if (response.status === 200) customNot('success', "Imagen agregada", 'Imagen guardada con éxito');
+
+          const resourceId = response.data.newRecordId;
+          newResourceId = resourceId;
+        }
+        
         await productsServices.update(
           formName,
           formDescription,
@@ -360,7 +413,8 @@ function ProductForm(props) {
           formIsTaxable,
           formEnabledForProduction,
           formPackageContent,
-          formId
+          formId,
+          newResourceId
         );
 
         forEach(formStocks, async (x) => {
@@ -376,53 +430,6 @@ function ProductForm(props) {
         setFetching(false);
       }
     }
-  }
-
-  async function addProductPackageConfig() {
-    if (formId !== undefined && formId !== 0) {
-      if (
-        validateSelectedData(formPackageConfigPackageTypeId, 'Seleccione un tipo de paquete')
-        && validateNumberData(formPackageConfigQuantity, 'Coloque una cantidad válida', false)
-      ) {
-        setFetching(true);
-        try {
-          await productsServices.packageConfigs.add(
-            formPackageConfigPackageTypeId,
-            formId,
-            formUnitMeasurementId,
-            formPackageConfigQuantity
-          );
-
-          setFormPackageConfigPackageTypeId(0);
-          setFormPackageConfigQuantity(0);
-
-          loadPackageConfig(formId);
-        } catch (error) {
-          console.log(error);
-        }
-        setFetching(false);
-      }
-    }
-  }
-
-  function deletePackageConfig(idToDelete) {
-    const { name } = dataToUpdate;
-    Modal.confirm({
-      title: '¿Desea remover esta información de contenido?',
-      centered: true,
-      icon: <WarningOutlined />,
-      content: `Será removido de la lista de contenidos`,
-      okText: 'Confirmar',
-      okType: 'danger',
-      cancelText: 'Cancelar',
-      async onOk() {
-        setFetching(true);
-        await productsServices.packageConfigs.remove(idToDelete);
-        loadPackageConfig(formId);
-        setFetching(false);
-      },
-      onCancel() { },
-    });
   }
 
   function getProductTotalTaxes() {
@@ -471,6 +478,22 @@ function ProductForm(props) {
     })
 
     return totalTaxes || 0;
+  }
+
+  function selectImage(e) {
+    const file = e.target.files[0]
+    setSelectedFile(file);
+    setFileName(file ? file.name : 'Seleccione un archivo');
+    setPreviewUrl(file ? URL.createObjectURL(file) : '');
+  }
+
+  function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   return (
@@ -588,11 +611,11 @@ function ProductForm(props) {
                 }
               </Select>
             </Col>
-            <Col span={12}>
+            <Col span={12} hidden>
               <p style={styleSheet.labelStyle}>Impresora:</p>
               <strong>{printerSelect}</strong>
             </Col>
-            <Col span={12}>
+            <Col span={12} hidden>
               <p style={styleSheet.labelStyle}>Costo:</p>
               <InputNumber
                 addonBefore={'$'}
@@ -601,6 +624,28 @@ function ProductForm(props) {
                 value={formCost}
                 precision={4}
               />
+            </Col>
+            <Col span={12}>
+              <p style={styleSheet.labelStyle}>Imagen:</p>
+              {
+                previewUrl && (
+                  <Image
+                    src={previewUrl}
+                    alt="Vista previa"
+                  />
+                  // <img src={previewUrl} alt="Vista previa" className="preview-image" />
+                )
+              }
+              <div className="file-input-container">
+                <input
+                  type="file"
+                  accept="image/jpeg, image/png"
+                  onChange={selectImage}
+                  id="file-input"
+                  className="file-input"
+                />
+                <label htmlFor="file-input" className="file-input-label">{fileName}</label>
+              </div>
             </Col>
             <Col span={12} hidden>
               <p style={styleSheet.labelStyle}>Contenido:</p>

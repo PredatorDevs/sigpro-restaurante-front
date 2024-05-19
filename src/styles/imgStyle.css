@@ -1,0 +1,31 @@
+.file-input-container {
+    width: 100%;
+    position: relative;
+}
+
+.file-input {
+    display: none;
+}
+
+.file-input-label {
+    width: 100%;
+    display: inline-block;
+    padding: 4px 4px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    text-align: center;
+    font-size: 14px;
+}
+
+.file-input-label:hover {
+    background-color: #0056b3;
+}
+
+.preview-image {
+    max-width: 100%;
+    height: auto;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
