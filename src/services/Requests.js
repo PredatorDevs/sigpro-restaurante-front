@@ -14,8 +14,8 @@ export function serverUrl() {
   // FOR SOME CLIENT
   // return `http://192.168.150.11:5001/api`;
   // return `http://127.0.0.1:5001/api`;
-  return `http://192.168.0.2:5001/api`;
-  //return `http://192.168.1.19:5001/api`;
+   return `http://192.168.0.5:5001/api`;
+  //return `http://192.168.1.20:5001/api`;
   //return `http://192.168.167.83/api`;
   // return `http://192.168.56.1:5001/api`;
   // return 'https://distribuidora-panaderia.vercel.app/api';
@@ -96,7 +96,7 @@ export function localPrinterServerUrl() {
     return `http://${getLocalPrinterServerIp()}:${getLocalPrinterServerPort()}/api`
   }
   //return `http://127.0.0.1:5005/api`;
-  return `http://192.168.0.9:5005/api`;
+  return `http://192.168.1.20:5005/api`;
 }
 
 const localPrinterGenRequest = async function (

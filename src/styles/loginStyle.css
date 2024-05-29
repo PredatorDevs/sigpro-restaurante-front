@@ -17,7 +17,7 @@
     overflow: hidden;
 }
 
-p {
+.containerLogin p {
     color: #000;
     margin: 0px;
     text-align: center;

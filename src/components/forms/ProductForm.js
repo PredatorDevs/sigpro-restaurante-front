@@ -251,17 +251,16 @@ function ProductForm(props) {
     setFetching(true);
 
     try {
-      if (!selectedFile) {
-        customNot('error', "Dato no valido", 'Por favor, seleccione una imagen');
-        return;
+      
+      let resourceId = 1
+      if (selectedFile) {
+        const title = fileName;
+        const baseImage = await readFileAsDataURL(selectedFile);
+        const response = await resourcesServices.uploadandSaveImage(title, baseImage.split(',')[1], 1, 1);
+        if (response.status === 200) customNot('success', "Imagen agregada", 'Imagen guardada con éxito');
+
+        resourceId = response.data.newRecordId;
       }
-
-      const title = fileName;
-      const baseImage = await readFileAsDataURL(selectedFile);
-      const response = await resourcesServices.uploadandSaveImage(title, baseImage.split(',')[1], 1, 1);
-      if (response.status === 200) customNot('success', "Imagen agregada", 'Imagen guardada con éxito');
-
-      const resourceId = response.data.newRecordId;
 
       const productAddResponse = await productsServices.add(
         formName,
@@ -381,25 +380,25 @@ function ProductForm(props) {
 
   async function updateAction() {
     if (validateData()) {
-      
-      try {
-        if (!selectedFile && fileName !== imageUrl) {
-          customNot('error', "Dato no valido", 'Por favor, seleccione una imagen');
-          return;
-        }
-        
-        setFetching(true);
-        let newResourceId = resourceIdToSave;
-        if (fileName !== imageUrl) {
-          const title = fileName;
-          const baseImage = await readFileAsDataURL(selectedFile);
-          const response = await resourcesServices.uploadandSaveImage(title, baseImage.split(',')[1], 1, 1);
-          if (response.status === 200) customNot('success', "Imagen agregada", 'Imagen guardada con éxito');
 
-          const resourceId = response.data.newRecordId;
-          newResourceId = resourceId;
+      try {
+
+        setFetching(true);
+
+        let newResourceId = resourceIdToSave === 0 ? 1 : resourceIdToSave;
+        if (selectedFile && fileName !== imageUrl) {
+          if (fileName !== imageUrl) {
+            const title = fileName;
+            const baseImage = await readFileAsDataURL(selectedFile);
+            const response = await resourcesServices.uploadandSaveImage(title, baseImage.split(',')[1], 1, 1);
+            if (response.status === 200) customNot('success', "Imagen agregada", 'Imagen guardada con éxito');
+
+            const resourceId = response.data.newRecordId;
+            newResourceId = resourceId;
+          }
         }
-        
+
+
         await productsServices.update(
           formName,
           formDescription,
@@ -686,78 +685,7 @@ function ProductForm(props) {
             </Col>
           </Row>
         </Tabs.TabPane>
-        <Tabs.TabPane tab="Existencias" key={'2'} disabled={!updateMode}>
-          {
-            (formStocks || []).map((element, index) => {
-              return (
-                <Row gutter={8} key={index}>
-                  <Col span={24}>
-                    <p style={{ ...styleSheet.labelStyle, fontWeight: 600 }}>{`${(element.locationName)}`}</p>
-                  </Col>
-                  <Col span={8}>
-                    <p style={{ ...styleSheet.labelStyle, fontSize: 11 }}>{`Inicial:`}</p>
-                    <Space>
-                      <InputNumber
-                        type={'number'}
-                        // disabled={updateMode}
-                        // min={0}
-                        precision={2}
-                        value={element.initialStock}
-                        onChange={(value) => {
-                          let newArr = [...formStocks];
-                          newArr[index] = { ...newArr[index], initialStock: value };
-                          setFormStocks(newArr);
-                        }}
-                      />
-                    </Space>
-                  </Col>
-                  <Col span={8}>
-                    <p style={{ ...styleSheet.labelStyle, fontSize: 11, color: 'blue' }}>{`Actual:`}</p>
-                    <Space>
-                      <InputNumber
-                        type={'number'}
-                        precision={2}
-                        // min={0}
-                        // disabled={updateMode}
-                        value={element.stock}
-                        onChange={(value) => {
-                          let newArr = [...formStocks];
-                          newArr[index] = { ...newArr[index], stock: value };
-                          setFormStocks(newArr);
-                        }}
-                      />
-                    </Space>
-                  </Col>
-                  <Col span={8}>
-                    <p style={{ ...styleSheet.labelStyle, fontSize: 11, color: 'red' }}>{`Alerta Mínimo:`}</p>
-                    <Space>
-                      <InputNumber
-                        type={'number'}
-                        precision={2}
-                        // disabled={updateMode}
-                        min={0}
-                        value={element.minStockAlert}
-                        onChange={(value) => {
-                          let newArr = [...formStocks];
-                          newArr[index] = { ...newArr[index], minStockAlert: value };
-                          setFormStocks(newArr);
-                        }}
-                      />
-                    </Space>
-                  </Col>
-                  {
-                    formProductPackageConfigs.map((x) => (
-                      <Col span={24} style={{ margin: '10px 0px' }}>
-                        <Tag color={'blue'}>{`${Number(element.stock / x.quantity).toFixed(2)} ${x.packageTypeName} de ${x.quantity} ${x.measurementUnitName}`}</Tag>
-                      </Col>
-                    ))
-                  }
-                </Row>
-              )
-            })
-          }
-        </Tabs.TabPane>
-        <Tabs.TabPane tab="Precios" key={'3'} disabled={!updateMode}>
+        <Tabs.TabPane tab="Precios" key={'2'} disabled={!updateMode}>
           <Row gutter={8}>
             <Col span={24}>
               <Space>
@@ -898,6 +826,7 @@ function ProductForm(props) {
                         <InputNumber
                           size='small'
                           type={'number'}
+                          min={0.01}
                           prefix={element[3] ? <DollarOutlined /> : <PercentageOutlined />}
                           precision={2}
                           style={{ width: '125px' }}
@@ -923,6 +852,7 @@ function ProductForm(props) {
                       <Col span={8}>
                         <p style={styleSheet.labelStyle}>{`Precio Final`}</p>
                         <InputNumber
+                          readOnly
                           type={'number'}
                           size='small'
                           precision={2}
@@ -986,7 +916,7 @@ function ProductForm(props) {
                 )
               })
             }
-            <Col span={24}>
+            <Col hidden span={24}>
               <Button
                 type={'default'}
                 icon={<PlusOutlined />}

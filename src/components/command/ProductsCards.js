@@ -1,9 +1,9 @@
-import { Card, Empty, Image, Spin } from "antd";
+import { Avatar, Card, Empty, Spin } from "antd";
 
 import { isEmpty } from "lodash";
 
 function ProductsCard({ products, selectedProduct, loading }) {
-    
+
     return (
         <Spin spinning={loading} tip="Cargando...">
             {
@@ -26,8 +26,9 @@ function ProductsCard({ products, selectedProduct, loading }) {
                                 onClick={() => selectedProduct(product)}
                                 bodyStyle={{ padding: 5 }}
                             >
-                                {/* <Image /> */}
-                                <img alt={product.alt} src={product.url} className="img-product" />
+                                <div style={{alignContent: 'center'}}>
+                                    <Avatar src={product.url} alt={product.alt} size={67} shape="square" />
+                                </div>
                                 <div className="description-card-product">
                                     <p style={{ fontWeight: "bolder", margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.productName}</p>
                                     <p style={{ margin: 0 }}>{product.Description}</p>

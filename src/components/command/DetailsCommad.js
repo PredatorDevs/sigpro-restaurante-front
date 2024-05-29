@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Empty, Table, Tag, Modal, Spin } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, WarningOutlined } from "@ant-design/icons";
 
 import orderSalesServices from "../../services/OrderSalesServices";
 import { isEmpty, forEach, find } from "lodash";
@@ -87,7 +87,7 @@ const { confirm } = Modal;
 function DetailsCommand(props) {
 
     const { tableOrder, orderInTable, detailsOrder, fetchingDetails, onClickDelete } = props;
-    
+
     function getTotalCommand() {
         let total = 0;
         forEach(detailsOrder, (detail) => {
@@ -109,55 +109,71 @@ function DetailsCommand(props) {
                 customRender: (value, record) => (
                     <div style={{ display: "flex", justifyContent: 'center' }}>
                         {
-                            record.isActive === 0 ? (
+                            record.isPrinter === 1 ? (
                                 <Tag
-                                    color={'blue'}
+                                    color={'yellow'}
                                     style={{
                                         display: 'block',
                                         width: 30,
                                         cursor: "pointer"
                                     }}
                                     onClick={() => {
-                                        customNot('info', 'No se puede eliminar el detalle', 'El detalle ya se encuentra en cocina');
+                                        customNot('info', 'Problemas en este detalle', 'El detalle no pudo enviarse a cocina');
                                     }}
                                 >
-                                    <DeleteOutlined />
+                                    <WarningOutlined color={'red'} />
                                 </Tag >
                             ) : (
-
-                                <Tag
-                                    color={'red'}
-                                    style={{
-                                        display: 'block',
-                                        width: 30,
-                                        cursor: "pointer"
-                                    }}
-                                    onClick={() => {
-                                        const lengthProducts = detailsOrder.length;
-                                        const productCheck = find(detailsOrder, ['id', value]);
-
-                                        if (lengthProducts === 1) {
-                                            customNot('warning', 'No se puede eliminar el detalle', 'La cuenta no puede quedar sin detalles');
-                                        } else if (productCheck.isActive === 0) {
+                                record.isActive === 0 ? (
+                                    <Tag
+                                        color={'blue'}
+                                        style={{
+                                            display: 'block',
+                                            width: 30,
+                                            cursor: "pointer"
+                                        }}
+                                        onClick={() => {
                                             customNot('info', 'No se puede eliminar el detalle', 'El detalle ya se encuentra en cocina');
-                                        } else {
-                                            confirm({
-                                                centered: true,
-                                                title: '¿Desea eliminar este detalle?',
-                                                icon: <DeleteOutlined />,
-                                                content: 'Acción irreversible',
-                                                okType: 'danger',
-                                                okText: 'Eliminar',
-                                                async onOk() {
-                                                    onClickDelete(value);
-                                                },
-                                                onCancel() { },
-                                            });
-                                        }
-                                    }}
-                                >
-                                    <DeleteOutlined />
-                                </Tag >
+                                        }}
+                                    >
+                                        <DeleteOutlined />
+                                    </Tag >
+                                ) : (
+
+                                    <Tag
+                                        color={'red'}
+                                        style={{
+                                            display: 'block',
+                                            width: 30,
+                                            cursor: "pointer"
+                                        }}
+                                        onClick={() => {
+                                            const lengthProducts = detailsOrder.length;
+                                            const productCheck = find(detailsOrder, ['id', value]);
+
+                                            if (lengthProducts === 1) {
+                                                customNot('warning', 'No se puede eliminar el detalle', 'La cuenta no puede quedar sin detalles');
+                                            } else if (productCheck.isActive === 0) {
+                                                customNot('info', 'No se puede eliminar el detalle', 'El detalle ya se encuentra en cocina');
+                                            } else {
+                                                confirm({
+                                                    centered: true,
+                                                    title: '¿Desea eliminar este detalle?',
+                                                    icon: <DeleteOutlined />,
+                                                    content: 'Acción irreversible',
+                                                    okType: 'danger',
+                                                    okText: 'Eliminar',
+                                                    async onOk() {
+                                                        onClickDelete(value);
+                                                    },
+                                                    onCancel() { },
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <DeleteOutlined />
+                                    </Tag >
+                                )
                             )
                         }
                     </div>

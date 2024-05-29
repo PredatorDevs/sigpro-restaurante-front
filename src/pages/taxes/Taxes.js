@@ -71,6 +71,18 @@ function Taxes() {
                 </Tag>
             )
         }),
+        columnDef({
+            title: 'Es Opcional',
+            dataKey: 'isApplicable',
+            customRender: isApplicable => (
+                <Tag color={isApplicable === 1 ? 'green' : 'red'} style={{
+                    display: 'block',
+                    maxWidth: 30
+                }}>
+                    {isApplicable === 1 ? 'Si' : 'No'}
+                </Tag>
+            )
+        }),
         columnActionsDef(
             {
                 title: 'Acciones',

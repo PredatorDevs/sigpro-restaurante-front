@@ -22,12 +22,14 @@ function TaxForm(props) {
     const [taxRate, setTaxRate] = useState("");
     const [isPercentage, setIsPercentage] = useState(0);
     const [taxId, setTaxId] = useState(0);
+    const [isApplicable, setIsApplicable] = useState(0);
 
     function restoreState() {
         setName("");
         setTaxRate("");
         setIsPercentage(0);
         setTaxId(0);
+        setIsApplicable(0);
     }
 
     async function saveTax() {
@@ -40,6 +42,7 @@ function TaxForm(props) {
                     name,
                     totalTax,
                     isPercentage,
+                    isApplicable,
                     getUserLocation()
                 )
                     .then((response) => {
@@ -60,6 +63,7 @@ function TaxForm(props) {
                     name,
                     totalTax,
                     isPercentage,
+                    isApplicable,
                     getUserLocation()
                 )
                     .then((response) => {
@@ -87,7 +91,6 @@ function TaxForm(props) {
 
         return validName && validTaxRate;
     }
-
 
     async function removeTax() {
         Modal.confirm({
@@ -121,6 +124,10 @@ function TaxForm(props) {
         setIsPercentage(checked ? 1 : 0);
     }
 
+    const changeApplicable = (checked) => {
+        setIsApplicable(checked ? 1 : 0);
+    }
+
     useEffect(() => {
         if (!isEmpty(dataToUpdate)) {
             const totalTax = dataToUpdate.isPercentage === 1 ? (parseFloat(dataToUpdate.taxRate) * 100).toFixed(2) : parseInt(dataToUpdate.taxRate);
@@ -128,6 +135,7 @@ function TaxForm(props) {
             setName(dataToUpdate.name);
             setTaxRate(totalTax);
             setIsPercentage(dataToUpdate.isPercentage);
+            setIsApplicable(dataToUpdate.isApplicable);
         } else {
             restoreState();
         }
@@ -183,9 +191,15 @@ function TaxForm(props) {
                         }}
                     />
                 </Col>
-                <Col span={24}>
-                    <p style={{ margin: '0px 0px 0px 0px' }}>Es Porcentual:</p>
-                    <Switch checked={isPercentage === 1 ? true : false} onChange={changePercentage} />
+                <Col span={24} style={{display: 'flex', padding: 5, justifyContent: 'space-between'}}>
+                    <div style={{display: 'flex', gap: 10}}>
+                        <p style={{ margin: '0px 0px 0px 0px' }}>Es Porcentual:</p>
+                        <Switch checked={isPercentage === 1 ? true : false} onChange={changePercentage} />
+                    </div>
+                    <div style={{display: 'flex', gap: 10}}>
+                        <p style={{ margin: '0px 0px 0px 0px' }}>Es Obligatorio:</p>
+                        <Switch checked={isApplicable === 1 ? true : false} onChange={changeApplicable} />
+                    </div>
                 </Col>
                 <Divider />
                 <Col span={24}>
