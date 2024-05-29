@@ -96,7 +96,7 @@ export function localPrinterServerUrl() {
     return `http://${getLocalPrinterServerIp()}:${getLocalPrinterServerPort()}/api`
   }
   //return `http://127.0.0.1:5005/api`;
-  return `http://192.168.1.20:5005/api`;
+  return `http://192.168.0.5:5005/api`;
 }
 
 const localPrinterGenRequest = async function (

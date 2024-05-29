@@ -460,58 +460,76 @@ function NewCommandDelivery() {
             }
         } catch (error) {
             console.error(error);
-            customNot('info', 'No es posible crear el ticket', 'No fue posible generar el PDF');
+            customNot('info', 'No es posible crear el ticket', 'No fue posible generar el ticket');
         }
     }
 
+    function logAndNotify(printer, message) {
+        console.error(message);
+        customNot('warning', `La impresora ${printer.name} no se encuentra disponible`, 'Verificar disponibilidad');
+    }
+
     async function validateStateOfPrinters() {
+
         if (printers.length === 0) {
             console.log('There are no printers to validate');
             customNot('warning', 'No hay impresoras disponibles', 'Verificar disponibilidad');
-            return false;
+            return [];
         }
-    
-        for (const printer of printers) {
+
+        const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
+        const activePrinterIds = new Set(detailActives.map(detail => detail.printerid));
+        const activePrinters = printers.filter(printer => activePrinterIds.has(printer.printerid));
+
+        const validationResults = await Promise.all(activePrinters.map(async (printer) => {
             try {
                 const response = await printerServices.validateConnection(printer.ip, printer.port);
                 if (response.status !== 200) {
-                    console.log(`Printer at ${printer.ip}:${printer.port} is not connected correctly.`);
-                    customNot('warning', `La impresora ${printer.name} no se encuentra disponible`, 'Verificar disponibilidad');
-                    return false;
+                    logAndNotify(printer, `Printer at ${printer.ip}:${printer.port} is not connected correctly.`);
+                    return { id: printer.printerid, status: 1 };
                 } else {
                     console.log(`Printer at ${printer.ip}:${printer.port} connected successfully.`);
+                    return { id: printer.printerid, status: 0 };
                 }
             } catch (error) {
-                console.error(`Error connecting to printer at ${printer.ip}:${printer.port}:`, error);
-                customNot('warning', `Error conectando con la impresora ${printer.name}`, 'Verificar disponibilidad');
-                return false;
+                logAndNotify(printer, `Error connecting to printer at ${printer.ip}:${printer.port}: ${error.message}`);
+                return { id: printer.printerid, status: 0 };
             }
-        }
-    
-        return true;
+        }));
+
+        return validationResults;
     }
-    
+
     async function sendToKitchen() {
         try {
             setChargeKitchen(true);
             const orderId = orderInTable.id;
-
+    
             const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
             if (detailActives.length < 1) {
                 setChargeKitchen(false);
                 customNot('info', 'Todos los detalles en cocina', 'Todos los detalles ya se encuentran en cocina');
                 return;
             }
-
+    
             const printersAvailable = await validateStateOfPrinters();
-            if (!printersAvailable) {
+    
+            if (printersAvailable.length === 0) {
                 setChargeKitchen(false);
                 customNot('warning', 'Impresora/s no disponible/s', 'No es posible enviar a cocina');
                 return;
             }
-
-            const activeIds = detailActives.map(obj => obj.id);
-
+    
+            const activeIds = detailActives.map(detailActive => {
+                const printer = printersAvailable.find(printer => printer.id === detailActive.printerid);
+                if (printer) {
+                    return {
+                        detailId: detailActive.id,
+                        printerStatus: printer.status
+                    };
+                }
+            }).filter(Boolean);
+    
             Modal.confirm({
                 title: '¿Enviar Detalle a cocina?',
                 centered: true,
@@ -544,8 +562,7 @@ function NewCommandDelivery() {
             customNot('info', 'Algo salió mal', 'No se pudo enviar a cocina');
         }
     }
-
-
+    
     async function restoreClient() {
         setCustomerUpdateMode(false);
         setCustomerToUpdate({});

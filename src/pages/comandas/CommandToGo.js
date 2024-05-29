@@ -473,92 +473,104 @@ function NewCommandToGo() {
         }
     }
 
+    function logAndNotify(printer, message) {
+        console.error(message);
+        customNot('warning', `La impresora ${printer.name} no se encuentra disponible`, 'Verificar disponibilidad');
+    }
+    
     async function validateStateOfPrinters() {
 
-        if (isEmpty(printers) || printers.length === 0) {
+        if (printers.length === 0) {
             console.log('There are no printers to validate');
-            customNot('warning', `No hay impresoras disponibles`, 'Verificar disponibilidad');
-            return false;
+            customNot('warning', 'No hay impresoras disponibles', 'Verificar disponibilidad');
+            return [];
         }
 
-        let responsesSuccess = true;
+        const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
+        const activePrinterIds = new Set(detailActives.map(detail => detail.printerid));
+        const activePrinters = printers.filter(printer => activePrinterIds.has(printer.printerid));
 
-        if (!isEmpty(printers)) {
-            for (const element of printers) {
-                try {
-                    const response = await printerServices.validateConnection(element.ip, element.port);
-                    if (response.status !== 200) {
-                        console.log(`Impresora en ${element.ip}:${element.port} no esta conectada correctamente.`);
-                        customNot('warning', `La impresora ${element.name} no se encuentra disponible`, 'Verificar disponibilidad');
-                        responsesSuccess = false;
-                        break;
-                    } else {
-                        console.log(`Impresora en ${element.ip}:${element.port} conectada correctamente.`);
-                    }
-                } catch (error) {
-                    console.error(`Error al conectar con la impresora en ${element.ip}:${element.port}:`, error);
-                    responsesSuccess = false;
-                    break;
+        const validationResults = await Promise.all(activePrinters.map(async (printer) => {
+            try {
+                const response = await printerServices.validateConnection(printer.ip, printer.port);
+                if (response.status !== 200) {
+                    logAndNotify(printer, `Printer at ${printer.ip}:${printer.port} is not connected correctly.`);
+                    return { id: printer.printerid, status: 1 };
+                } else {
+                    console.log(`Printer at ${printer.ip}:${printer.port} connected successfully.`);
+                    return { id: printer.printerid, status: 0 };
                 }
+            } catch (error) {
+                logAndNotify(printer, `Error connecting to printer at ${printer.ip}:${printer.port}: ${error.message}`);
+                return { id: printer.printerid, status: 0 };
             }
-        }
+        }));
 
-        return responsesSuccess;
+        return validationResults;
     }
 
     async function sendToKitchen() {
         try {
             setChargeKitchen(true);
             const orderId = orderInTable.id;
-
+    
             const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
-            if (detailActives.length >= 1) {
-                const activeIds = detailActives.map(obj => obj.id);
-
-                const validationOfPrinters = await validateStateOfPrinters();
-                if (!validationOfPrinters) {
-                    setChargeKitchen(false);
-                    customNot('warning', 'Impresora/s no disponible/s', 'No es posible enviar a cocina');
-                    return;
-                }
-
-                Modal.confirm({
-                    title: '¿Enviar Detalle a cocina?',
-                    centered: true,
-                    icon: <WarningOutlined />,
-                    content: `Los detalles ya no se podrán modificar`,
-                    okText: 'Confirmar',
-                    okType: 'info',
-                    cancelText: 'Cancelar',
-                    onOk() {
-
-                        setChargeKitchen(true);
-                        orderSalesServices.details.sendToKitchen(orderId, activeIds)
-                            .then(async (response) => {
-                                await kitchenTicket(orderId, activeIds);
-                                await getOrderInfo(tableOrder);
-                                customNot('success', 'Operación exitosa', 'Detalle enviados a cocina');
-                                setChargeKitchen(false);
-                            })
-                            .catch((error) => {
-                                customNot('info', 'Algo salió mal', 'No se pudo enviar a cocina');
-                                setChargeKitchen(false);
-                            });
-                    },
-                    onCancel() { },
-                });
-
-            } else {
+            if (detailActives.length < 1) {
                 setChargeKitchen(false);
                 customNot('info', 'Todos los detalles en cocina', 'Todos los detalles ya se encuentran en cocina');
+                return;
             }
+    
+            const printersAvailable = await validateStateOfPrinters();
+    
+            if (printersAvailable.length === 0) {
+                setChargeKitchen(false);
+                customNot('warning', 'Impresora/s no disponible/s', 'No es posible enviar a cocina');
+                return;
+            }
+    
+            const activeIds = detailActives.map(detailActive => {
+                const printer = printersAvailable.find(printer => printer.id === detailActive.printerid);
+                if (printer) {
+                    return {
+                        detailId: detailActive.id,
+                        printerStatus: printer.status
+                    };
+                }
+            }).filter(Boolean);
+    
+            Modal.confirm({
+                title: '¿Enviar Detalle a cocina?',
+                centered: true,
+                icon: <WarningOutlined />,
+                content: `Los detalles ya no se podrán modificar`,
+                okText: 'Confirmar',
+                okType: 'info',
+                cancelText: 'Cancelar',
+                async onOk() {
+                    try {
+                        setChargeKitchen(true);
+                        await orderSalesServices.details.sendToKitchen(orderId, activeIds);
+                        await kitchenTicket(orderId, activeIds);
+                        await getOrderInfo(tableOrder);
+                        customNot('success', 'Operación exitosa', 'Detalles enviados a cocina');
+                    } catch (error) {
+                        console.error(error);
+                        customNot('info', 'Algo salió mal', 'No se pudo enviar a cocina');
+                    } finally {
+                        setChargeKitchen(false);
+                    }
+                },
+                onCancel() {
+                    setChargeKitchen(false);
+                },
+            });
         } catch (error) {
-            console.log(error);
+            console.error(error);
             setChargeKitchen(false);
             customNot('info', 'Algo salió mal', 'No se pudo enviar a cocina');
         }
     }
-
     async function createPreCuenta() {
         const orderId = orderInTable.id;
         setChargePreAccount(true);
