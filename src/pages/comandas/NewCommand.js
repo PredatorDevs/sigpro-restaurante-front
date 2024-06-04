@@ -140,6 +140,9 @@ function NewCommand() {
     const [printers, setPrinters] = useState({});
     const [fetchingDetails, setFetchingDetails] = useState(false);
 
+    const [reprintersDetails, setReprintersDetails] = useState(true);
+    const [reprintBtn, setReprintBtn] = useState(false);
+
     // #region Order Details
     async function getOrderInfo(tableId) {
         try {
@@ -177,10 +180,15 @@ function NewCommand() {
     async function getOrderDetails(orderId) {
         try {
             const response = await orderSalesServices.details.findByOrderId(orderId);
-            setDetailsOrder(response.data[0]);
-            if (isEmpty(response.data[0])) {
+            const details = response.data[0];
+
+            setDetailsOrder(details);
+
+            if (isEmpty(details)) {
                 setShowButtons(false);
             } else {
+                const isPrinterDetails = details.filter(obj => obj.isActive === 1 && obj.isPrinter);
+                setReprintersDetails(isPrinterDetails.length > 0 ? true : false);
                 setShowButtons(true);
             }
 
@@ -194,6 +202,7 @@ function NewCommand() {
             getOrderDetails(orderInTable.id);
         } else {
             setShowButtons(false);
+            setReprintersDetails(false);
         }
     }, [orderInTable]);
 
@@ -238,6 +247,8 @@ function NewCommand() {
             setCategories(categoriesResponse.data);
             setPrinters(printersResponse.data);
 
+            await refreshPrinters();
+
             if (categoriesResponse.data.length > 0) {
                 setSelectedCategory(categoriesResponse.data[0]);
             }
@@ -246,41 +257,24 @@ function NewCommand() {
         }
     }
 
+    async function refreshPrinters() {
+        try {
+
+            const userLocation = getUserLocation();
+
+            const [printersResponse] = await Promise.all([
+                printersServices.findByLocationId(userLocation)
+            ]);
+
+            setPrinters(printersResponse.data);
+        } catch (error) {
+            console.error("Error al cargar los datos:", error);
+        }
+    }
 
     function logAndNotify(printer, message) {
         console.error(message);
         customNot('warning', `La impresora ${printer.name} no se encuentra disponible`, 'Verificar disponibilidad');
-    }
-
-    async function validateStateOfPrinters() {
-
-        if (printers.length === 0) {
-            console.log('There are no printers to validate');
-            customNot('warning', 'No hay impresoras disponibles', 'Verificar disponibilidad');
-            return [];
-        }
-
-        const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
-        const activePrinterIds = new Set(detailActives.map(detail => detail.printerid));
-        const activePrinters = printers.filter(printer => activePrinterIds.has(printer.printerid));
-
-        const validationResults = await Promise.all(activePrinters.map(async (printer) => {
-            try {
-                const response = await printerServices.validateConnection(printer.ip, printer.port);
-                if (response.status !== 200) {
-                    logAndNotify(printer, `Printer at ${printer.ip}:${printer.port} is not connected correctly.`);
-                    return { id: printer.printerid, status: 1 };
-                } else {
-                    console.log(`Printer at ${printer.ip}:${printer.port} connected successfully.`);
-                    return { id: printer.printerid, status: 0 };
-                }
-            } catch (error) {
-                logAndNotify(printer, `Error connecting to printer at ${printer.ip}:${printer.port}: ${error.message}`);
-                return { id: printer.printerid, status: 0 };
-            }
-        }));
-
-        return validationResults;
     }
 
     async function loadMyTables() {
@@ -469,7 +463,40 @@ function NewCommand() {
         return formattedTime;
     };
 
-    async function kitchenTicket(orderId, details) {
+    async function validateStateOfPrinters() {
+
+        await refreshPrinters();
+
+        if (printers.length === 0) {
+            console.log('There are no printers to validate');
+            customNot('warning', 'No hay impresoras disponibles', 'Verificar disponibilidad');
+            return [];
+        }
+
+        const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
+        const activePrinterIds = new Set(detailActives.map(detail => detail.printerid));
+        const activePrinters = printers.filter(printer => activePrinterIds.has(printer.printerid));
+
+        const validationResults = await Promise.all(activePrinters.map(async (printer) => {
+            try {
+                const response = await printerServices.validateConnection(printer.ip, printer.port);
+                if (response.status !== 200) {
+                    logAndNotify(printer, `Printer at ${printer.ip}:${printer.port} is not connected correctly.`);
+                    return { id: printer.printerid, status: 1 };
+                } else {
+                    console.log(`Printer at ${printer.ip}:${printer.port} connected successfully.`);
+                    return { id: printer.printerid, status: 0 };
+                }
+            } catch (error) {
+                logAndNotify(printer, `Error connecting to printer at ${printer.ip}:${printer.port}: ${error.message}`);
+                return { id: printer.printerid, status: 0 };
+            }
+        }));
+
+        return validationResults;
+    }
+
+    async function kitchenTicket(orderId, details, isPrinter = 0) {
         try {
             const response = await orderSalesServices.getKitchenTicket(orderId, details);
             const data = response.data;
@@ -480,6 +507,7 @@ function NewCommand() {
                     ticketName: `TicketCocina_${orderId}`,
                     date: getFormattedDate(),
                     time: getFormattedTime(),
+                    reprint: isPrinter
                 }
 
                 await printerServices.printTicketKitchen(ticketBody);
@@ -490,26 +518,26 @@ function NewCommand() {
         }
     }
 
-    async function sendToKitchen() {
+    async function sendToKitchen(pintersVal = 0) {
         try {
             setChargeKitchen(true);
             const orderId = orderInTable.id;
-    
-            const detailActives = detailsOrder.filter(obj => obj.isActive === 1);
+
+            const detailActives = detailsOrder.filter(obj => obj.isActive === 1 && obj.isPrinter === pintersVal);
             if (detailActives.length < 1) {
                 setChargeKitchen(false);
                 customNot('info', 'Todos los detalles en cocina', 'Todos los detalles ya se encuentran en cocina');
                 return;
             }
-    
+
             const printersAvailable = await validateStateOfPrinters();
-    
+
             if (printersAvailable.length === 0) {
                 setChargeKitchen(false);
                 customNot('warning', 'Impresora/s no disponible/s', 'No es posible enviar a cocina');
                 return;
             }
-    
+
             const activeIds = detailActives.map(detailActive => {
                 const printer = printersAvailable.find(printer => printer.id === detailActive.printerid);
                 if (printer) {
@@ -519,9 +547,9 @@ function NewCommand() {
                     };
                 }
             }).filter(Boolean);
-    
+
             Modal.confirm({
-                title: '¿Enviar Detalle a cocina?',
+                title: `¿${pintersVal === 0 ? "Enviar" : "Reenviar"} orden a cocina?`,
                 centered: true,
                 icon: <WarningOutlined />,
                 content: `Los detalles ya no se podrán modificar`,
@@ -532,7 +560,7 @@ function NewCommand() {
                     try {
                         setChargeKitchen(true);
                         await orderSalesServices.details.sendToKitchen(orderId, activeIds);
-                        await kitchenTicket(orderId, activeIds);
+                        await kitchenTicket(orderId, activeIds, pintersVal);
                         await getOrderInfo(tableOrder);
                         customNot('success', 'Operación exitosa', 'Detalles enviados a cocina');
                     } catch (error) {
@@ -580,6 +608,10 @@ function NewCommand() {
         }
     }
 
+    async function reprintProduct(reprint) {
+        setOpenAuthUserPINCode(true);
+    }
+
     return (
         !ableToProcess ?
             <>
@@ -594,6 +626,20 @@ function NewCommand() {
 
                     <Col className="command-size">
                         <div style={{ width: '100%', display: 'flex' }}>
+
+                            {reprintersDetails ?
+                                <Button
+                                    loading={chargeKitchen}
+                                    icon={<WarningOutlined />}
+                                    disabled={!showButtons}
+                                    style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
+                                    onClick={() => sendToKitchen(1)}
+                                // disabled={fetching}
+                                >
+                                    REIMPRIMIR TICKET
+                                </Button> : <></>
+                            }
+
                             <Button
                                 loading={chargeKitchen}
                                 type={'primary'}
@@ -605,6 +651,7 @@ function NewCommand() {
                             >
                                 ENVIAR A COCINA
                             </Button>
+
                             <Button
                                 loading={chargePreAccount}
                                 icon={<CopyOutlined />}
@@ -621,6 +668,7 @@ function NewCommand() {
                             orderInTable={orderInTable}
                             detailsOrder={detailsOrder}
                             fetchingDetails={fetchingDetails}
+                            onClickReprint={reprintProduct}
                             onClickDelete={deleteProductDetails}
                         />
 
@@ -699,6 +747,7 @@ function NewCommand() {
                             createNewComanda(saleDetailToPush, userDetails);
                         }
 
+                        setSelectedProductData([]);
                     }}
                     onUpdate={(saleDetailToPush, executePut, orderInfo, userDetails) => {
                         setOpenProductInfo(false);
@@ -706,6 +755,8 @@ function NewCommand() {
                         if (executePut) {
                             updateOrderCommand({ saleDetailToPush, orderInfo, userDetails });
                         }
+
+                        setSelectedProductData([]);
                     }}
                 />
 
@@ -715,14 +766,19 @@ function NewCommand() {
                     confirmButtonText={'Confirmar'}
                     onClose={(authorized, userAuthorizer) => {
                         const { successAuth } = userAuthorizer;
-                        if (authorized && successAuth) {
-                            const { userId, userPINCode, fullName } = userAuthorizer;
-                            setCurrentWaiter({ userId, userPINCode, fullName });
-                            setOpenAuthUserPINCode(false);
-                            const titleCommand = document.querySelector('.details-command');
-                            titleCommand.textContent = 'Comandas de ' + fullName;
+
+                        if (isEmpty(detailsOrder)) {
+                            if (authorized && successAuth) {
+                                const { userId, userPINCode, fullName } = userAuthorizer;
+                                setCurrentWaiter({ userId, userPINCode, fullName });
+                                setOpenAuthUserPINCode(false);
+                                const titleCommand = document.querySelector('.details-command');
+                                titleCommand.textContent = 'Comandas de ' + fullName;
+                            } else {
+                                navigate("/main");
+                            }
                         } else {
-                            navigate("/main");
+                            setOpenAuthUserPINCode(false);
                         }
                     }}
                 />

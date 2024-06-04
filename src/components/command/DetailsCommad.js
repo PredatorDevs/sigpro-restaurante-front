@@ -86,7 +86,7 @@ const { confirm } = Modal;
 
 function DetailsCommand(props) {
 
-    const { tableOrder, orderInTable, detailsOrder, fetchingDetails, onClickDelete } = props;
+    const { tableOrder, orderInTable, detailsOrder, fetchingDetails, onClickReprint, onClickDelete } = props;
 
     function getTotalCommand() {
         let total = 0;
@@ -118,7 +118,7 @@ function DetailsCommand(props) {
                                         cursor: "pointer"
                                     }}
                                     onClick={() => {
-                                        customNot('info', 'Problemas en este detalle', 'El detalle no pudo enviarse a cocina');
+                                        customNot(`info`, `El detalle no pudo ser imprimido`, `Por favor, intente de nuevo`)
                                     }}
                                 >
                                     <WarningOutlined color={'red'} />

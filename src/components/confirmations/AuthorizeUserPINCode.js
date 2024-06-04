@@ -27,6 +27,7 @@ function AuthorizeUserPINCode(props) {
       customNot('success', `Verificación exitosa`, `PIN confirmado para ${fullName}`);
       onClose(true, { userId, fullName, roleId, successAuth, userPINCode });
       setUserPINCode('');
+      setInputNumpad('');
       setFetching(false);
     } else {
       customNot('error', 'No Autorizado', 'Su PIN no cuenta con los privilegios necesarios o no es correcto');
@@ -61,7 +62,11 @@ function AuthorizeUserPINCode(props) {
       centered
       width={450}
       closeIcon={<CloseOutlined style={{ padding: 5, backgroundColor: '#f0f0f0', borderRadius: 5, color: '#f5222d' }} />}
-      onCancel={(e) => onClose(false, { userId: null, roleId: null, successAuth: null })}
+      onCancel={(e) => {
+        onClose(false, { userId: null, roleId: null, successAuth: null });
+        setInputNumpad('');
+        setUserPINCode('');
+      }}
       maskClosable={false}
       open={open}
       footer={null}

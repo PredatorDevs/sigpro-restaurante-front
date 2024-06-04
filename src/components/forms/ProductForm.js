@@ -251,7 +251,7 @@ function ProductForm(props) {
     setFetching(true);
 
     try {
-      
+
       let resourceId = 1
       if (selectedFile) {
         const title = fileName;
@@ -442,7 +442,7 @@ function ProductForm(props) {
       } else {
         totalTaxes += (+formCost + +tax.taxRate);
       }
-    })
+    });
 
     return totalTaxes || 0;
   }
@@ -466,15 +466,17 @@ function ProductForm(props) {
 
   function getFinalPriceTotalTax(price) {
     let totalTaxes = 0; // DECLARA UNA VARIABLE RESULTADO
+
     // UN FOREACH PARA RECORRER LOS DETALLES DE LA VENTA
     forEach(formProductTaxes, (tax) => {
+
       // BUSCA EL TAX ENTRE LA INFORMACIÓN DE LOS TAXES
       if (tax.isPercentage === 1) {
         totalTaxes += (+price - (+price / (1 + +tax.taxRate)));
       } else {
         totalTaxes += (+price + +tax.taxRate);
       }
-    })
+    });
 
     return totalTaxes || 0;
   }
@@ -794,12 +796,12 @@ function ProductForm(props) {
                           />
                         </Space>
                       </Col>
-                      <Col span={8}>
+                      <Col span={8} hidden>
                         <p style={styleSheet.labelStyle}>{`Tipo`}</p>
                         <Space wrap>
-                          <p style={{ ...styleSheet.labelStyle, color: element[3] ? '#000000' : '#1677ff' }}>{`%`}</p>
+                          <p style={{ ...styleSheet.labelStyle, color: true ? '#000000' : '#1677ff' }}>{`%`}</p>
                           <Switch
-                            checked={element[3]}
+                            checked={true}
                             disabled={updateMode && (formPriceIndexSelected !== index)}
                             onChange={(checked) => {
                               let newArr = [...formPrices];
@@ -807,9 +809,9 @@ function ProductForm(props) {
                               newArr[index] = [
                                 element[0] || null,
                                 // SÍ ES PORCENTUAL SE CALCULA EL COSTO BRUTO X (1 + (PORCENTAJE DE GANANCIA))
-                                ((checked ? ((+formCost + getProductTotalTaxes()) + +element[2]) : ((+formCost + getProductTotalTaxes()) * (1 + (+element[2] / 100))))) || 0,
+                                ((true ? ((+formCost + getProductTotalTaxes()) + +element[2]) : ((+formCost + getProductTotalTaxes()) * (1 + (+element[2] / 100))))) || 0,
                                 element[2] || 0,
-                                checked,
+                                true,
                                 element[4] || null
                               ];
 
@@ -821,31 +823,20 @@ function ProductForm(props) {
                           <p style={{ ...styleSheet.labelStyle, color: element[3] ? '#1677ff' : '#000000' }}>{`$`}</p>
                         </Space>
                       </Col>
+                      {/* Seccion de precios */}
                       <Col span={8}>
                         <p style={styleSheet.labelStyle}>{`Margen Ganancia`}</p>
                         <InputNumber
                           size='small'
                           type={'number'}
                           min={0.01}
-                          prefix={element[3] ? <DollarOutlined /> : <PercentageOutlined />}
+                          prefix={<DollarOutlined />}
                           precision={2}
                           style={{ width: '125px' }}
                           value={element[2]}
                           disabled={updateMode && (formPriceIndexSelected !== index)}
                           onChange={(value) => {
-                            let newArr = [...formPrices];
 
-                            // [productId, price, profitRate, profitRateFixed, productPriceId]
-                            newArr[index] = [
-                              element[0] || null,
-                              // SÍ ES PORCENTUAL SE CALCULA EL COSTO BRUTO X (1 + (PORCENTAJE DE GANANCIA))
-                              ((!!element[3] ? ((+formCost + getProductTotalTaxes()) + +value) : ((+formCost + getProductTotalTaxes()) * (1 + (+value / 100))))) || 0,
-                              +value,
-                              element[3] || false,
-                              element[4] || null
-                            ];
-
-                            setFormPrices(newArr);
                           }}
                         />
                       </Col>
@@ -859,51 +850,41 @@ function ProductForm(props) {
                           value={element[1]}
                           disabled={updateMode && (formPriceIndexSelected !== index)}
                           onChange={(value) => {
-                            let newArr = [...formPrices];
 
-                            // [productId, price, profitRate, profitRateFixed, productPriceId]
-                            newArr[index] = [
-                              updateMode ? element[0] : null,
-                              +value,
-                              updateMode ? element[2] : 0,
-                              updateMode ? element[3] : false,
-                              updateMode ? element[4] : null
-                            ];
-
-                            setFormPrices(newArr);
                           }}
                         />
                       </Col>
-                      <Col span={12}>
+                      {/* Seccion de precios */}
 
+                      <Col span={12}>
                       </Col>
                       <Col span={12}>
-
                       </Col>
                     </Row>
                     <Space align='start' size={'large'}>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
                         {
                           (formProductTaxes || [])
                             .map((x, index) => {
+
                               return (
                                 <Tag
                                   key={index}
                                   icon={<ExclamationCircleOutlined />}
                                   color={'blue'}
                                 >
-                                  {`${x.taxName}: $${getFinalPriceTotalTaxesByTax(x.taxId, element[1]).toFixed(4)}`}
+                                  {`${x.taxName}: $${getFinalPriceTotalTaxesByTax(x.taxId, element[1]).toFixed(2)}`}
                                 </Tag>
                               )
                             })
                         }
-                        <Tag
+                        <Tag hidden
                           icon={<DollarOutlined />}
                           color={'yellow'}
                         >
-                          {`Pago a cuenta: $${((element[1] - +getFinalPriceTotalTax(element[1])) * 0.0175).toFixed(4)}`}
+                          {`Pago a cuenta: $${((element[1] - +getFinalPriceTotalTax(element[1])) * 0.0175).toFixed(2)}`}
                         </Tag>
-                        <Tag
+                        <Tag hidden
                           icon={<DollarOutlined />}
                           color={'green'}
                         >

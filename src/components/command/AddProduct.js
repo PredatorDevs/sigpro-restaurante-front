@@ -80,8 +80,7 @@ function AddProduct(props) {
         if (provitionalClient !== "") {
             setNameOrder(provitionalClient);
         }
-
-    }, [productSelected, open])
+    }, [productSelected, open]);
 
     function restoreState() {
         setProductData([]);
@@ -158,7 +157,7 @@ function AddProduct(props) {
             footer={null}
         >
             <div className="add-modal">
-                <Row className="command-size" gutter={[12, 12]} style={{justifyContent: "center"}}>
+                <Row className="command-size" gutter={[12, 12]} style={{ justifyContent: "center" }}>
                     <Col span={24} style={{ display: 'flex', flexDirection: 'column' }}>
                         <Space>
                             <p
@@ -172,11 +171,8 @@ function AddProduct(props) {
                                     fontSize: 16
                                 }}
                             >
-                                {productData.productName}
+                                {productData.productName ? productData.productName : "CARGADO..."}
                             </p>
-                            {
-                                productData.productIsService ? <Tag color='blue'>{`Servicio`}</Tag> : <></>
-                            }
                         </Space>
                     </Col>
                     <Col style={{ display: 'flex', flexDirection: 'column' }}>
@@ -197,7 +193,7 @@ function AddProduct(props) {
                         <Numpad onKeyPress={handleKeyPress} onDelete={handleDelete} valueNumpad={inputNumpad} validCero={true} />
                     </Col>
                 </Row>
-                <Row className="products-size" gutter={[12, 12]} style={{justifyContent: "center"}}>
+                <Row className="products-size" gutter={[12, 12]} style={{ justifyContent: "center" }}>
                     {!updateMode ?
                         <Col
                             style={{ display: 'flex', flexDirection: 'column' }}>
