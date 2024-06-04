@@ -465,6 +465,7 @@ function NewCommand() {
 
     async function validateStateOfPrinters() {
 
+        setOpenAuthUserPINCode(false);
         await refreshPrinters();
 
         if (printers.length === 0) {
@@ -610,6 +611,9 @@ function NewCommand() {
 
     async function reprintProduct(reprint) {
         setOpenAuthUserPINCode(true);
+
+
+
     }
 
     return (
@@ -633,7 +637,7 @@ function NewCommand() {
                                     icon={<WarningOutlined />}
                                     disabled={!showButtons}
                                     style={{ margin: 5, width: '50%', fontSize: '0.7rem' }}
-                                    onClick={() => sendToKitchen(1)}
+                                    onClick={() => reprintProduct(1)}
                                 // disabled={fetching}
                                 >
                                     REIMPRIMIR TICKET
@@ -764,7 +768,7 @@ function NewCommand() {
                     open={openAuthUserPINCode}
                     title={`PIN requerido`}
                     confirmButtonText={'Confirmar'}
-                    onClose={(authorized, userAuthorizer) => {
+                    onClose={async (authorized, userAuthorizer) => {
                         const { successAuth } = userAuthorizer;
 
                         if (isEmpty(detailsOrder)) {
@@ -778,7 +782,14 @@ function NewCommand() {
                                 navigate("/main");
                             }
                         } else {
-                            setOpenAuthUserPINCode(false);
+
+                            if (authorized && successAuth) {
+                                await sendToKitchen(1);
+                            }
+                            else {
+                                setOpenAuthUserPINCode(false);
+                            }
+
                         }
                     }}
                 />
