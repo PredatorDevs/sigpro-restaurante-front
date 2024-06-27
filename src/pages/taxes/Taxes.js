@@ -72,7 +72,7 @@ function Taxes() {
             )
         }),
         columnDef({
-            title: 'Es Opcional',
+            title: 'Es Obligatorio',
             dataKey: 'isApplicable',
             customRender: isApplicable => (
                 <Tag color={isApplicable === 1 ? 'green' : 'red'} style={{

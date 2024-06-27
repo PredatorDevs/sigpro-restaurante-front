@@ -1,0 +1,16 @@
+
+.ant-card-head {
+    padding: 0 10px !important;
+}
+
+.ant-card-body {
+    padding: 10px !important;
+}
+
+.ant-card-extra {
+    padding: 5px !important;
+}
+
+.prices-info {
+    margin: 0;
+}

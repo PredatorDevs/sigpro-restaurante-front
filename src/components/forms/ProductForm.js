@@ -18,6 +18,7 @@ import '../../styles/imgStyle.css';
 
 import axios from 'axios';
 import resourcesServices from '../../services/ResourcesServices.js';
+import ProductPrices from '../prices/ProductPrices.js';
 
 const { Option } = Select;
 const { confirm } = Modal;
@@ -689,7 +690,7 @@ function ProductForm(props) {
         </Tabs.TabPane>
         <Tabs.TabPane tab="Precios" key={'2'} disabled={!updateMode}>
           <Row gutter={8}>
-            <Col span={24}>
+            <Col span={24} hidden>
               <Space>
                 <Tag>{'Costo'}</Tag>
                 <Tag icon={<DollarOutlined />}>{formCost}</Tag>
@@ -697,7 +698,7 @@ function ProductForm(props) {
                 <Tag icon={<DollarOutlined />}>{getProductTotalTaxes().toFixed(4)}</Tag>
               </Space>
             </Col>
-            <Col span={24}>
+            <Col span={24} hidden>
               {
                 (formProductTaxes || [])
                   .map((element, index) => {
@@ -712,189 +713,12 @@ function ProductForm(props) {
             </Col>
             <Col span={24}>
               <div style={{ height: 10 }} />
+
+
             </Col>
             {
               (formPrices || []).map((element, index) => {
-                return (
-                  <Col span={24} key={index}>
-                    <Row
-                      gutter={8}
-                      style={{ width: '100%' }}
-                    >
-                      <Col
-                        span={24}
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: 5,
-                          borderRadius: 5,
-                          backgroundColor: '#f5f5f5'
-                        }}
-                      >
-                        <p style={{ ...styleSheet.labelStyle }}>{`Precio ${(index + 1)}`}</p>
-                        <Space>
-                          <Button
-                            icon={(formPriceIndexSelected !== index) ? <EditOutlined /> : <SaveOutlined />}
-                            onClick={async (e) => {
-                              if (!(formPriceIndexSelected !== index)) {
-                                if (element[0] === null) {
-                                  try {
-                                    await productsServices.prices.add([[formId, element[1], element[2] || 0, element[3] || 0]]);
-                                    setFormPriceIndexSelected(null);
-                                  } catch (error) {
-                                  }
-                                } else {
-                                  await productsServices.prices.update(+element[1], +element[2] || 0, +element[3] || 0, +element[4]);
-                                  setFormPriceIndexSelected(null);
-                                }
-                              } else {
-                                setFormPriceIndexSelected(index);
-                              }
-                            }}
-                            size='small'
-                            disabled={!updateMode}
-                          />
-                          <Button
-                            icon={<DeleteOutlined />}
-                            onClick={(e) => {
-                              confirm({
-                                title: '¿Desea remover este precio?',
-                                icon: <DeleteOutlined />,
-                                content: 'Acción irreversible',
-                                okType: 'danger',
-                                async onOk() {
-                                  setFetching(true);
-
-                                  const removedPriceRes = await productsServices.prices.remove(element[4] || 0);
-                                  const { productId } = dataToUpdate;
-                                  const pricesRes = await productsServices.prices.findByProductId(productId);
-
-                                  if (isEmpty(pricesRes.data)) {
-                                    setFormPrices([[null, null, null, false, null]]); // [productId, price, profitRate, profitRateFixed, productPriceId]
-                                  } else {
-                                    let newArr = (pricesRes.data || []).map((element) => ([
-                                      element.productId,
-                                      +element.price,
-                                      +element.profitRate,
-                                      +element.profitRateFixed,
-                                      element.id
-                                    ]));
-                                    setFormPrices(newArr);
-                                  }
-
-                                  setFetching(false);
-                                },
-                                onCancel() { },
-                              });
-                            }}
-                            size='small'
-                            disabled={!updateMode && (index === 0)}
-                            type={'primary'}
-                            danger
-                          />
-                        </Space>
-                      </Col>
-                      <Col span={8} hidden>
-                        <p style={styleSheet.labelStyle}>{`Tipo`}</p>
-                        <Space wrap>
-                          <p style={{ ...styleSheet.labelStyle, color: true ? '#000000' : '#1677ff' }}>{`%`}</p>
-                          <Switch
-                            checked={true}
-                            disabled={updateMode && (formPriceIndexSelected !== index)}
-                            onChange={(checked) => {
-                              let newArr = [...formPrices];
-                              // [productId, price, profitRate, profitRateFixed, productPriceId]
-                              newArr[index] = [
-                                element[0] || null,
-                                // SÍ ES PORCENTUAL SE CALCULA EL COSTO BRUTO X (1 + (PORCENTAJE DE GANANCIA))
-                                ((true ? ((+formCost + getProductTotalTaxes()) + +element[2]) : ((+formCost + getProductTotalTaxes()) * (1 + (+element[2] / 100))))) || 0,
-                                element[2] || 0,
-                                true,
-                                element[4] || null
-                              ];
-
-                              setFormPrices(newArr);
-                            }}
-                            size='small'
-                          />
-
-                          <p style={{ ...styleSheet.labelStyle, color: element[3] ? '#1677ff' : '#000000' }}>{`$`}</p>
-                        </Space>
-                      </Col>
-                      {/* Seccion de precios */}
-                      <Col span={8}>
-                        <p style={styleSheet.labelStyle}>{`Margen Ganancia`}</p>
-                        <InputNumber
-                          size='small'
-                          type={'number'}
-                          min={0.01}
-                          prefix={<DollarOutlined />}
-                          precision={2}
-                          style={{ width: '125px' }}
-                          value={element[2]}
-                          disabled={updateMode && (formPriceIndexSelected !== index)}
-                          onChange={(value) => {
-
-                          }}
-                        />
-                      </Col>
-                      <Col span={8}>
-                        <p style={styleSheet.labelStyle}>{`Precio Final`}</p>
-                        <InputNumber
-                          readOnly
-                          type={'number'}
-                          size='small'
-                          precision={2}
-                          value={element[1]}
-                          disabled={updateMode && (formPriceIndexSelected !== index)}
-                          onChange={(value) => {
-
-                          }}
-                        />
-                      </Col>
-                      {/* Seccion de precios */}
-
-                      <Col span={12}>
-                      </Col>
-                      <Col span={12}>
-                      </Col>
-                    </Row>
-                    <Space align='start' size={'large'}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
-                        {
-                          (formProductTaxes || [])
-                            .map((x, index) => {
-
-                              return (
-                                <Tag
-                                  key={index}
-                                  icon={<ExclamationCircleOutlined />}
-                                  color={'blue'}
-                                >
-                                  {`${x.taxName}: $${getFinalPriceTotalTaxesByTax(x.taxId, element[1]).toFixed(2)}`}
-                                </Tag>
-                              )
-                            })
-                        }
-                        <Tag hidden
-                          icon={<DollarOutlined />}
-                          color={'yellow'}
-                        >
-                          {`Pago a cuenta: $${((element[1] - +getFinalPriceTotalTax(element[1])) * 0.0175).toFixed(2)}`}
-                        </Tag>
-                        <Tag hidden
-                          icon={<DollarOutlined />}
-                          color={'green'}
-                        >
-                          {`Margen Utilidad: $${(element[1] - +getFinalPriceTotalTax(element[1]) - +formCost - +((element[1] - +getFinalPriceTotalTax(element[1])) * 0.0175)).toFixed(4)}`}
-                        </Tag>
-                      </div>
-                    </Space>
-                    <div style={{ height: 10 }} />
-                  </Col>
-                )
+                return (<ProductPrices price={element} index={index} taxes={formProductTaxes} />);
               })
             }
             <Col hidden span={24}>

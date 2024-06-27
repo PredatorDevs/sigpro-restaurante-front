@@ -140,7 +140,6 @@ function Products() {
     columnDef({ title: 'Categoria', dataKey: 'productCategoryName' }),
     columnDef({ title: 'Marca', dataKey: 'productBrandName' }),
     columnDef({ title: 'Ubicación', dataKey: 'productUbicationName' }),
-    columnMoneyDef({ title: 'Costo', dataKey: 'productCost' }),
     {
       title: <p style={{ margin: '0px', fontSize: 12, fontWeight: 600 }}>{'Acciones'}</p>,
       dataIndex: 'productId',
