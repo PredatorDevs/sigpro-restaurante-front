@@ -55,7 +55,7 @@ function ProductPrices(props) {
             let totalTaxes = 0;
 
             forEach(taxes, (tax) => {
-                if (tax.status === 'associated' || tax.isApplicable === 1) {
+                if ((tax.status === 'associated' || tax.isApplicable === 1) && tax.isActive === 1) {
                     if (tax.isPercentage === 1) {
                         totalTaxes += (+price * +tax.taxRate);
                     } else {
@@ -63,16 +63,14 @@ function ProductPrices(props) {
                     }
                 }
             });
-
             return (+price + totalTaxes).toFixed(2);
         } else {
             return (0).toFixed(2);
         }
     }
 
-
     function calcPriceTax(tax, price) {
-        if ((tax.status === 'associated' || tax.isApplicable === 1) && price > 0) {
+        if ((tax.status === 'associated' || tax.isApplicable === 1) && price > 0 && tax.isActive === 1) {
             const taxRate = parseFloat(tax.taxRate).toFixed(2);
             if (tax.isPercentage === 1) {
                 const totalTax = parseFloat((price * taxRate)).toFixed(2);
@@ -180,23 +178,25 @@ function ProductPrices(props) {
                 <div style={{ display: 'flex', flexDirection: 'row', gap: 5, marginTop: 5, maxWidth: '100%', flexWrap: 'wrap' }}>
                     {
                         (productTaxes || []).map((element, index) => {
-                            return (
-                                <Tag
-                                    key={element.id}
-                                    style={{ cursor: 'pointer' }}
-                                    color={element.isApplicable === 1 ? 'blue' : element.status === 'not_associated' ? 'green' : 'blue'}
-                                    icon={element.isApplicable === 1 ? <ExclamationCircleOutlined /> : element.status === 'not_associated' ? <CloseCircleOutlined /> : <ExclamationCircleOutlined />}
-                                    onClick={() => {
-                                        if (element.isApplicable === 0) {
+                            if (element.isActive === 1) {
+                                return (
+                                    <Tag
+                                        key={element.id}
+                                        style={{ cursor: 'pointer' }}
+                                        color={element.isApplicable === 1 ? 'blue' : element.status === 'not_associated' ? 'green' : 'blue'}
+                                        icon={element.isApplicable === 1 ? <ExclamationCircleOutlined /> : element.status === 'not_associated' ? <CloseCircleOutlined /> : <ExclamationCircleOutlined />}
+                                        onClick={() => {
+                                            if (element.isApplicable === 0) {
 
-                                        } else {
-                                            customNot('info', 'Impuesto Obligatorio', 'Este Impuesto no se puede modificar');
-                                        }
-                                    }}
-                                >
-                                    {element.name}: {calcPriceTax(element, profitTotal)}
-                                </Tag>
-                            )
+                                            } else {
+                                                customNot('info', 'Impuesto Obligatorio', 'Este Impuesto no se puede modificar');
+                                            }
+                                        }}
+                                    >
+                                        {element.name}: {calcPriceTax(element, profitTotal)}
+                                    </Tag>
+                                )
+                            }
                         })
                     }
                 </div>
