@@ -15,9 +15,10 @@ import measurementUnitsServices from '../../services/MeasurementUnitsServices.js
 import { columnActionsDef, columnDef } from '../../utils/ColumnsDefinitions.js';
 import generalsServices from '../../services/GeneralsServices.js';
 import '../../styles/imgStyle.css';
-
+import "../../styles/pricesStyle.css";
 import axios from 'axios';
 import resourcesServices from '../../services/ResourcesServices.js';
+import productPricesServices from '../../services/ProductPricesServices.js';
 import ProductPrices from '../prices/ProductPrices.js';
 
 const { Option } = Select;
@@ -39,6 +40,8 @@ function ProductForm(props) {
 
   const [fetching, setFetching] = useState(false);
   const [activeTab, setActiveTab] = useState('1');
+
+  const [productPrices, setProductPrices] = useState([]);
 
   const [brandsData, setBrandsData] = useState([]);
   const [categoriesData, setCategoriesData] = useState([]);
@@ -83,6 +86,7 @@ function ProductForm(props) {
   const [imageUrl, setImageUrl] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
   const [resourceIdToSave, setResourceIdToSave] = useState(0);
+  const [loadingPrice, setLoadingPrice] = useState(false);
 
   const { open, updateMode, dataToUpdate, onClose } = props;
 
@@ -168,24 +172,9 @@ function ProductForm(props) {
 
         setFormProductTaxes(productTaxesResponse.data[0].taxesData);
 
-        const pricesResponse = await productsServices.prices.findByProductId(productId);
-
-        if (isEmpty(pricesResponse.data)) {
-          // [productId, price, profitRate, profitRateFixed, productPriceId]
-          setFormPrices([[null, null, null, null, null]]);
-        } else {
-          const newArr = [];
-          forEach(pricesResponse.data, (x) => {
-            newArr.push([
-              x.productId,
-              +x.price,
-              +x.profitRate,
-              +x.profitRateFixed,
-              x.id
-            ]);
-          })
-          setFormPrices(newArr);
-        };
+        //const pricesResponse = await productsServices.prices.findByProductId(productId);
+        const pricesResponse = await productPricesServices.findAllPricesByProductId(productId);
+        setProductPrices(pricesResponse.data);
 
         const stocksResponse = await productsServices.stocks.findByProductId(productId);
 
@@ -212,6 +201,7 @@ function ProductForm(props) {
   }, [dataToUpdate]);
 
   function restoreState() {
+    setProductPrices([]);
     setResourceIdToSave(0);
     setImageUrl('');
     setPrinterSelect("");
@@ -312,23 +302,10 @@ function ProductForm(props) {
     setFetching(true);
 
     try {
-      const productPricesResponse = await productsServices.prices.findByProductId(formId);
 
-      if (isEmpty(productPricesResponse.data)) {
-        setFormPrices([[null, null, null, null, null]]);
-      } else {
-        const newArr = [];
-        forEach(productPricesResponse.data, (x) => {
-          newArr.push([
-            x.productId,
-            +x.price,
-            +x.profitRate,
-            +x.profitRateFixed,
-            x.id
-          ]);
-        })
-        setFormPrices(newArr);
-      }
+      //const productPricesResponse = await productsServices.prices.findByProductId(formId);
+      const pricesResponse = await productPricesServices.findAllPricesByProductId(formId);
+      setProductPrices(pricesResponse.data);
 
       setFetching(false);
     } catch (error) {
@@ -337,32 +314,15 @@ function ProductForm(props) {
   }
 
   async function thirdStageAction() {
-    const validPrices = updateMode ? true : !(formPrices[formPrices.length - 1][1] === null);
-
-    if (!validPrices) {
+    
+    if (isEmpty(productPrices)) {
       customNot('warning', 'Debe tener al menos un precio o un valor correcto', 'Dato no válido');
       return;
     }
 
-    setFetching(true);
-
-    const bulkDataPrices = [];
-
-    forEach(formPrices, (x) => bulkDataPrices.push(
-      // [productId, price, profitRate, profitRateFixed]
-      [formId, x[1], x[2], x[3]]
-    ));
-
-    try {
-      await productsServices.prices.add(bulkDataPrices);
-      restoreState();
-      setFetching(false);
-      onClose(true);
-    } catch (error) {
-      console.log(error);
-      setFetching(false);
-      onClose(false);
-    }
+    restoreState();
+    setFetching(false);
+    onClose(true);
   }
 
   function validateData() {
@@ -495,6 +455,52 @@ function ProductForm(props) {
       reader.onloadend = () => resolve(reader.result);
       reader.onerror = reject;
       reader.readAsDataURL(file);
+    });
+  }
+
+  async function insertPrice() {
+    setLoadingPrice(true);
+    try {
+      if (formId > 0) {
+        await productPricesServices.insertProductPrice(formId, 0);
+        customNot('success', 'Precio agregado correctamente', 'El precio fue agregado de manera correcta');
+
+        const pricesResponse = await productPricesServices.findAllPricesByProductId(formId);
+        setProductPrices(pricesResponse.data);
+      }
+    } catch (error) {
+      console.error(error);
+      customNot('error', 'Error al agregar el precio', 'Ocurrió un error al agregar el nuevo precio');
+    } finally {
+      setLoadingPrice(false);
+    }
+  }
+
+  async function softDeletePrice(priceDeleteId) {
+    Modal.confirm({
+      title: '¿Eliminar este precio?',
+      centered: true,
+      icon: <WarningOutlined />,
+      content: `El precio ya no estará disponible`,
+      okText: 'Confirmar',
+      okType: 'danger',
+      cancelText: 'Cancelar',
+      async onOk() {
+
+        await productPricesServices.softDeletePrice(0, priceDeleteId)
+          .then(async () => {
+            customNot('success', 'El precio fue eliminado', 'El precio fue eliminado correctamente');
+
+            const pricesResponse = await productPricesServices.findAllPricesByProductId(formId);
+            setProductPrices(pricesResponse.data);
+
+          })
+          .catch((error) => {
+            console.error(error);
+            customNot('error', 'Error al elminar el precio', 'El precio no pudo ser eliminado correctamente');
+          });
+      },
+      onCancel() { }
     });
   }
 
@@ -716,11 +722,38 @@ function ProductForm(props) {
 
 
             </Col>
-            {
-              (formPrices || []).map((element, index) => {
-                return (<ProductPrices price={element} index={index} taxes={formProductTaxes} />);
-              })
-            }
+            <Button
+              icon={<PlusOutlined />}
+              size='small'
+              style={{ margin: '0 0 10px 0' }}
+              loading={loadingPrice}
+              onClick={() => {
+                insertPrice();
+              }}
+            >
+              {loadingPrice ? 'Agregando Precio...' : 'Agregar Precio'}
+            </Button>
+            <Col
+              style={{
+                maxHeight: 350,
+                overflowY: 'scroll',
+                paddingRight: 5
+              }}
+              className="scroll-prices"
+              span={24}
+            >
+              {
+                isEmpty(productPrices) ?
+                  <>
+                    Sin precios...
+                  </>
+                  :
+                  (productPrices || []).map((element, index) => {
+                    return (<ProductPrices price={element} index={index} deletePrice={softDeletePrice} />);
+                  })
+              }
+            </Col>
+
             <Col hidden span={24}>
               <Button
                 type={'default'}

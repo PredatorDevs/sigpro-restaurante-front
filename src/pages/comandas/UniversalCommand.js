@@ -115,7 +115,7 @@ const styleSheet = {
 
 function UniversalCommand(props) {
     const { typeCommand } = props;
-    console.log(typeCommand);
+    
     const navigate = useNavigate();
 
     const [ableToProcess, setAbleToProcess] = useState(false);

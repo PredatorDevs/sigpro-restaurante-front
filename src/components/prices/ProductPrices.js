@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { CloseCircleOutlined, DeleteOutlined, DollarCircleOutlined, EditOutlined, ExclamationCircleOutlined, SaveOutlined } from "@ant-design/icons";
-import { Button, Card, Col, InputNumber, Row, Space, Switch, Tag } from "antd";
+import { Button, Card, Col, InputNumber, Row, Space, Switch, Tag, Modal } from "antd";
 import productPricesServices from "../../services/ProductPricesServices";
 import { customNot } from "../../utils/Notifications";
 import "../../styles/pricesStyle.css";
@@ -8,7 +8,7 @@ import { forEach, isEmpty } from "lodash";
 
 function ProductPrices(props) {
 
-    const { price, index, taxes } = props;
+    const { price, index, deletePrice } = props;
 
     const [updatedMode, setUpdatedMode] = useState(true);
     const [loading, setLoading] = useState(true);
@@ -25,15 +25,15 @@ function ProductPrices(props) {
 
     async function loadData() {
         try {
-            const priceId = price[0]
+            const priceId = price.id;
 
             if (priceId != null) {
                 const response = await productPricesServices.findByProductId(priceId);
                 const result = response.data[0];
-                console.log(response.data[0]);
                 setPriceInfo(result);
                 setBtnActions(false);
                 setLoading(false);
+
                 const total = parseFloat(result.price).toFixed(2);
                 setProfitTotal(total);
                 setProfitDefault(result.isDefault);
@@ -97,6 +97,31 @@ function ProductPrices(props) {
         setProfitFinal(calcFinalPrice(productTaxes, parseFloat(value).toFixed(2)));
     }
 
+    function ProfitRate() {
+        return (+profitFinal - +profitTotal).toFixed(2);
+    }
+
+    async function SavePrice() {
+        setBtnActions(true);
+
+        try {
+            await productPricesServices.updateProductPrice(
+                profitTotal,
+                ProfitRate(),
+                profitDefault,
+                priceInfo.id,
+                priceInfo.productId
+            );
+            customNot('success', 'Precio actualizado', 'El precio se actualizó correctamente');
+        } catch (error) {
+            console.error(error);
+            customNot('error', 'No se pudo actualizar el precio', 'Ocurrió un error al momento de actualizar el precio');
+        } finally {
+            setUpdatedMode(!updatedMode);
+            setBtnActions(false);
+        }
+    }
+
     return (
         <Card
             key={index}
@@ -112,19 +137,45 @@ function ProductPrices(props) {
                         gap: 10
                     }}
                 >
-                    <Button
-                        icon={!updatedMode ? <SaveOutlined /> : <EditOutlined />}
-                        loading={btnActions}
-                        size='small'
-                        onClick={changeInputsHandle}
-                    >
-                    </Button>
+                    {updatedMode ?
+                        <>
+                            <Button
+                                id={'edit-btn'}
+                                icon={<EditOutlined />}
+                                loading={btnActions}
+                                size='small'
+                                onClick={changeInputsHandle}
+                            >
+                            </Button>
+                        </>
+                        :
+                        <>
+                            <Button
+                                id={'save-btn'}
+                                icon={<SaveOutlined />}
+                                loading={btnActions}
+                                size='small'
+                                onClick={() => {
+                                    SavePrice();
+                                }}
+                            >
+                            </Button>
+                        </>
+                    }
+
                     <Button
                         loading={btnActions}
                         icon={<DeleteOutlined />}
                         color="red"
                         size='small'
                         type={'primary'}
+                        onClick={() => {
+                            if (profitDefault === 0) {
+                                deletePrice(priceInfo.id);
+                            } else {
+                                customNot('info', 'El precio es principal', 'No se pueden eliminar los precios principales')
+                            }
+                        }}
                         danger
                     >
                     </Button>
