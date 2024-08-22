@@ -67,7 +67,8 @@ productsServices.add = (
   isTaxable,
   enabledForProduction,
   packageContent,
-  resourceId
+  resourceId,
+  formIsAlcholic
 ) =>
   genRequest(
     `post`,
@@ -85,7 +86,8 @@ productsServices.add = (
       isTaxable,
       enabledForProduction,
       packageContent,
-      resourceId
+      resourceId,
+      formIsAlcholic
     },
     'Información general del producto guardada',
     '',
@@ -107,7 +109,8 @@ productsServices.update = (
   enabledForProduction,
   packageContent,
   productId,
-  resourceId
+  resourceId,
+  formIsAlcholic
 ) =>
   genRequest(
     `put`,
@@ -126,7 +129,8 @@ productsServices.update = (
       enabledForProduction,
       packageContent,
       productId,
-      resourceId
+      resourceId,
+      formIsAlcholic
     }
   );
 
@@ -157,9 +161,6 @@ productsServices.prices.add = (bulkData) =>
     'Los precios no fueron añadidos',
     'Error desconocido'
   );
-
-productsServices.prices.update = (price, profitRate, profitRateFixed, productPriceId) =>
-  genRequest(`put`, `/products/prices`, { price, profitRate, profitRateFixed, productPriceId });
 
 productsServices.prices.remove = (productPriceId) =>
   genRequest(`delete`, `/products/prices/${productPriceId}`);

@@ -8,15 +8,15 @@ import { customNot } from '../../utils/Notifications.js';
 import productsServices from '../../services/ProductsServices.js';
 import brandsServices from '../../services/BrandsServices.js';
 import categoriesServices from '../../services/CategoriesServices.js';
-import MeasurementUnitSelector from '../selectors/MeasurementUnitsSelector.js';
+
 import { validateNumberData, validateSelectedData, validateStringData } from '../../utils/ValidateData.js';
 import ubicationsServices from '../../services/UbicationsServices.js';
 import measurementUnitsServices from '../../services/MeasurementUnitsServices.js';
-import { columnActionsDef, columnDef } from '../../utils/ColumnsDefinitions.js';
+
 import generalsServices from '../../services/GeneralsServices.js';
 import '../../styles/imgStyle.css';
 import "../../styles/pricesStyle.css";
-import axios from 'axios';
+
 import resourcesServices from '../../services/ResourcesServices.js';
 import productPricesServices from '../../services/ProductPricesServices.js';
 import ProductPrices from '../prices/ProductPrices.js';
@@ -47,9 +47,10 @@ function ProductForm(props) {
   const [categoriesData, setCategoriesData] = useState([]);
   const [unitMesData, setUnitMesData] = useState([]);
   const [ubicationsData, setUbicationsData] = useState([]);
-  const [printersData, setPrintersData] = useState([]);
   const [packageTypesData, setPackageTypesData] = useState([]);
   const [printerSelect, setPrinterSelect] = useState("");
+
+  const [formIsAlcholic, setFormIsAlcholic] = useState(0);
 
   // FIRST STAGE FORM VALUES
   const [formId, setId] = useState(0);
@@ -66,19 +67,10 @@ function ProductForm(props) {
   const [formIsTaxable, setFormIsTaxable] = useState(true);
   const [formPackageContent, setFormPackageContent] = useState(1);
 
-  const [formProductTaxes, setFormProductTaxes] = useState([]);
   const [formProductPackageConfigs, setFormProductPackageConfigs] = useState([]);
-
-  const [formPackageConfigPackageTypeId, setFormPackageConfigPackageTypeId] = useState(0);
-  const [formPackageConfigQuantity, setFormPackageConfigQuantity] = useState(0);
 
   // SECOND STAGE FORM VALUES
   const [formStocks, setFormStocks] = useState([]);
-
-  // THIRD STAGE FORM VALUES
-  // [productId, price, profitRate, profitRateFixed]
-  const [formPrices, setFormPrices] = useState([[null, null, null, null]]);
-  const [formPriceIndexSelected, setFormPriceIndexSelected] = useState(null);
 
   //IMG
   const [selectedFile, setSelectedFile] = useState(null);
@@ -129,6 +121,7 @@ function ProductForm(props) {
   }, []);
 
   async function loadDataToUpdate() {
+
     if (!isEmpty(dataToUpdate)) {
       const {
         productId,
@@ -146,9 +139,11 @@ function ProductForm(props) {
         packageContent,
         productAlt,
         productUrl,
-        productResourceId
+        productResourceId,
+        isAlcoholic
       } = dataToUpdate;
 
+      setFormIsAlcholic(isAlcoholic || 0);
       setResourceIdToSave(productResourceId);
       setImageUrl(productAlt);
       setFileName(productAlt ? productAlt : 'Archivo no valido');
@@ -168,16 +163,13 @@ function ProductForm(props) {
       setFormPackageContent(packageContent);
 
       if (productId !== undefined) {
-        const productTaxesResponse = await productsServices.findTaxesByProductId(productId);
-
-        setFormProductTaxes(productTaxesResponse.data[0].taxesData);
-
         //const pricesResponse = await productsServices.prices.findByProductId(productId);
         const pricesResponse = await productPricesServices.findAllPricesByProductId(productId);
         setProductPrices(pricesResponse.data);
 
-        const stocksResponse = await productsServices.stocks.findByProductId(productId);
+        console.log(pricesResponse.data);
 
+        const stocksResponse = await productsServices.stocks.findByProductId(productId);
         setFormStocks(stocksResponse.data);
 
         loadPackageConfig(productId);
@@ -185,8 +177,6 @@ function ProductForm(props) {
         setActiveTab('1');
         setFormStocks([]);
         // // [productId, price, profitRate, profitRateFixed, productPriceId]
-        setFormPrices([[null, null, null, null]]);
-        setFormPriceIndexSelected(null);
       }
 
       if (!isEmpty(ubicationsData)) {
@@ -201,6 +191,7 @@ function ProductForm(props) {
   }, [dataToUpdate]);
 
   function restoreState() {
+    setFormIsAlcholic(0);
     setProductPrices([]);
     setResourceIdToSave(0);
     setImageUrl('');
@@ -220,15 +211,12 @@ function ProductForm(props) {
     setFormIsTaxable(true);
     setFormPackageContent(1);
     setFormStocks([]);
-    setFormProductTaxes([]);
-    // [productId, price, profitRate, profitRateFixed, productPriceId]
-    setFormPrices([[null, null, null, null, null]]);
-    setFormPriceIndexSelected(null);
     setSelectedFile(null);
     setFileName('Seleccione un archivo');
     setPreviewUrl('');
   }
 
+  //Aqui se guarda el producto
   async function firstStageAction() {
     if (
       !validateSelectedData(formCategoryId, 'Seleccione una categoría')
@@ -266,7 +254,8 @@ function ProductForm(props) {
         formIsTaxable,
         formEnabledForProduction,
         formPackageContent,
-        resourceId
+        resourceId,
+        formIsAlcholic
       );
 
       const { insertId } = productAddResponse.data;
@@ -274,12 +263,10 @@ function ProductForm(props) {
       setId(insertId);
 
       const productStockResponse = await productsServices.stocks.findByProductId(insertId);
-      const productTaxesResponse = await productsServices.findTaxesByProductId(insertId);
 
       setFetching(false);
       setActiveTab('2');
       setFormStocks(productStockResponse.data);
-      setFormProductTaxes(productTaxesResponse.data[0].taxesData);
     } catch (error) {
       setFetching(false);
     }
@@ -287,26 +274,12 @@ function ProductForm(props) {
 
   async function secondStageAction() {
     setFetching(true);
-
+    setActiveTab('2');
     try {
-      forEach(formStocks, async (x) => {
-        const { initialStock, stock, productStockId } = x;
-        await productsServices.stocks.updateById(initialStock || 0, stock || 0, productStockId);
-      });
-    } catch (error) {
-
-    }
-
-    setFetching(false);
-    setActiveTab('3');
-    setFetching(true);
-
-    try {
-
       //const productPricesResponse = await productsServices.prices.findByProductId(formId);
       const pricesResponse = await productPricesServices.findAllPricesByProductId(formId);
       setProductPrices(pricesResponse.data);
-
+      
       setFetching(false);
     } catch (error) {
       setFetching(false);
@@ -314,7 +287,7 @@ function ProductForm(props) {
   }
 
   async function thirdStageAction() {
-    
+
     if (isEmpty(productPrices)) {
       customNot('warning', 'Debe tener al menos un precio o un valor correcto', 'Dato no válido');
       return;
@@ -326,7 +299,7 @@ function ProductForm(props) {
   }
 
   function validateData() {
-    if (!(updateMode ? true : !(formPrices[formPrices.length - 1][1] === null)))
+    if (!(updateMode ? true : !(productPrices.length === 0)))
       customNot('warning', 'Debe tener al menos un precio o un valor correcto', 'Dato no válido');
 
     return (
@@ -335,7 +308,7 @@ function ProductForm(props) {
         && validateSelectedData(formBrandId, 'Seleccione una marca')
         && validateSelectedData(formCategoryId, 'Seleccione una categoria')
         && validateSelectedData(formUbicationId, 'Seleccione una ubicación')
-        && updateMode ? true : !(formPrices[formPrices.length - 1][1] === null)
+        && updateMode ? true : !(productPrices.length === 0)
     );
   }
 
@@ -359,7 +332,6 @@ function ProductForm(props) {
           }
         }
 
-
         await productsServices.update(
           formName,
           formDescription,
@@ -374,14 +346,9 @@ function ProductForm(props) {
           formEnabledForProduction,
           formPackageContent,
           formId,
-          newResourceId
+          newResourceId,
+          formIsAlcholic
         );
-
-        forEach(formStocks, async (x) => {
-          const { initialStock, stock, minStockAlert, productStockId } = x;
-
-          await productsServices.stocks.updateById(initialStock || 0, stock || 0, minStockAlert || 1, productStockId);
-        });
 
         restoreState();
         setFetching(false);
@@ -390,56 +357,6 @@ function ProductForm(props) {
         setFetching(false);
       }
     }
-  }
-
-  function getProductTotalTaxes() {
-    let totalTaxes = 0; // DECLARA UNA VARIABLE RESULTADO
-
-    // UN FOREACH PARA RECORRER LOS DETALLES DE LA VENTA
-    forEach(formProductTaxes, (tax) => {
-      // BUSCA EL TAX ENTRE LA INFORMACIÓN DE LOS TAXES
-      if (tax.isPercentage === 1) {
-        totalTaxes += (+formCost * +tax.taxRate);
-      } else {
-        totalTaxes += (+formCost + +tax.taxRate);
-      }
-    });
-
-    return totalTaxes || 0;
-  }
-
-  function getFinalPriceTotalTaxesByTax(taxId, price) {
-    let totalTaxes = 0; // DECLARA UNA VARIABLE RESULTADO
-    // UN FOREACH PARA RECORRER LOS DETALLES DE LA VENTA
-    forEach(formProductTaxes, (tax) => {
-      // BUSCA EL TAX ENTRE LA INFORMACIÓN DE LOS TAXES
-      if (tax.taxId === taxId) {
-        if (tax.isPercentage === 1) {
-          totalTaxes += (+price - (+price / (1 + +tax.taxRate)));
-        } else {
-          totalTaxes += (+price + +tax.taxRate);
-        }
-      }
-    })
-
-    return totalTaxes || 0;
-  }
-
-  function getFinalPriceTotalTax(price) {
-    let totalTaxes = 0; // DECLARA UNA VARIABLE RESULTADO
-
-    // UN FOREACH PARA RECORRER LOS DETALLES DE LA VENTA
-    forEach(formProductTaxes, (tax) => {
-
-      // BUSCA EL TAX ENTRE LA INFORMACIÓN DE LOS TAXES
-      if (tax.isPercentage === 1) {
-        totalTaxes += (+price - (+price / (1 + +tax.taxRate)));
-      } else {
-        totalTaxes += (+price + +tax.taxRate);
-      }
-    });
-
-    return totalTaxes || 0;
   }
 
   function selectImage(e) {
@@ -619,9 +536,14 @@ function ProductForm(props) {
                 }
               </Select>
             </Col>
-            <Col span={12} hidden>
-              <p style={styleSheet.labelStyle}>Impresora:</p>
-              <strong>{printerSelect}</strong>
+            <Col span={12}>
+              <p style={styleSheet.labelStyle}>Producto Alcohólico:</p>
+              <Switch
+                checked={formIsAlcholic === 0 ? false : true}
+                onClick={() => {
+                  setFormIsAlcholic(formIsAlcholic === 0 ? 1 : 0);
+                }}
+              />
             </Col>
             <Col span={12} hidden>
               <p style={styleSheet.labelStyle}>Costo:</p>
@@ -696,31 +618,8 @@ function ProductForm(props) {
         </Tabs.TabPane>
         <Tabs.TabPane tab="Precios" key={'2'} disabled={!updateMode}>
           <Row gutter={8}>
-            <Col span={24} hidden>
-              <Space>
-                <Tag>{'Costo'}</Tag>
-                <Tag icon={<DollarOutlined />}>{formCost}</Tag>
-                <Tag>{'Impuestos'}</Tag>
-                <Tag icon={<DollarOutlined />}>{getProductTotalTaxes().toFixed(4)}</Tag>
-              </Space>
-            </Col>
-            <Col span={24} hidden>
-              {
-                (formProductTaxes || [])
-                  .map((element, index) => {
-                    return (
-                      <Space key={index}>
-                        <Tag>{element.taxName}</Tag>
-                        <Tag icon={element.isPercentage ? <PercentageOutlined /> : <DollarOutlined />}>{element.isPercentage ? (element.taxRate * 100) : element.isPercentage}</Tag>
-                      </Space>
-                    )
-                  })
-              }
-            </Col>
             <Col span={24}>
               <div style={{ height: 10 }} />
-
-
             </Col>
             <Button
               icon={<PlusOutlined />}
@@ -753,124 +652,8 @@ function ProductForm(props) {
                   })
               }
             </Col>
-
-            <Col hidden span={24}>
-              <Button
-                type={'default'}
-                icon={<PlusOutlined />}
-                onClick={(e) => {
-                  let newArr = [...formPrices];
-                  // [productId, price, profitRate, profitRateFixed, productPriceId]
-                  newArr.push([null, null, null, false, null]);
-                  setFormPrices(newArr);
-                  if (updateMode) setFormPriceIndexSelected(newArr.length - 1);
-                }}
-                style={{ width: '50%', marginTop: 20 }}
-                loading={fetching}
-                disabled={fetching || (formPrices[formPrices.length - 1][1] === null) || !(formPriceIndexSelected === null)}
-              >
-                Añadir otro precio
-              </Button>
-            </Col>
           </Row>
         </Tabs.TabPane>
-        {/* <Tabs.TabPane tab="Contenidos" key={'4'} disabled={!updateMode}>
-            <Row gutter={8}>
-              <Col span={24}>
-                <Table 
-                  columns={[
-                    columnDef({title: 'Paquete', dataKey: 'packageTypeName'}),
-                    columnDef({title: 'Cantidad', dataKey: 'quantity'}),
-                    columnDef({title: 'Medida', dataKey: 'measurementUnitName', ifNull: '-'}),
-                    columnActionsDef(
-                      {
-                        title: 'Acciones',
-                        dataKey: 'productPackageConfigId',
-                        detail: false,
-                        edit: false,
-                        del: true,
-                        delAction: (value) => {
-                          deletePackageConfig(value);
-                          // setEntitySelectedId(value);
-                          // setOpenPreview(true);
-                        },
-                      }
-                    ),
-                  ]}
-                  rowKey={'productPackageConfigId'}
-                  size={'small'}
-                  dataSource={formProductPackageConfigs || []}
-                  loading={fetching}
-                />
-              </Col>
-              <Col span={12}>
-                <p style={styleSheet.labelStyle}>Paquete:</p>  
-                <Select
-                  dropdownStyle={{ width: '100%' }} 
-                  style={{ width: '100%' }} 
-                  value={formPackageConfigPackageTypeId} 
-                  onChange={(value) => setFormPackageConfigPackageTypeId(value)}
-                  optionFilterProp='children'
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option.children).toLowerCase().includes(input.toLowerCase())
-                  }
-                >
-                  <Option key={0} value={0} disabled>{'No seleccionado'}</Option>
-                  {
-                    (packageTypesData || []).map(
-                      (element) => <Option key={element.id} value={element.id}>{element.name}</Option>
-                    )
-                  }
-                </Select>
-              </Col>
-              <Col span={12}>
-                <p style={styleSheet.labelStyle}>Cantidad:</p>  
-                <InputNumber
-                  type={'number'}
-                  precision={2} 
-                  disabled={!updateMode}
-                  value={formPackageConfigQuantity}
-                  onChange={(value) => {
-                    setFormPackageConfigQuantity(value);
-                  }}
-                />
-              </Col>
-              <Col span={12}>
-                <p style={styleSheet.labelStyle}>Medida:</p>  
-                <Select
-                  dropdownStyle={{ width: '100%' }} 
-                  style={{ width: '100%' }} 
-                  value={formUnitMeasurementId} 
-                  // onChange={(value) => setFormPackageConfigPackageTypeId(value)}
-                  disabled={true}
-                  optionFilterProp='children'
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option.children).toLowerCase().includes(input.toLowerCase())
-                  }
-                >
-                  <Option key={0} value={0} disabled>{'No seleccionado'}</Option>
-                  {
-                    (unitMesData || []).map(
-                      (element) => <Option key={element.measurementUnitId} value={element.measurementUnitId}>{element.measurementUnitName}</Option>
-                    )
-                  }
-                </Select>
-              </Col>
-              <Col span={12} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <Button
-                  onClick={() => {
-                    addProductPackageConfig();
-                  }}
-                  loading={fetching}
-                  disabled={fetching}
-                >
-                  Añadir contenido
-                </Button>
-              </Col>
-            </Row>
-          </Tabs.TabPane> */}
       </Tabs>
       {/* </TabsContainer> */}
       <Divider />
@@ -914,10 +697,7 @@ function ProductForm(props) {
             disabled={fetching}
           >
             {
-              updateMode ?
-                'Guardar' :
-                activeTab === '1' || activeTab === '2' ?
-                  'Siguiente' : 'Guardar'
+              updateMode ? 'Guardar' : activeTab === '1' || activeTab === '2' ? 'Siguiente' : 'Guardar'
             }
           </Button>
         </Col>

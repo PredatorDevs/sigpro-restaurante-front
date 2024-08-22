@@ -46,7 +46,7 @@ function TaxDetails(props) {
                                     {details.isPercentage === 1 ? 'Si' : 'No'}
                                 </Tag>
                             </Descriptions.Item>
-                            <Descriptions.Item label="Es Obligatorio" span={3}>
+                            <Descriptions.Item label="Aplicable a productos alcoholicos" span={3}>
                                 <Tag color={details.isApplicable === 1 ? 'green' : 'red'} style={{
                                     display: 'block',
                                     maxWidth: 30

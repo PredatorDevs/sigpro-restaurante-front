@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CloseCircleOutlined, DeleteOutlined, DollarCircleOutlined, EditOutlined, ExclamationCircleOutlined, SaveOutlined } from "@ant-design/icons";
+import { CloseCircleOutlined, DeleteOutlined, DollarCircleOutlined, EditOutlined, ExclamationCircleOutlined, InfoCircleOutlined, SaveOutlined } from "@ant-design/icons";
 import { Button, Card, Col, InputNumber, Row, Space, Switch, Tag, Modal } from "antd";
 import productPricesServices from "../../services/ProductPricesServices";
 import { customNot } from "../../utils/Notifications";
@@ -18,6 +18,7 @@ function ProductPrices(props) {
     const [profitFinal, setProfitFinal] = useState(0);
     const [profitDefault, setProfitDefault] = useState(0);
     const [productTaxes, setProductTaxes] = useState([]);
+    const [isDefaultPrice, setIsDefaultPrice] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -38,7 +39,7 @@ function ProductPrices(props) {
                 setProfitTotal(total);
                 setProfitDefault(result.isDefault);
 
-                const responseTaxes = await productPricesServices.findTaxByProductId(priceId);
+                const responseTaxes = await productPricesServices.findTaxByProductId(price.productId);
                 setProductTaxes(responseTaxes.data);
 
                 setProfitFinal(calcFinalPrice(responseTaxes.data, total));
@@ -55,7 +56,7 @@ function ProductPrices(props) {
             let totalTaxes = 0;
 
             forEach(taxes, (tax) => {
-                if ((tax.status === 'associated' || tax.isApplicable === 1) && tax.isActive === 1) {
+                if (tax.status === 'associated' && tax.isActive === 1) {
                     if (tax.isPercentage === 1) {
                         totalTaxes += (+price * +tax.taxRate);
                     } else {
@@ -70,10 +71,10 @@ function ProductPrices(props) {
     }
 
     function calcPriceTax(tax, price) {
-        if ((tax.status === 'associated' || tax.isApplicable === 1) && price > 0 && tax.isActive === 1) {
-            const taxRate = parseFloat(tax.taxRate).toFixed(2);
+        if (tax.status === 'associated' && price > 0 && tax.isActive === 1) {
+            const taxRate = parseFloat(tax.taxRate).toFixed(3);
             if (tax.isPercentage === 1) {
-                const totalTax = parseFloat((price * taxRate)).toFixed(2);
+                const totalTax = parseFloat((price * taxRate)).toFixed(3);
                 return `$${totalTax}`
             } else {
                 return `$${taxRate}`
@@ -84,8 +85,29 @@ function ProductPrices(props) {
         }
     }
 
-    const changeInputsHandle = () => {
-        setUpdatedMode(!updatedMode);
+    const changeInputsHandle = async () => {
+
+        setBtnActions(true);
+
+        try {
+            const validDefaultPrice = await productPricesServices.findDefultPrice(priceInfo.productId);
+
+            const isDefault = validDefaultPrice.data[0];
+
+            if (isDefault.result === 1 && isDefault.id !== priceInfo.id) {
+                customNot('info', 'Precio Principal', 'Ya existe un Precio Principal seleccionado');
+                setIsDefaultPrice(true);
+            } else {
+                setIsDefaultPrice(false);
+            }
+            
+        } catch (error) {
+            console.error(error);
+        }
+        finally {
+            setUpdatedMode(!updatedMode);
+            setBtnActions(false);
+        }
     }
 
     const changeMainPriceHandle = () => {
@@ -98,13 +120,18 @@ function ProductPrices(props) {
     }
 
     function ProfitRate() {
-        return (+profitFinal - +profitTotal).toFixed(2);
+        if (!isEmpty(priceInfo)) {
+            return (+profitFinal - +profitTotal).toFixed(2);
+        } else {
+            return (0).toFixed(2);
+        }
     }
 
     async function SavePrice() {
         setBtnActions(true);
 
         try {
+
             await productPricesServices.updateProductPrice(
                 profitTotal,
                 ProfitRate(),
@@ -155,6 +182,7 @@ function ProductPrices(props) {
                                 icon={<SaveOutlined />}
                                 loading={btnActions}
                                 size='small'
+                                type={'primary'}
                                 onClick={() => {
                                     SavePrice();
                                 }}
@@ -185,7 +213,7 @@ function ProductPrices(props) {
             <Col span={24}>
                 <Row gutter={8}>
                     <Col span={8}>
-                        <p className="prices-info">{`Margen Ganancia`}</p>
+                        <p className="prices-info">{`Precio`}</p>
                         <InputNumber
                             size='small'
                             type={'number'}
@@ -211,15 +239,13 @@ function ProductPrices(props) {
                             value={profitFinal}
                             disabled={updatedMode}
                             readOnly
-                            onChange={(value) => {
-                            }}
                         />
                     </Col>
                     <Col span={8}>
                         <p className="prices-info">{`Precio Principal`}</p>
                         <Switch
                             checked={profitDefault === 0 ? false : true}
-                            disabled={updatedMode}
+                            disabled={updatedMode || isDefaultPrice}
                             onClick={changeMainPriceHandle}
                         />
                     </Col>
@@ -229,20 +255,13 @@ function ProductPrices(props) {
                 <div style={{ display: 'flex', flexDirection: 'row', gap: 5, marginTop: 5, maxWidth: '100%', flexWrap: 'wrap' }}>
                     {
                         (productTaxes || []).map((element, index) => {
-                            if (element.isActive === 1) {
+                            if (element.isActive === 1 && element.status !== 'not_associated') {
                                 return (
                                     <Tag
                                         key={element.id}
                                         style={{ cursor: 'pointer' }}
                                         color={element.isApplicable === 1 ? 'blue' : element.status === 'not_associated' ? 'green' : 'blue'}
                                         icon={element.isApplicable === 1 ? <ExclamationCircleOutlined /> : element.status === 'not_associated' ? <CloseCircleOutlined /> : <ExclamationCircleOutlined />}
-                                        onClick={() => {
-                                            if (element.isApplicable === 0) {
-
-                                            } else {
-                                                customNot('info', 'Impuesto Obligatorio', 'Este Impuesto no se puede modificar');
-                                            }
-                                        }}
                                     >
                                         {element.name}: {calcPriceTax(element, profitTotal)}
                                     </Tag>

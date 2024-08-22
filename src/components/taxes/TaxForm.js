@@ -135,7 +135,7 @@ function TaxForm(props) {
             setName(dataToUpdate.name);
             setTaxRate(totalTax);
             setIsPercentage(dataToUpdate.isPercentage);
-            setIsApplicable(dataToUpdate.isApplicable);
+            setIsApplicable(dataToUpdate.isAlcoholic);
         } else {
             restoreState();
         }
@@ -197,7 +197,7 @@ function TaxForm(props) {
                         <Switch checked={isPercentage === 1 ? true : false} onChange={changePercentage} />
                     </div>
                     <div style={{display: 'flex', gap: 10}}>
-                        <p style={{ margin: '0px 0px 0px 0px' }}>Es Obligatorio:</p>
+                        <p style={{ margin: '0px 0px 0px 0px' }}>Aplicable a productos alcoholicos:</p>
                         <Switch checked={isApplicable === 1 ? true : false} onChange={changeApplicable} />
                     </div>
                 </Col>

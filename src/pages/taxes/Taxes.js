@@ -72,8 +72,8 @@ function Taxes() {
             )
         }),
         columnDef({
-            title: 'Es Obligatorio',
-            dataKey: 'isApplicable',
+            title: 'Aplicable a productos alcoholicos',
+            dataKey: 'isAlcoholic',
             customRender: isApplicable => (
                 <Tag color={isApplicable === 1 ? 'green' : 'red'} style={{
                     display: 'block',
