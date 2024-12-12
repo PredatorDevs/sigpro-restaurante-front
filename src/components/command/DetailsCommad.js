@@ -1,8 +1,6 @@
-import { useState, useEffect } from "react";
 import { Empty, Table, Tag, Modal, Spin } from "antd";
 import { DeleteOutlined, WarningOutlined } from "@ant-design/icons";
 
-import orderSalesServices from "../../services/OrderSalesServices";
 import { isEmpty, forEach, find } from "lodash";
 import { numberToLetters } from "../../utils/NumberToLetters";
 import { customNot } from "../../utils/Notifications";
@@ -86,7 +84,7 @@ const { confirm } = Modal;
 
 function DetailsCommand(props) {
 
-    const { tableOrder, orderInTable, detailsOrder, fetchingDetails, onClickReprint, onClickDelete } = props;
+    const { tableOrder, orderInTable, detailsOrder, fetchingDetails, onClickDelete } = props;
 
     function getTotalCommand() {
         let total = 0;
@@ -195,21 +193,22 @@ function DetailsCommand(props) {
                 <Empty description="Seleccione una Cuenta..." />
                 :
                 <>
-                    {
-                        isEmpty(orderInTable) ?
-                            <>
-                                <Empty description="Cuenta sin ordenes" style={{}} />
-                            </> :
-                            <Spin spinning={fetchingDetails}>
+                    <Spin spinning={fetchingDetails}>
+                        {
+                            isEmpty(orderInTable) ?
+                                <>
+                                    <Empty description="Cuenta sin ordenes" style={{}} />
+                                </> :
                                 <Table
+                                    loading={isEmpty(detailsOrder)}
                                     columns={columns}
                                     rowKey={'id'}
                                     size={'small'}
                                     pagination={false}
                                     dataSource={detailsOrder || []}
                                 />
-                            </Spin>
-                    }
+                        }
+                    </Spin>
                 </>}
             <div style={styleSheet.tableFooter.footerCotainer}>
                 <div className="letters-total" style={styleSheet.tableFooter.detailContainerLetters}>

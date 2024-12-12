@@ -22,7 +22,7 @@ function TableButton({ table, tableOrder, fetchingTables, onChangeTable }) {
             disabled={fetchingTables}
             onClick={() => {
                 if (table.id !== tableOrder) {
-                    onChangeTable(table.id);
+                    onChangeTable({id: table.id, status: table.status});
                 }
             }}
             key={table.id}

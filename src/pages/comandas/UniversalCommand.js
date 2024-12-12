@@ -115,7 +115,7 @@ const styleSheet = {
 
 function UniversalCommand(props) {
     const { typeCommand } = props;
-    
+
     const navigate = useNavigate();
 
     const [ableToProcess, setAbleToProcess] = useState(false);
@@ -189,6 +189,10 @@ function UniversalCommand(props) {
             } else {
                 setOrderInTable(orderInformation[0]);
 
+                if (!isEmpty(orderInformation)) {
+                    await getOrderDetails(orderInformation[0].id)
+                }
+
                 if (typeCommand === 2) {
                     if (!isEmpty(orderInformation)) {
                         const clientInfo = await customersServices.findByIdandPhoneId(orderInformation[0].customerId, orderInformation[0].customerphoneId, orderInformation[0].customeraddressId);
@@ -217,7 +221,7 @@ function UniversalCommand(props) {
                     }
                 }
             }
-            
+
         } catch (error) {
             console.error("Error fetching order info:", error);
         } finally {
@@ -226,14 +230,6 @@ function UniversalCommand(props) {
             setFetchingClient(false);
         }
     }
-
-    useEffect(() => {
-        if (tableOrder) {
-            getOrderInfo(tableOrder);
-        } else {
-            setOrderInTable({});
-        }
-    }, [tableOrder]);
 
     async function getOrderDetails(orderId) {
         try {
@@ -254,15 +250,6 @@ function UniversalCommand(props) {
             console.error("Error fetching order details:", error);
         }
     }
-
-    useEffect(() => {
-        if (!isEmpty(orderInTable)) {
-            getOrderDetails(orderInTable.id);
-        } else {
-            setShowButtons(false);
-            setReprintersDetails(false);
-        }
-    }, [orderInTable]);
 
     // #endregion Order Details
 
@@ -380,14 +367,20 @@ function UniversalCommand(props) {
     }
 
     const changeTable = (value) => {
-        if (value !== tableOrder) {
-            setDetailsOrder([]);
-            setOrderInTable({});
-            setFetchingClient(false);
-            setFetchingDetails(true);
-            setFetchingTables(true);
-            setShowButtons(false);
-            setTableOrder(value);
+        if (value.id !== tableOrder) {
+            setTableOrder(value.id);
+            if (value.status === 0) {
+                setDetailsOrder([]);
+                setOrderInTable({});
+                setShowButtons(false);
+                setReprintersDetails(false);
+            } else {
+                setFetchingClient(false);
+                setFetchingDetails(true);
+                setFetchingTables(true);
+                setShowButtons(false);
+                getOrderInfo(value.id);
+            }
         }
     }
 
@@ -1171,7 +1164,7 @@ function UniversalCommand(props) {
                                 if (!isEmpty(orderInTable) && isUpdate) {
                                     await updateOrderIdentifierToGO(clientName)
                                 }
-                                
+
                                 setCustomerUpdateMode(true);
                                 setCustomerInfo(clientName);
                             }

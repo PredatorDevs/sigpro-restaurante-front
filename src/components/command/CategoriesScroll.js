@@ -1,7 +1,6 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Button } from "antd";
 import { CaretLeftOutlined, CaretRightFilled } from "@ant-design/icons";
-import IconCategoriesProvider from "../../utils/IconCategoriesProvider";
 
 import '../../styles/categoriesStyle.css';
 
